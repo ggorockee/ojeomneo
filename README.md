@@ -1,7 +1,16 @@
-# 오점너 (오늘 점심은 너야!) Mobile
+# mobile
 
-냉장고 식재료 관리 및 레시피 추천 앱
+A new Flutter project.
 
-## 프로젝트 구조
+## Getting Started
 
-Flutter 기반 크로스 플랫폼 모바일 애플리케이션
+This project is a starting point for a Flutter application.
+
+A few resources to get you started if this is your first Flutter project:
+
+- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
+- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+
+For help getting started with Flutter development, view the
+[online documentation](https://docs.flutter.dev/), which offers tutorials,
+samples, guidance on mobile development, and a full API reference.
