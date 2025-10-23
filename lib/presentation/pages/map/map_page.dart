@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:kakao_map_sdk/kakao_map_sdk.dart';
@@ -51,6 +52,10 @@ class _MapPageState extends ConsumerState<MapPage> with WidgetsBindingObserver {
 
   // 검색 관련
   final TextEditingController _searchController = TextEditingController();
+  
+  // 지도 이동 감지를 위한 타이머
+  Timer? _mapMoveTimer;
+  LatLng? _lastCameraPosition;
 
   // 카테고리 필터
   String? _selectedCategory;
@@ -86,6 +91,7 @@ class _MapPageState extends ConsumerState<MapPage> with WidgetsBindingObserver {
     // 라이프사이클 옵저버 제거
     WidgetsBinding.instance.removeObserver(this);
     _searchController.dispose();
+    _mapMoveTimer?.cancel();
     super.dispose();
   }
 
@@ -268,11 +274,14 @@ class _MapPageState extends ConsumerState<MapPage> with WidgetsBindingObserver {
           Expanded(
             child: Stack(
               children: [
-                // 카카오맵
-                KakaoMap(
-                  onMapReady: _onMapReady,
-                  option: const KakaoMapOption(
-                    position: LatLng(37.6161, 126.7168), // 풍무역
+                // 카카오맵 (GestureDetector로 감싸서 탭 감지)
+                GestureDetector(
+                  onTapUp: (details) => _onMapTap(details.localPosition),
+                  child: KakaoMap(
+                    onMapReady: _onMapReady,
+                    option: const KakaoMapOption(
+                      position: LatLng(37.6161, 126.7168), // 풍무역
+                    ),
                   ),
                 ),
 
@@ -342,8 +351,38 @@ class _MapPageState extends ConsumerState<MapPage> with WidgetsBindingObserver {
     });
     print('✅ 지도 컨트롤러 설정 완료');
     
+    // 지도 이동 감지 타이머 시작
+    _startMapMoveDetection();
+    
     // 권한이 있으면 현재 위치로 이동 및 마커 표시
     _moveToCurrentLocationIfPermitted();
+  }
+
+  /// 지도 이동 감지 타이머 시작
+  void _startMapMoveDetection() {
+    _mapMoveTimer = Timer.periodic(const Duration(milliseconds: 500), (timer) async {
+      if (!_isMapReady || !mounted) return;
+      
+      try {
+        final cameraPosition = await _mapController.getCameraPosition();
+        final currentPos = cameraPosition.position;
+        
+        // 이전 위치와 현재 위치를 비교
+        if (_lastCameraPosition == null ||
+            (_lastCameraPosition!.latitude - currentPos.latitude).abs() > 0.0001 ||
+            (_lastCameraPosition!.longitude - currentPos.longitude).abs() > 0.0001) {
+          
+          _lastCameraPosition = currentPos;
+          
+          // 지도가 이동했으면 필터링 업데이트
+          if (_restaurants.isNotEmpty) {
+            await _onMapMoved();
+          }
+        }
+      } catch (e) {
+        // 에러 무시 (지도가 준비되지 않았을 수 있음)
+      }
+    });
   }
 
   /// 지도 이동 후 호출 - 보이는 영역에 맞춰 필터링
@@ -583,7 +622,8 @@ class _MapPageState extends ConsumerState<MapPage> with WidgetsBindingObserver {
       for (final restaurant in restaurants) {
         try {
           // 마커 추가 (카카오맵 공식 방법)
-          // 참고: 카카오맵 SDK에서 onTap이 지원되지 않아 리스트에서만 선택 가능
+          // 참고: 카카오맵 SDK는 마커 클릭 이벤트를 직접 지원하지 않음
+          // 대신 리스트에서 식당을 선택하면 지도에 표시됩니다
           final poi = await _mapController.labelLayer.addPoi(
             LatLng(restaurant.latitude, restaurant.longitude),
             style: poiStyle,
@@ -602,6 +642,59 @@ class _MapPageState extends ConsumerState<MapPage> with WidgetsBindingObserver {
       print('❌❌❌ 마커 표시 중 오류: $e');
       print('   💡 assets/icons/marker.png 파일이 있는지 확인하세요');
       print('   💡 pubspec.yaml에 assets 경로가 등록되었는지 확인하세요');
+    }
+  }
+
+  /// 지도 탭 시 가장 가까운 식당 찾기
+  Future<void> _onMapTap(Offset tapPosition) async {
+    if (_visibleRestaurants.isEmpty || !_isMapReady) return;
+    
+    try {
+      // 탭 위치를 지도 좌표로 변환
+      final screenSize = MediaQuery.of(context).size;
+      final cameraPosition = await _mapController.getCameraPosition();
+      
+      // 화면 크기와 줌 레벨을 기반으로 탭 위치의 대략적인 위도/경도 계산
+      final delta = 0.02 / (cameraPosition.zoomLevel / 13.0);
+      final latPerPixel = (delta * 2) / screenSize.height;
+      final lngPerPixel = (delta * 2) / screenSize.width;
+      
+      // 지도 상단부터의 오프셋 계산 (상단 UI 제외)
+      final topPadding = MediaQuery.of(context).padding.top + 170.h; // 상단 UI 높이
+      final adjustedY = tapPosition.dy - topPadding;
+      
+      // 탭 위치의 위도/경도 계산
+      final centerLat = cameraPosition.position.latitude;
+      final centerLng = cameraPosition.position.longitude;
+      
+      final tapLat = centerLat + (screenSize.height / 2 - adjustedY) * latPerPixel;
+      final tapLng = centerLng + (tapPosition.dx - screenSize.width / 2) * lngPerPixel;
+      
+      print('🖱️ 지도 탭: lat=$tapLat, lng=$tapLng');
+      
+      // 탭 위치에서 가장 가까운 식당 찾기 (50m 이내)
+      RestaurantModel? nearestRestaurant;
+      double minDistance = 0.0005; // 약 50m (위도/경도 차이)
+      
+      for (final restaurant in _visibleRestaurants) {
+        final distance = ((restaurant.latitude - tapLat).abs() + 
+                         (restaurant.longitude - tapLng).abs());
+        
+        if (distance < minDistance) {
+          minDistance = distance;
+          nearestRestaurant = restaurant;
+        }
+      }
+      
+      // 가까운 식당을 찾았으면 선택
+      if (nearestRestaurant != null) {
+        print('🎯 가장 가까운 식당 발견: ${nearestRestaurant.name}');
+        _onRestaurantSelected(nearestRestaurant);
+      } else {
+        print('❌ 근처에 식당 없음');
+      }
+    } catch (e) {
+      print('⚠️ 지도 탭 처리 실패: $e');
     }
   }
 
