@@ -487,11 +487,58 @@ class _MapPageState extends ConsumerState<MapPage> with WidgetsBindingObserver {
     print('✅ 총 ${_markers.length}개 마커 추가 완료');
   }
 
-  /// 검색 결과를 지도에 마커로 표시
+  /// 검색 결과를 지도에 마커로 표시 (카카오맵 베스트 프랙티스)
   Future<void> _showRestaurantMarkersOnMap(List<RestaurantModel> restaurants) async {
-    // 마커 표시는 비활성화 (kakao_map_sdk의 PoiStyle 이슈)
-    // 대신 하단 리스트에만 결과 표시
-    print('📍 ${restaurants.length}개 음식점을 리스트에 표시');
+    if (!_isMapReady) {
+      print('❌ 지도가 준비되지 않음');
+      return;
+    }
+
+    try {
+      // 1. 기존 마커 모두 제거
+      print('🗑️ 기존 마커 ${_markers.length}개 제거 시작');
+      for (var marker in _markers) {
+        try {
+          await _mapController.labelLayer.removePoi(marker);
+        } catch (e) {
+          print('⚠️ 마커 제거 실패: $e');
+        }
+      }
+      _markers.clear();
+      print('✅ 기존 마커 제거 완료');
+
+      // 2. 마커 스타일 정의 (카카오맵 베스트 프랙티스)
+      // assets/icons/marker.png 파일이 필요합니다
+      // 40x60px 오렌지색 위치 마커 PNG를 추가하세요
+      final poiStyle = PoiStyle(
+        icon: KImage.fromAsset('assets/icons/marker.png', 40, 60),
+      );
+
+      // 3. 새 마커 추가
+      print('📍 ${restaurants.length}개 마커 추가 시작');
+      
+      for (final restaurant in restaurants) {
+        try {
+          // 마커 추가 (카카오맵 공식 방법)
+          final poi = await _mapController.labelLayer.addPoi(
+            LatLng(restaurant.latitude, restaurant.longitude),
+            style: poiStyle,
+          );
+          
+          _markers.add(poi);
+          print('  ✅ 마커 추가 성공: ${restaurant.name}');
+        } catch (e) {
+          print('  ❌ 마커 추가 실패 (${restaurant.name}): $e');
+        }
+      }
+
+      print('🎯 마커 추가 완료: ${_markers.length}개');
+      
+    } catch (e) {
+      print('❌❌❌ 마커 표시 중 오류: $e');
+      print('   💡 assets/icons/marker.png 파일이 있는지 확인하세요');
+      print('   💡 pubspec.yaml에 assets 경로가 등록되었는지 확인하세요');
+    }
   }
 
   /// 카테고리 필터 빌드
