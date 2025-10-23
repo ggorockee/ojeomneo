@@ -508,10 +508,10 @@ class _MapPageState extends ConsumerState<MapPage> with WidgetsBindingObserver {
       print('✅ 기존 마커 제거 완료');
 
       // 2. 마커 스타일 정의 (카카오맵 베스트 프랙티스)
-      // assets/icons/marker_f.png 파일 사용
-      // 20x30px 파란색 위치 마커 PNG
+      // assets/icons/marker_f2.png 파일 사용
+      // 20x30px 파란색 위치 마커 PNG (외곽선 스타일)
       final poiStyle = PoiStyle(
-        icon: KImage.fromAsset('assets/icons/marker_f.png', 20, 30),
+        icon: KImage.fromAsset('assets/icons/marker_f2.png', 20, 30),
       );
 
       // 3. 새 마커 추가
