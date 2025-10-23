@@ -509,9 +509,9 @@ class _MapPageState extends ConsumerState<MapPage> with WidgetsBindingObserver {
 
       // 2. 마커 스타일 정의 (카카오맵 베스트 프랙티스)
       // assets/icons/marker.png 파일이 필요합니다
-      // 40x60px 오렌지색 위치 마커 PNG를 추가하세요
+      // 20x30px 오렌지색 위치 마커 PNG
       final poiStyle = PoiStyle(
-        icon: KImage.fromAsset('assets/icons/marker.png', 40, 60),
+        icon: KImage.fromAsset('assets/icons/marker.png', 20, 30),
       );
 
       // 3. 새 마커 추가
