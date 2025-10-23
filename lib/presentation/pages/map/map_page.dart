@@ -271,7 +271,7 @@ class _MapPageState extends ConsumerState<MapPage> with WidgetsBindingObserver {
             ),
           ),
 
-          // 지도 영역 (SlidingUpPanel로 구성)
+          // 지도 영역
           Expanded(
             child: SlidingUpPanel(
               controller: _panelController,
@@ -279,6 +279,8 @@ class _MapPageState extends ConsumerState<MapPage> with WidgetsBindingObserver {
               maxHeight: MediaQuery.of(context).size.height * 0.7,
               borderRadius: BorderRadius.vertical(top: Radius.circular(24.r)),
               panel: _buildRestaurantList(),
+              backdropEnabled: false,
+              renderPanelSheet: false, // 패널을 투명하게 렌더링하지 않음
               onPanelSlide: (position) {
                 setState(() {
                   _panelPosition = position;
@@ -287,16 +289,17 @@ class _MapPageState extends ConsumerState<MapPage> with WidgetsBindingObserver {
               body: Stack(
                 children: [
                   // 카카오맵 (GestureDetector로 감싸서 탭 감지)
-                  GestureDetector(
-                    onTapUp: (details) {
-                      print('🖱️ 탭 감지: ${details.localPosition}');
-                      _onMapTap(details.localPosition);
-                    },
-                    behavior: HitTestBehavior.opaque,
-                    child: KakaoMap(
-                      onMapReady: _onMapReady,
-                      option: const KakaoMapOption(
-                        position: LatLng(37.6161, 126.7168), // 풍무역
+                  Positioned.fill(
+                    child: GestureDetector(
+                      onTapDown: (details) {
+                        print('🖱️ 탭 감지: ${details.localPosition}');
+                        _onMapTap(details.localPosition);
+                      },
+                      child: KakaoMap(
+                        onMapReady: _onMapReady,
+                        option: const KakaoMapOption(
+                          position: LatLng(37.6161, 126.7168), // 풍무역
+                        ),
                       ),
                     ),
                   ),
@@ -314,7 +317,7 @@ class _MapPageState extends ConsumerState<MapPage> with WidgetsBindingObserver {
                     ),
                   ),
                   
-                  // 현재 위치 버튼
+                  // 현재 위치 버튼 (지도 위에 고정)
                   Positioned(
                     bottom: 16.h,
                     right: 16.w,
