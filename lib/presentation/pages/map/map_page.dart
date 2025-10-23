@@ -348,35 +348,54 @@ class _MapPageState extends ConsumerState<MapPage> with WidgetsBindingObserver {
 
   /// 지도 이동 후 호출 - 보이는 영역에 맞춰 필터링
   /// (카카오맵 SDK에 onCameraIdle이 없어서 수동으로 호출)
-  void _onMapMoved() {
+  Future<void> _onMapMoved() async {
     if (!_isMapReady) return;
     
     print('📸 지도 이동 완료 - 보이는 영역 계산');
-    _updateVisibleArea();
+    await _updateVisibleArea();
     _filterVisibleRestaurants();
   }
 
   /// 현재 지도에서 보이는 영역 계산
-  void _updateVisibleArea() {
-    // 카카오맵 SDK에서 현재 지도의 중심과 줌 레벨을 가져와서
-    // 보이는 영역(bounds)을 계산합니다.
-    // 
-    // 카카오맵 SDK에서는 직접적인 bounds API가 없을 수 있으므로,
-    // 화면 크기와 줌 레벨을 기반으로 대략적인 영역을 계산합니다.
-    // 
-    // 임시로 중심점 기준 ±0.01도 (약 1.1km) 영역으로 설정
-    // 실제로는 줌 레벨에 따라 동적으로 계산해야 하지만,
-    // 카카오맵 SDK의 제약으로 인해 고정값 사용
+  Future<void> _updateVisibleArea() async {
+    if (!_isMapReady) return;
     
-    final double latitudeDelta = 0.015; // 약 1.6km
-    final double longitudeDelta = 0.015; // 약 1.6km
-    
-    _mapNorthLatitude = _currentMapCenterLat + latitudeDelta;
-    _mapSouthLatitude = _currentMapCenterLat - latitudeDelta;
-    _mapEastLongitude = _currentMapCenterLng + longitudeDelta;
-    _mapWestLongitude = _currentMapCenterLng - longitudeDelta;
-    
-    print('🌍 보이는 영역: N=$_mapNorthLatitude, S=$_mapSouthLatitude, W=$_mapWestLongitude, E=$_mapEastLongitude');
+    try {
+      // 카카오맵 SDK에서 현재 카메라 위치 가져오기
+      final cameraPosition = await _mapController.getCameraPosition();
+      
+      // 지도 중심 좌표 업데이트
+      _currentMapCenterLat = cameraPosition.position.latitude;
+      _currentMapCenterLng = cameraPosition.position.longitude;
+      
+      print('📍 현재 지도 중심: lat=$_currentMapCenterLat, lng=$_currentMapCenterLng');
+      
+      // 줌 레벨에 따라 보이는 영역 계산
+      // 줌 레벨이 높을수록 더 좁은 영역
+      final zoomLevel = cameraPosition.zoomLevel;
+      
+      // 줌 레벨에 따른 영역 크기 조정
+      // zoomLevel 15 = 약 0.01도 (1.1km)
+      // zoomLevel 13 = 약 0.02도 (2.2km)
+      final delta = 0.02 / (zoomLevel / 13.0);
+      
+      _mapNorthLatitude = _currentMapCenterLat + delta;
+      _mapSouthLatitude = _currentMapCenterLat - delta;
+      _mapEastLongitude = _currentMapCenterLng + delta;
+      _mapWestLongitude = _currentMapCenterLng - delta;
+      
+      print('🌍 보이는 영역: N=$_mapNorthLatitude, S=$_mapSouthLatitude, W=$_mapWestLongitude, E=$_mapEastLongitude (zoom=$zoomLevel)');
+    } catch (e) {
+      print('⚠️ 카메라 위치 가져오기 실패: $e');
+      // 폴백: 기존 값 사용
+      final double latitudeDelta = 0.015;
+      final double longitudeDelta = 0.015;
+      
+      _mapNorthLatitude = _currentMapCenterLat + latitudeDelta;
+      _mapSouthLatitude = _currentMapCenterLat - latitudeDelta;
+      _mapEastLongitude = _currentMapCenterLng + longitudeDelta;
+      _mapWestLongitude = _currentMapCenterLng - longitudeDelta;
+    }
   }
 
   /// 보이는 영역 내의 식당만 필터링
@@ -674,7 +693,7 @@ class _MapPageState extends ConsumerState<MapPage> with WidgetsBindingObserver {
     );
   }
 
-  /// "이 위치에서 검색" 버튼 빌드
+  /// "이 화면에서 검색" 버튼 빌드
   Widget _buildSearchHereButton() {
     return Material(
       elevation: 4,
@@ -704,7 +723,7 @@ class _MapPageState extends ConsumerState<MapPage> with WidgetsBindingObserver {
                 Icon(Icons.refresh, color: Colors.white, size: 18.sp),
               SizedBox(width: 6.w),
               Text(
-                _isSearching ? '검색 중...' : '이 위치에서 검색',
+                _isSearching ? '검색 중...' : '이 화면에서 검색',
                 style: TextStyle(
                   fontSize: 13.sp,
                   fontWeight: FontWeight.w600,
@@ -718,7 +737,7 @@ class _MapPageState extends ConsumerState<MapPage> with WidgetsBindingObserver {
     );
   }
 
-  /// 현재 위치에서 음식점 검색 (보이는 영역 기반)
+  /// 현재 화면에서 음식점 검색 (화면 중심 기반)
   Future<void> _searchRestaurantsAtCurrentLocation() async {
     setState(() {
       _isSearching = true;
@@ -726,90 +745,117 @@ class _MapPageState extends ConsumerState<MapPage> with WidgetsBindingObserver {
     });
 
     try {
-      print('🔍 현재 위치에서 검색 시작: lat=$_currentMapCenterLat, lng=$_currentMapCenterLng');
-
-      // 보이는 영역 업데이트
-      _updateVisibleArea();
+      // 1. 먼저 현재 화면 중심 좌표를 가져옴
+      await _updateVisibleArea();
       
-      // 보이는 영역의 대략적인 반경 계산 (위도 차이를 km로 변환)
+      print('🔍 화면 중심에서 검색 시작: lat=$_currentMapCenterLat, lng=$_currentMapCenterLng');
+      
+      // 2. 보이는 영역의 대략적인 반경 계산 (위도 차이를 km로 변환)
       final latDiff = _mapNorthLatitude - _mapSouthLatitude;
       final radiusInKm = (latDiff * 111.0) / 2; // 위도 1도 ≈ 111km
       final radiusInMeters = (radiusInKm * 1000).toInt().clamp(500, 20000); // 최소 500m, 최대 20km
 
       print('📐 검색 반경: ${radiusInMeters}m (화면 기반)');
 
-      // 카테고리 그룹 코드 (FD6: 음식점)
-      // 보이는 영역 기반으로 검색
+      // 3. 카카오 로컬 API로 음식점 검색
       final allRestaurants = <RestaurantModel>[];
+      int pageCount = 0;
       
-      // 1페이지부터 3페이지까지 요청
+      // 모든 페이지 가져오기 (API가 끝날 때까지)
       for (int page = 1; page <= 3; page++) {
-        final response = await _kakaoLocalService.searchByCategory(
-          categoryGroupCode: 'FD6',
-          x: _currentMapCenterLng,
-          y: _currentMapCenterLat,
-          radius: radiusInMeters,
-          size: 15,
-          page: page,
-        );
-        
-        final documents = response['documents'] as List<dynamic>? ?? [];
-        if (documents.isEmpty) break;
-        
-        final restaurants = documents
-            .map((doc) => RestaurantModel.fromKakaoApi(doc as Map<String, dynamic>))
-            .toList();
-        
-        allRestaurants.addAll(restaurants);
-        
-        final meta = response['meta'] as Map<String, dynamic>?;
-        final isEnd = meta?['is_end'] as bool? ?? true;
-        if (isEnd) break;
+        try {
+          final response = await _kakaoLocalService.searchByCategory(
+            categoryGroupCode: 'FD6',
+            x: _currentMapCenterLng,
+            y: _currentMapCenterLat,
+            radius: radiusInMeters,
+            size: 15,
+            page: page,
+          );
+          
+          final documents = response['documents'] as List<dynamic>? ?? [];
+          print('📄 페이지 $page: ${documents.length}개 발견');
+          
+          if (documents.isEmpty) {
+            print('📄 페이지 $page: 결과 없음 - 검색 중단');
+            break;
+          }
+          
+          final restaurants = documents
+              .map((doc) => RestaurantModel.fromKakaoApi(doc as Map<String, dynamic>))
+              .toList();
+          
+          allRestaurants.addAll(restaurants);
+          pageCount++;
+          
+          final meta = response['meta'] as Map<String, dynamic>?;
+          final isEnd = meta?['is_end'] as bool? ?? true;
+          print('📄 페이지 $page: is_end=$isEnd');
+          
+          if (isEnd) {
+            print('📄 마지막 페이지 도달 - 검색 완료');
+            break;
+          }
+        } catch (e) {
+          print('⚠️ 페이지 $page 요청 실패: $e');
+          break;
+        }
       }
 
+      print('✅ 검색 완료: 총 ${allRestaurants.length}개 음식점 발견 ($pageCount 페이지)');
+
+      // 4. 전체 식당 목록 저장
       setState(() {
         _restaurants = allRestaurants;
       });
 
-      print('✅ 검색 완료: ${allRestaurants.length}개 음식점 발견');
-
-      // 지도에 마커 표시
+      // 5. 지도에 마커 표시
       await _showRestaurantMarkersOnMap(allRestaurants);
 
-      // 지도 이동 후 보이는 영역 필터링
-      _onMapMoved();
+      // 6. 화면에 보이는 영역만 필터링
+      await _onMapMoved();
 
-      // 결과 안내
+      // 7. 결과 안내
       if (allRestaurants.isEmpty) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('주변에 음식점이 없습니다', style: TextStyle(fontSize: 14.sp)),
-            duration: const Duration(seconds: 2),
-          ),
-        );
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('주변에 음식점이 없습니다', style: TextStyle(fontSize: 14.sp)),
+              duration: const Duration(seconds: 2),
+            ),
+          );
+        }
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('화면에 ${_visibleRestaurants.length}곳 표시 중 (전체 ${allRestaurants.length}곳)', 
-                style: TextStyle(fontSize: 14.sp)),
-            duration: const Duration(seconds: 2),
-            backgroundColor: AppColors.primary,
-          ),
-        );
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                '화면에 ${_visibleRestaurants.length}곳 표시 중 (전체 ${allRestaurants.length}곳)', 
+                style: TextStyle(fontSize: 14.sp)
+              ),
+              duration: const Duration(seconds: 2),
+              backgroundColor: AppColors.primary,
+            ),
+          );
+        }
       }
     } catch (e) {
       print('❌ 음식점 검색 실패: $e');
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('검색 중 오류가 발생했습니다', style: TextStyle(fontSize: 14.sp)),
-          duration: const Duration(seconds: 2),
-          backgroundColor: Colors.red,
-        ),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('검색 중 오류가 발생했습니다', style: TextStyle(fontSize: 14.sp)),
+            duration: const Duration(seconds: 2),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
     } finally {
-      setState(() {
-        _isSearching = false;
-      });
+      if (mounted) {
+        setState(() {
+          _isSearching = false;
+        });
+      }
     }
   }
 
@@ -914,7 +960,7 @@ class _MapPageState extends ConsumerState<MapPage> with WidgetsBindingObserver {
                     children: [
                       Text(
                         _restaurants.isEmpty
-                            ? '"이 위치에서 검색" 버튼을 눌러주세요'
+                            ? '"이 화면에서 검색" 버튼을 눌러주세요'
                             : '화면에 보이는 맛집이 없습니다\n지도를 이동해보세요',
                         textAlign: TextAlign.center,
                         style: TextStyle(
