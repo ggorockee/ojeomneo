@@ -78,3 +78,12 @@ kakao_map_plugin: ^0.3.7
 keytool -exportcert -alias androiddebugkey -keystore ~/.android/debug.keystore -storepass android -keypass android | openssl sha1 -binary | openssl base64
 
 YbiRfmLczScamYWnzeDeN1b2tiM=
+
+
+지도에서 현재 위치를 기준으로 (위아래 중간)
+
+- 모바일에서 보이는 만큼만 표시하고싶어 API 요청을 어떻게 해야하는지 모르겠지만 잘 생각해봐 그리고 주변맛집은 45개가 아니라 현재 보이는 화면의 핀의 갯수가 되야겠지?
+- 슬라이드업하면 현재 화면의 보이는것만 나오고
+- 핀을 누르면 슬라이드업했을때 그것 만 나오고
+
+내말이 정확히 뭔지 알지?
