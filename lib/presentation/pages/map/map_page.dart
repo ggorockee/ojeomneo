@@ -271,71 +271,72 @@ class _MapPageState extends ConsumerState<MapPage> with WidgetsBindingObserver {
             ),
           ),
 
-          // 지도 영역
+          // 지도 영역 (SlidingUpPanel로 구성)
           Expanded(
-            child: Stack(
-              children: [
-                // 카카오맵 (GestureDetector로 감싸서 탭 감지)
-                GestureDetector(
-                  onTapUp: (details) => _onMapTap(details.localPosition),
-                  child: KakaoMap(
-                    onMapReady: _onMapReady,
-                    option: const KakaoMapOption(
-                      position: LatLng(37.6161, 126.7168), // 풍무역
+            child: SlidingUpPanel(
+              controller: _panelController,
+              minHeight: 140.h,
+              maxHeight: MediaQuery.of(context).size.height * 0.7,
+              borderRadius: BorderRadius.vertical(top: Radius.circular(24.r)),
+              panel: _buildRestaurantList(),
+              onPanelSlide: (position) {
+                setState(() {
+                  _panelPosition = position;
+                });
+              },
+              body: Stack(
+                children: [
+                  // 카카오맵 (GestureDetector로 감싸서 탭 감지)
+                  GestureDetector(
+                    onTapUp: (details) {
+                      print('🖱️ 탭 감지: ${details.localPosition}');
+                      _onMapTap(details.localPosition);
+                    },
+                    behavior: HitTestBehavior.opaque,
+                    child: KakaoMap(
+                      onMapReady: _onMapReady,
+                      option: const KakaoMapOption(
+                        position: LatLng(37.6161, 126.7168), // 풍무역
+                      ),
                     ),
                   ),
-                ),
 
-                // "이 위치에서 검색" 버튼 (지도 위에 배치)
-                Positioned(
-                  top: 16.h,
-                  left: 0,
-                  right: 0,
-                  child: Center(
-                    child: Container(
-                      constraints: BoxConstraints(maxWidth: 200.w),
-                      child: _buildSearchHereButton(),
+                  // "이 위치에서 검색" 버튼 (지도 위에 배치)
+                  Positioned(
+                    top: 16.h,
+                    left: 0,
+                    right: 0,
+                    child: Center(
+                      child: Container(
+                        constraints: BoxConstraints(maxWidth: 200.w),
+                        child: _buildSearchHereButton(),
+                      ),
                     ),
                   ),
-                ),
-
-                // 슬라이딩 패널
-                SlidingUpPanel(
-                  controller: _panelController,
-                  minHeight: 140.h,
-                  maxHeight: MediaQuery.of(context).size.height * 0.7,
-                  borderRadius: BorderRadius.vertical(top: Radius.circular(24.r)),
-                  panel: _buildRestaurantList(),
-                  body: const SizedBox.shrink(),
-                  onPanelSlide: (position) {
-                    setState(() {
-                      _panelPosition = position;
-                    });
-                  },
-                ),
-                
-                // 현재 위치 버튼 (슬라이딩 패널과 함께 움직임)
-                Positioned(
-                  bottom: _calculateButtonPosition(),
-                  right: 16.w,
-                  child: FloatingActionButton(
-                    heroTag: 'current_location',
-                    backgroundColor: Colors.white,
-                    elevation: 4,
-                    onPressed: _moveToCurrentLocation,
-                    child: _isLoadingLocation
-                        ? SizedBox(
-                            width: 24.w,
-                            height: 24.h,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              color: AppColors.primary,
-                            ),
-                          )
-                        : Icon(Icons.my_location, color: AppColors.primary, size: 24.sp),
+                  
+                  // 현재 위치 버튼
+                  Positioned(
+                    bottom: 16.h,
+                    right: 16.w,
+                    child: FloatingActionButton(
+                      heroTag: 'current_location',
+                      backgroundColor: Colors.white,
+                      elevation: 4,
+                      onPressed: _moveToCurrentLocation,
+                      child: _isLoadingLocation
+                          ? SizedBox(
+                              width: 24.w,
+                              height: 24.h,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: AppColors.primary,
+                              ),
+                            )
+                          : Icon(Icons.my_location, color: AppColors.primary, size: 24.sp),
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ],
@@ -467,18 +468,6 @@ class _MapPageState extends ConsumerState<MapPage> with WidgetsBindingObserver {
     });
     
     print('👀 화면에 보이는 식당: ${visible.length}개 / 전체: ${_restaurants.length}개');
-  }
-
-  /// 플로팅 버튼 위치 계산 (패널과 함께 움직임)
-  double _calculateButtonPosition() {
-    final minHeight = 140.h;
-    final maxHeight = MediaQuery.of(context).size.height * 0.7;
-    final buttonOffset = 10.h; // 패널 위로 약간 올림
-    
-    // 패널 높이에 따라 버튼 위치 계산
-    // position: 0.0 (닫힘) ~ 1.0 (열림)
-    final currentPanelHeight = minHeight + (maxHeight - minHeight) * _panelPosition;
-    return currentPanelHeight + buttonOffset;
   }
 
   /// 권한이 있으면 자동으로 마커 표시 및 현재 위치로 이동
