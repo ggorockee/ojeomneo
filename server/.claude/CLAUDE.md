@@ -13,6 +13,7 @@ Django 5.2.7 + Django Ninja 기반 REST API 백엔드 서버입니다.
 - **의존성 관리**: uv (pyproject.toml)
 - **데이터베이스**: PostgreSQL (Docker)
 - **서버**: Uvicorn (ASGI - 비동기 지원)
+- **환경변수 관리**: python-dotenv (.env 파일)
 - **Settings Module**: `settings.settings` (비표준 구조 - settings 디렉토리)
 - **Timezone**: Asia/Seoul
 - **언어**: ko-kr
@@ -28,6 +29,10 @@ source .venv/bin/activate
 uv sync                           # uv.lock 기반 설치
 uv add <package>                  # 패키지 추가
 uv pip list                       # 설치된 패키지 확인
+
+# 환경변수 설정
+cp .env.example .env              # .env 파일 생성
+# .env 파일을 열어서 DATABASE 정보와 SECRET_KEY 수정
 ```
 
 ### 개발 서버
@@ -157,9 +162,43 @@ python manage.py check                       # 프로젝트 설정 검증
 - 새로운 API 엔드포인트 추가 시 `api/v1/` 디렉토리에 모듈 생성
 - Auto-generated API docs: `http://localhost:8000/v1/docs` (개발 중 확인 가능)
 
-### SECRET_KEY 관리
-- 현재 settings.py에 하드코딩된 개발용 키 존재 (settings.py:23)
-- 프로덕션 배포 전 환경변수 기반 관리로 전환 필요
+### 환경변수 관리 (.env)
+- **라이브러리**: python-dotenv
+- **환경변수 파일**: `.env` (gitignore에 추가됨)
+- **예제 파일**: `.env.example` (버전 관리에 포함)
+- **로딩**: `settings.py`에서 자동 로드됨
+
+**환경변수 목록**:
+```bash
+# Django Settings
+SECRET_KEY=your-secret-key-here
+DEBUG=True
+
+# Database Configuration
+DB_ENGINE=django.db.backends.postgresql
+DB_NAME=your_database_name
+DB_USER=your_database_user
+DB_PASSWORD=your_database_password
+DB_HOST=localhost
+DB_PORT=5432
+```
+
+**초기 설정**:
+```bash
+# 1. .env.example을 복사하여 .env 생성
+cp .env.example .env
+
+# 2. .env 파일을 열어 실제 값으로 변경
+vim .env
+
+# 3. 설정 확인
+python manage.py check
+```
+
+**주의사항**:
+- `.env` 파일은 **절대 커밋하지 말 것** (.gitignore에 포함됨)
+- 프로덕션 환경에서는 환경변수를 시스템 레벨에서 주입
+- SECRET_KEY는 반드시 강력한 랜덤 키로 변경 필요
 
 ### 가상환경
 - `.venv/` 사용 중 - 항상 활성화된 상태에서 작업
@@ -203,11 +242,14 @@ python manage.py check                       # 프로젝트 설정 검증
 ```
 tests/
 ├── __init__.py
+├── test_env_config.py         # 환경변수 설정 테스트
+├── test_database_async.py     # Database utility async 테스트
 └── api/
     ├── __init__.py
     └── v1/
         ├── __init__.py
-        └── test_healthcheck.py    # healthcheck API 테스트
+        ├── test_healthcheck.py        # healthcheck API 동기 테스트
+        └── test_healthcheck_async.py  # healthcheck API 비동기 테스트
 ```
 
 ### TDD 워크플로우
@@ -226,6 +268,11 @@ tests/
 - Mock을 활용한 실패 시나리오 테스트 포함
 
 ### 구현된 테스트
+- **환경변수 설정**: 10개 테스트 (100% 통과)
+  - `tests/test_env_config.py`
+  - SECRET_KEY, DEBUG, DATABASE 설정 로딩 검증
+  - .env 파일 존재 확인, python-dotenv 패키지 확인
+  - 환경변수 fallback 메커니즘 테스트
 - **Healthcheck API (동기)**: 11개 테스트 (100% 통과)
   - `tests/api/v1/test_healthcheck.py`
 - **Healthcheck API (비동기)**: 7개 테스트 (100% 통과)
@@ -238,12 +285,17 @@ tests/
   - `tests/test_accounts.py`
   - User 생성, Superuser 생성, Email 정규화, 필드 검증 등
 
+**전체 테스트**: 46개 (100% 통과)
+
 ## 프로젝트 구조
 
 ```
 server/
 ├── .claude/
 │   └── CLAUDE.md          # 프로젝트 문서
+├── .env                   # 환경변수 파일 (gitignore)
+├── .env.example           # 환경변수 예제 파일
+├── .gitignore             # Git 제외 파일 (.env 포함)
 ├── accounts/              # 사용자 인증 앱
 │   ├── managers.py        # Custom UserManager
 │   ├── models.py          # Custom User Model (email 인증)
@@ -259,15 +311,16 @@ server/
 │   └── utils/
 │       └── database.py    # DB 연결 체크 유틸리티 (sync/async)
 ├── settings/
-│   ├── settings.py        # PostgreSQL + 컬러 로깅 + Custom User
+│   ├── settings.py        # 환경변수 기반 설정 (dotenv)
 │   └── urls.py
 ├── tests/
-│   ├── test_accounts.py   # User Model 테스트
+│   ├── test_accounts.py        # User Model 테스트
+│   ├── test_env_config.py      # 환경변수 설정 테스트
 │   ├── test_database_async.py  # Database utility async 테스트
 │   └── api/
 │       └── v1/
-│           ├── test_healthcheck.py  # Healthcheck 동기 테스트
-│           └── test_healthcheck_async.py  # Healthcheck 비동기 테스트
+│           ├── test_healthcheck.py       # Healthcheck 동기 테스트
+│           └── test_healthcheck_async.py # Healthcheck 비동기 테스트
 └── test_database/
     └── docker-compose.yml # PostgreSQL 컨테이너
 ```
