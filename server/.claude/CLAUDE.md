@@ -239,18 +239,37 @@ python manage.py check
 ## 테스트 주도 개발 (TDD)
 
 ### 테스트 구조
+Django 권장 방식에 따라 **각 앱(모듈) 내부에 `tests/` 디렉토리**를 둡니다.
+
 ```
-tests/
-├── __init__.py
-├── test_env_config.py         # 환경변수 설정 테스트
-├── test_database_async.py     # Database utility async 테스트
-└── api/
+accounts/
+└── tests/
+    ├── __init__.py
+    └── test_models.py         # User 모델 테스트
+
+api/
+└── tests/
     ├── __init__.py
     └── v1/
         ├── __init__.py
         ├── test_healthcheck.py        # healthcheck API 동기 테스트
         └── test_healthcheck_async.py  # healthcheck API 비동기 테스트
+
+core/
+└── tests/
+    ├── __init__.py
+    └── test_database_async.py # Database utility async 테스트
+
+settings/
+└── tests/
+    ├── __init__.py
+    └── test_env_config.py     # 환경변수 설정 테스트
 ```
+
+**원칙**:
+- 각 앱의 테스트는 해당 앱의 `tests/` 디렉토리에 위치
+- 테스트 파일명은 `test_*.py` 형식
+- 앱 경계를 넘는 통합 테스트는 가장 관련 있는 앱에 위치
 
 ### TDD 워크플로우
 1. **테스트 작성**: 기능 구현 전 테스트 케이스 먼저 작성
@@ -269,20 +288,20 @@ tests/
 
 ### 구현된 테스트
 - **환경변수 설정**: 10개 테스트 (100% 통과)
-  - `tests/test_env_config.py`
+  - `settings/tests/test_env_config.py`
   - SECRET_KEY, DEBUG, DATABASE 설정 로딩 검증
   - .env 파일 존재 확인, python-dotenv 패키지 확인
   - 환경변수 fallback 메커니즘 테스트
 - **Healthcheck API (동기)**: 11개 테스트 (100% 통과)
-  - `tests/api/v1/test_healthcheck.py`
+  - `api/tests/v1/test_healthcheck.py`
 - **Healthcheck API (비동기)**: 7개 테스트 (100% 통과)
-  - `tests/api/v1/test_healthcheck_async.py`
+  - `api/tests/v1/test_healthcheck_async.py`
   - AsyncClient를 사용한 async endpoint 테스트
 - **Database Utility (비동기)**: 4개 테스트 (100% 통과)
-  - `tests/test_database_async.py`
+  - `core/tests/test_database_async.py`
   - sync_to_async wrapper 검증
 - **Custom User Model**: 14개 테스트 (100% 통과)
-  - `tests/test_accounts.py`
+  - `accounts/tests/test_models.py`
   - User 생성, Superuser 생성, Email 정규화, 필드 검증 등
 
 **전체 테스트**: 46개 (100% 통과)
@@ -300,27 +319,34 @@ server/
 │   ├── managers.py        # Custom UserManager
 │   ├── models.py          # Custom User Model (email 인증)
 │   ├── admin.py           # Admin 패널 설정
-│   └── migrations/
+│   ├── migrations/
+│   └── tests/             # accounts 앱 테스트
+│       ├── __init__.py
+│       └── test_models.py # User 모델 테스트
 ├── api/
+│   ├── tests/             # api 앱 테스트
+│   │   ├── __init__.py
+│   │   └── v1/
+│   │       ├── __init__.py
+│   │       ├── test_healthcheck.py       # Healthcheck 동기 테스트
+│   │       └── test_healthcheck_async.py # Healthcheck 비동기 테스트
 │   └── v1/
 │       ├── api.py         # v1 API 라우터
 │       └── healthcheck.py # DB 연결 체크 포함 healthcheck
 ├── core/
 │   ├── models/
 │   │   └── base.py        # CoreModel (created_at, updated_at)
-│   └── utils/
-│       └── database.py    # DB 연결 체크 유틸리티 (sync/async)
+│   ├── utils/
+│   │   └── database.py    # DB 연결 체크 유틸리티 (sync/async)
+│   └── tests/             # core 앱 테스트
+│       ├── __init__.py
+│       └── test_database_async.py  # Database utility async 테스트
 ├── settings/
 │   ├── settings.py        # 환경변수 기반 설정 (dotenv)
-│   └── urls.py
-├── tests/
-│   ├── test_accounts.py        # User Model 테스트
-│   ├── test_env_config.py      # 환경변수 설정 테스트
-│   ├── test_database_async.py  # Database utility async 테스트
-│   └── api/
-│       └── v1/
-│           ├── test_healthcheck.py       # Healthcheck 동기 테스트
-│           └── test_healthcheck_async.py # Healthcheck 비동기 테스트
+│   ├── urls.py
+│   └── tests/             # settings 테스트
+│       ├── __init__.py
+│       └── test_env_config.py      # 환경변수 설정 테스트
 └── test_database/
     └── docker-compose.yml # PostgreSQL 컨테이너
 ```
