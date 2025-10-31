@@ -14,6 +14,7 @@ Django 5.2.7 + Django Ninja 기반 REST API 백엔드 서버입니다.
 - **데이터베이스**: PostgreSQL (Docker)
 - **서버**: Uvicorn (ASGI - 비동기 지원)
 - **환경변수 관리**: python-dotenv (.env 파일)
+- **Admin**: Django Unfold (Modern Admin UI)
 - **Settings Module**: `settings.settings` (비표준 구조 - settings 디렉토리)
 - **Timezone**: Asia/Seoul
 - **언어**: ko-kr
@@ -93,6 +94,8 @@ python manage.py createsuperuser             # 관리자 계정 생성
 python manage.py shell                       # Django 쉘 (ORM 테스트용)
 python manage.py shell_plus                  # 향상된 쉘 (django-extensions 설치 필요)
 python manage.py check                       # 프로젝트 설정 검증
+python manage.py collectstatic               # 정적 파일 수집 (배포 전 필수)
+python manage.py collectstatic --noinput     # 입력 없이 정적 파일 수집
 ```
 
 ## 아키텍처 특징
@@ -236,6 +239,26 @@ python manage.py check
   - 🔵 DEBUG: 청록색 (디버그)
 - 데이터베이스 연결 상태는 자동으로 로그에 색상으로 표시됨
 
+### Django Unfold Admin
+- **라이브러리**: django-unfold (Modern Admin UI)
+- **설치 위치**: `INSTALLED_APPS`에서 `django.contrib.admin` **앞에** 위치 필수
+- **설정**:
+  ```python
+  UNFOLD = {
+      "SITE_TITLE": "오점너 관리자",
+      "SITE_HEADER": "오점너 (오늘 점심 뭐 먹을래?)",
+      "SITE_FAVICON": "/static/favicon.ico",
+  }
+  ```
+- **정적 파일**: `python manage.py collectstatic` 실행 필수
+- **STATIC_ROOT**: `BASE_DIR / 'staticfiles'`
+- **접속**: `http://localhost:8000/admin/`
+- **특징**:
+  - 모던하고 반응형 UI
+  - 다크 모드 지원
+  - 개선된 UX/UI
+  - Django 기본 Admin과 호환
+
 ## 테스트 주도 개발 (TDD)
 
 ### 테스트 구조
@@ -292,6 +315,11 @@ settings/
   - SECRET_KEY, DEBUG, DATABASE 설정 로딩 검증
   - .env 파일 존재 확인, python-dotenv 패키지 확인
   - 환경변수 fallback 메커니즘 테스트
+- **Admin 설정**: 10개 테스트 (100% 통과)
+  - `settings/tests/test_admin_config.py`
+  - Unfold 설치 순서 검증, UNFOLD 설정 확인
+  - STATIC_ROOT, STATIC_URL 설정 검증
+  - Admin 접근성 및 로그인 테스트
 - **Healthcheck API (동기)**: 11개 테스트 (100% 통과)
   - `api/tests/v1/test_healthcheck.py`
 - **Healthcheck API (비동기)**: 7개 테스트 (100% 통과)
@@ -304,7 +332,7 @@ settings/
   - `accounts/tests/test_models.py`
   - User 생성, Superuser 생성, Email 정규화, 필드 검증 등
 
-**전체 테스트**: 46개 (100% 통과)
+**전체 테스트**: 56개 (100% 통과)
 
 ## 프로젝트 구조
 
