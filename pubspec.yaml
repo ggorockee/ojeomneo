@@ -43,7 +43,7 @@ dependencies:
   dio: ^5.4.0
 
   # 지도
-  kakao_map_sdk: ^1.2.1
+  google_maps_flutter: ^2.13.1
 
   # 위치
   geolocator: ^10.1.0

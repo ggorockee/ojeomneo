@@ -2,7 +2,7 @@ import 'dart:async';
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:kakao_map_sdk/kakao_map_sdk.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:sliding_up_panel/sliding_up_panel.dart';
@@ -13,7 +13,7 @@ import '../../providers/location_provider.dart';
 import '../../widgets/location_permission_dialog.dart';
 
 class MapPage extends ConsumerStatefulWidget {
-  final String? category; // 카테고리 필터링용
+  final String? category;
 
   const MapPage({super.key, this.category});
 
@@ -22,43 +22,34 @@ class MapPage extends ConsumerStatefulWidget {
 }
 
 class _MapPageState extends ConsumerState<MapPage> with WidgetsBindingObserver {
-  late KakaoMapController _mapController;
-  List<RestaurantModel> _restaurants = []; // 전체 검색된 식당 목록
-  List<RestaurantModel> _visibleRestaurants = []; // 현재 화면에 보이는 식당 목록
-  RestaurantModel? _selectedRestaurant; // 선택된 식당 (핀 클릭 시)
+  GoogleMapController? _mapController;
+  List<RestaurantModel> _restaurants = [];
+  List<RestaurantModel> _visibleRestaurants = [];
+  RestaurantModel? _selectedRestaurant;
   bool _isLoadingLocation = false;
-  bool _dialogShown = false; // 다이얼로그 중복 표시 방지
-  bool _isMapReady = false; // 지도 준비 상태
-  final Map<String, Poi> _markers = {}; // 지도에 추가된 마커 목록 (key: restaurant id)
-  double _panelPosition = 0.0; // 슬라이딩 패널 위치 (0.0 ~ 1.0)
-  
-  // 카카오 로컬 API 서비스
+  bool _dialogShown = false;
+  bool _isMapReady = false;
+  Set<Marker> _markers = {};
+  double _panelPosition = 0.0;
+
   final _kakaoLocalService = KakaoLocalService();
-  
-  // 현재 지도 중심 좌표 (기본값: 풍무역)
+
   double _currentMapCenterLat = 37.6161;
   double _currentMapCenterLng = 126.7168;
-  
-  // 현재 지도 보이는 영역 (bounds)
+
   double _mapNorthLatitude = 37.6161;
   double _mapSouthLatitude = 37.6161;
   double _mapWestLongitude = 126.7168;
   double _mapEastLongitude = 126.7168;
-  
-  // 검색 로딩 상태
+
   bool _isSearching = false;
 
-  // 슬라이딩 패널 컨트롤러
   final PanelController _panelController = PanelController();
-
-  // 검색 관련
   final TextEditingController _searchController = TextEditingController();
-  
-  // 지도 이동 감지를 위한 타이머
+
   Timer? _mapMoveTimer;
   LatLng? _lastCameraPosition;
 
-  // 카테고리 필터
   String? _selectedCategory;
   final List<String> _categories = [
     '전체',
@@ -76,11 +67,9 @@ class _MapPageState extends ConsumerState<MapPage> with WidgetsBindingObserver {
   void initState() {
     super.initState();
     print('🚀 MapPage initState 시작');
-    
-    // 라이프사이클 옵저버 등록
+
     WidgetsBinding.instance.addObserver(this);
 
-    // 페이지 진입 시 권한 확인 및 다이얼로그 표시
     WidgetsBinding.instance.addPostFrameCallback((_) {
       print('📍 페이지 로드 완료 - 권한 확인 시작');
       _checkPermissionAndShowDialog();
@@ -89,10 +78,10 @@ class _MapPageState extends ConsumerState<MapPage> with WidgetsBindingObserver {
 
   @override
   void dispose() {
-    // 라이프사이클 옵저버 제거
     WidgetsBinding.instance.removeObserver(this);
     _searchController.dispose();
     _mapMoveTimer?.cancel();
+    _mapController?.dispose();
     super.dispose();
   }
 
@@ -100,11 +89,9 @@ class _MapPageState extends ConsumerState<MapPage> with WidgetsBindingObserver {
   void didChangeAppLifecycleState(AppLifecycleState state) {
     super.didChangeAppLifecycleState(state);
 
-    // 앱이 다시 활성화되면 권한 재확인
     if (state == AppLifecycleState.resumed) {
       ref.read(locationProvider.notifier).recheckPermissionOnResume();
 
-      // 권한이 허용되었으면 마커 표시
       final locationState = ref.read(locationProvider);
       if (locationState.isGranted && _isMapReady) {
         print('🔄 앱 재개 - 권한 있음, 마커 표시');
@@ -113,11 +100,9 @@ class _MapPageState extends ConsumerState<MapPage> with WidgetsBindingObserver {
     }
   }
 
-  /// 권한 확인 및 다이얼로그 표시
   Future<void> _checkPermissionAndShowDialog() async {
     print('🔍 _checkPermissionAndShowDialog 시작');
 
-    // Provider에서 권한 확인
     await ref.read(locationProvider.notifier).checkPermission();
 
     final locationState = ref.read(locationProvider);
@@ -126,20 +111,17 @@ class _MapPageState extends ConsumerState<MapPage> with WidgetsBindingObserver {
     print('   _dialogShown: $_dialogShown');
     print('   mounted: $mounted');
 
-    // 권한이 필요하고 아직 다이얼로그를 표시하지 않았다면
     if (locationState.needsPermission && !_dialogShown && mounted) {
       print('✅ 다이얼로그 표시 조건 충족 - 표시 시작');
       _dialogShown = true;
       await _showPermissionDialog();
     } else if (locationState.isGranted) {
       print('✅ 권한 이미 허용됨 - onMapReady에서 마커 표시 예정');
-      // 권한이 있으면 onMapReady에서 마커가 표시됨 (지도 준비 후)
     } else {
       print('⚠️ 다이얼로그 표시 안 됨 - 조건 미충족');
     }
   }
 
-  /// 권한 다이얼로그 표시
   Future<void> _showPermissionDialog() async {
     print('🎯 _showPermissionDialog 호출됨');
     final locationState = ref.read(locationProvider);
@@ -153,7 +135,6 @@ class _MapPageState extends ConsumerState<MapPage> with WidgetsBindingObserver {
         print('❌ 사용자가 권한 거절');
         Navigator.of(context).pop();
         _dialogShown = false;
-        // 권한 없이 지도만 표시
       },
       onAllow: () async {
         print('✅ 사용자가 권한 허용 클릭');
@@ -163,7 +144,6 @@ class _MapPageState extends ConsumerState<MapPage> with WidgetsBindingObserver {
     );
   }
 
-  /// 허용 버튼 클릭 처리
   Future<void> _handlePermissionAllow() async {
     print('🔑 _handlePermissionAllow 시작');
     final locationNotifier = ref.read(locationProvider.notifier);
@@ -173,24 +153,20 @@ class _MapPageState extends ConsumerState<MapPage> with WidgetsBindingObserver {
 
     if (currentState.isPermanentlyDenied) {
       print('⚠️ 영구 거부 상태 → 설정 열기');
-      // 영구 거부 상태 → 설정 열기
       await locationNotifier.openSettings();
-      _dialogShown = false; // 설정에서 돌아올 때 재확인 위해 리셋
+      _dialogShown = false;
     } else {
       print('📱 권한 요청 시작...');
-      // 일반 거부 상태 → 권한 요청
       final result = await locationNotifier.requestPermission();
       print('📱 권한 요청 결과: $result');
 
       if (result == LocationPermission.always ||
           result == LocationPermission.whileInUse) {
         print('✅ 권한 획득 성공!');
-        // 권한 획득 성공 → 마커 표시 및 현재 위치로 이동
         _showRestaurantMarkers();
         await _moveToCurrentLocation();
       } else if (result == LocationPermission.deniedForever) {
         print('⚠️ 영구 거부됨 → 다이얼로그 재표시');
-        // 이번에 영구 거부됨 → 설정 안내 다이얼로그 재표시
         _dialogShown = false;
         _checkPermissionAndShowDialog();
       } else {
@@ -204,25 +180,21 @@ class _MapPageState extends ConsumerState<MapPage> with WidgetsBindingObserver {
   Widget build(BuildContext context) {
     print('🏗️ MapPage build 호출됨');
     final topPadding = MediaQuery.of(context).padding.top;
-    
+
     return Scaffold(
       backgroundColor: Colors.white,
       body: Column(
         children: [
-          // 상단 흰색 영역 (검색바 + 카테고리)
           Container(
             color: Colors.white,
             child: Column(
               children: [
-                // 상단 여백
                 SizedBox(height: topPadding),
-                
-                // 검색바
+
                 Padding(
                   padding: EdgeInsets.all(16.w),
                   child: Row(
                     children: [
-                      // 뒤로가기 버튼
                       Container(
                         decoration: BoxDecoration(
                           color: AppColors.background,
@@ -236,7 +208,6 @@ class _MapPageState extends ConsumerState<MapPage> with WidgetsBindingObserver {
                       ),
                       SizedBox(width: 12.w),
 
-                      // 검색바
                       Expanded(
                         child: Container(
                           padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
@@ -264,14 +235,12 @@ class _MapPageState extends ConsumerState<MapPage> with WidgetsBindingObserver {
                   ),
                 ),
 
-                // 카테고리 필터
                 _buildCategoryFilter(),
                 SizedBox(height: 8.h),
               ],
             ),
           ),
 
-          // 지도 영역
           Expanded(
             child: SlidingUpPanel(
               controller: _panelController,
@@ -280,7 +249,7 @@ class _MapPageState extends ConsumerState<MapPage> with WidgetsBindingObserver {
               borderRadius: BorderRadius.vertical(top: Radius.circular(24.r)),
               panel: _buildRestaurantList(),
               backdropEnabled: false,
-              renderPanelSheet: false, // 패널을 투명하게 렌더링하지 않음
+              renderPanelSheet: false,
               onPanelSlide: (position) {
                 setState(() {
                   _panelPosition = position;
@@ -288,23 +257,24 @@ class _MapPageState extends ConsumerState<MapPage> with WidgetsBindingObserver {
               },
               body: Stack(
                 children: [
-                  // 카카오맵 (GestureDetector로 감싸서 탭 감지)
                   Positioned.fill(
-                    child: GestureDetector(
-                      onTapDown: (details) {
-                        print('🖱️ 탭 감지: ${details.localPosition}');
-                        _onMapTap(details.localPosition);
-                      },
-                      child: KakaoMap(
-                        onMapReady: _onMapReady,
-                        option: const KakaoMapOption(
-                          position: LatLng(37.6161, 126.7168), // 풍무역
-                        ),
+                    child: GoogleMap(
+                      onMapCreated: _onMapReady,
+                      initialCameraPosition: CameraPosition(
+                        target: LatLng(_currentMapCenterLat, _currentMapCenterLng),
+                        zoom: 15.0,
                       ),
+                      markers: _markers,
+                      myLocationEnabled: true,
+                      myLocationButtonEnabled: false,
+                      onCameraMove: (CameraPosition position) {
+                        _currentMapCenterLat = position.target.latitude;
+                        _currentMapCenterLng = position.target.longitude;
+                      },
+                      onCameraIdle: _onMapMoved,
                     ),
                   ),
 
-                  // "이 위치에서 검색" 버튼 (지도 위에 배치)
                   Positioned(
                     top: 16.h,
                     left: 0,
@@ -316,8 +286,7 @@ class _MapPageState extends ConsumerState<MapPage> with WidgetsBindingObserver {
                       ),
                     ),
                   ),
-                  
-                  // 현재 위치 버튼 (지도 위에 고정)
+
                   Positioned(
                     bottom: 16.h,
                     right: 16.w,
@@ -347,104 +316,43 @@ class _MapPageState extends ConsumerState<MapPage> with WidgetsBindingObserver {
     );
   }
 
-  // 예제 코드 구조를 따라서 onMapReady 콜백 분리
-  void _onMapReady(KakaoMapController controller) {
-    print('🗺️🗺️🗺️ 카카오 지도가 정상적으로 불러와졌습니다!');
+  void _onMapReady(GoogleMapController controller) {
+    print('🗺️🗺️🗺️ 구글 지도가 정상적으로 불러와졌습니다!');
     _mapController = controller;
     setState(() {
       _isMapReady = true;
     });
     print('✅ 지도 컨트롤러 설정 완료');
-    
-    // 지도 이동 감지 타이머 시작
-    _startMapMoveDetection();
-    
-    // 권한이 있으면 현재 위치로 이동 및 마커 표시
+
     _moveToCurrentLocationIfPermitted();
   }
 
-  /// 지도 이동 감지 타이머 시작
-  void _startMapMoveDetection() {
-    _mapMoveTimer = Timer.periodic(const Duration(milliseconds: 500), (timer) async {
-      if (!_isMapReady || !mounted) return;
-      
-      try {
-        final cameraPosition = await _mapController.getCameraPosition();
-        final currentPos = cameraPosition.position;
-        
-        // 이전 위치와 현재 위치를 비교
-        if (_lastCameraPosition == null ||
-            (_lastCameraPosition!.latitude - currentPos.latitude).abs() > 0.0001 ||
-            (_lastCameraPosition!.longitude - currentPos.longitude).abs() > 0.0001) {
-          
-          _lastCameraPosition = currentPos;
-          
-          // 지도가 이동했으면 필터링 업데이트
-          if (_restaurants.isNotEmpty) {
-            await _onMapMoved();
-          }
-        }
-      } catch (e) {
-        // 에러 무시 (지도가 준비되지 않았을 수 있음)
-      }
-    });
-  }
-
-  /// 지도 이동 후 호출 - 보이는 영역에 맞춰 필터링
-  /// (카카오맵 SDK에 onCameraIdle이 없어서 수동으로 호출)
   Future<void> _onMapMoved() async {
     if (!_isMapReady) return;
-    
+
     print('📸 지도 이동 완료 - 보이는 영역 계산');
     await _updateVisibleArea();
     _filterVisibleRestaurants();
   }
 
-  /// 현재 지도에서 보이는 영역 계산
   Future<void> _updateVisibleArea() async {
-    if (!_isMapReady) return;
-    
+    if (!_isMapReady || _mapController == null) return;
+
     try {
-      // 카카오맵 SDK에서 현재 카메라 위치 가져오기
-      final cameraPosition = await _mapController.getCameraPosition();
-      
-      // 지도 중심 좌표 업데이트
-      _currentMapCenterLat = cameraPosition.position.latitude;
-      _currentMapCenterLng = cameraPosition.position.longitude;
-      
-      print('📍 현재 지도 중심: lat=$_currentMapCenterLat, lng=$_currentMapCenterLng');
-      
-      // 줌 레벨에 따라 보이는 영역 계산
-      // 줌 레벨이 높을수록 더 좁은 영역
-      final zoomLevel = cameraPosition.zoomLevel;
-      
-      // 줌 레벨에 따른 영역 크기 조정
-      // zoomLevel 15 = 약 0.01도 (1.1km)
-      // zoomLevel 13 = 약 0.02도 (2.2km)
-      final delta = 0.02 / (zoomLevel / 13.0);
-      
-      _mapNorthLatitude = _currentMapCenterLat + delta;
-      _mapSouthLatitude = _currentMapCenterLat - delta;
-      _mapEastLongitude = _currentMapCenterLng + delta;
-      _mapWestLongitude = _currentMapCenterLng - delta;
-      
-      print('🌍 보이는 영역: N=$_mapNorthLatitude, S=$_mapSouthLatitude, W=$_mapWestLongitude, E=$_mapEastLongitude (zoom=$zoomLevel)');
+      final bounds = await _mapController!.getVisibleRegion();
+
+      _mapNorthLatitude = bounds.northeast.latitude;
+      _mapSouthLatitude = bounds.southwest.latitude;
+      _mapEastLongitude = bounds.northeast.longitude;
+      _mapWestLongitude = bounds.southwest.longitude;
+
+      print('🌍 보이는 영역: N=$_mapNorthLatitude, S=$_mapSouthLatitude, W=$_mapWestLongitude, E=$_mapEastLongitude');
     } catch (e) {
-      print('⚠️ 카메라 위치 가져오기 실패: $e');
-      // 폴백: 기존 값 사용
-      final double latitudeDelta = 0.015;
-      final double longitudeDelta = 0.015;
-      
-      _mapNorthLatitude = _currentMapCenterLat + latitudeDelta;
-      _mapSouthLatitude = _currentMapCenterLat - latitudeDelta;
-      _mapEastLongitude = _currentMapCenterLng + longitudeDelta;
-      _mapWestLongitude = _currentMapCenterLng - longitudeDelta;
+      print('⚠️ 보이는 영역 가져오기 실패: $e');
     }
   }
 
-  /// 보이는 영역 내의 식당만 필터링
   void _filterVisibleRestaurants() {
-    // 선택된 식당이 있으면 그것만 표시
     if (_selectedRestaurant != null) {
       setState(() {
         _visibleRestaurants = [_selectedRestaurant!];
@@ -453,27 +361,25 @@ class _MapPageState extends ConsumerState<MapPage> with WidgetsBindingObserver {
       return;
     }
 
-    // 보이는 영역 내의 식당만 필터링
     final visible = _restaurants.where((restaurant) {
       final lat = restaurant.latitude;
       final lng = restaurant.longitude;
-      
+
       final isVisible = lat >= _mapSouthLatitude &&
           lat <= _mapNorthLatitude &&
           lng >= _mapWestLongitude &&
           lng <= _mapEastLongitude;
-      
+
       return isVisible;
     }).toList();
 
     setState(() {
       _visibleRestaurants = visible;
     });
-    
+
     print('👀 화면에 보이는 식당: ${visible.length}개 / 전체: ${_restaurants.length}개');
   }
 
-  /// 권한이 있으면 자동으로 마커 표시 및 현재 위치로 이동
   Future<void> _moveToCurrentLocationIfPermitted() async {
     await ref.read(locationProvider.notifier).checkPermission();
     final locationState = ref.read(locationProvider);
@@ -482,18 +388,15 @@ class _MapPageState extends ConsumerState<MapPage> with WidgetsBindingObserver {
 
     if (locationState.isGranted) {
       print('✅ 권한 있음 - 마커 표시 및 위치 이동');
-      // 마커 표시
       await _showRestaurantMarkers();
-      // 현재 위치로 이동
       await _moveToCurrentLocation();
     } else {
       print('❌ 권한 없음 - 대기');
     }
   }
 
-  /// 현재 위치로 이동
   Future<void> _moveToCurrentLocation() async {
-    if (!_isMapReady) return;
+    if (!_isMapReady || _mapController == null) return;
 
     setState(() {
       _isLoadingLocation = true;
@@ -503,7 +406,6 @@ class _MapPageState extends ConsumerState<MapPage> with WidgetsBindingObserver {
       final locationNotifier = ref.read(locationProvider.notifier);
       final locationState = ref.read(locationProvider);
 
-      // 권한이 없으면 종료
       if (!locationState.isGranted) {
         print('❌ 권한 없음 - 위치 이동 불가');
         ScaffoldMessenger.of(context).showSnackBar(
@@ -515,7 +417,6 @@ class _MapPageState extends ConsumerState<MapPage> with WidgetsBindingObserver {
         return;
       }
 
-      // Provider에서 현재 위치 가져오기
       if (locationState.position == null) {
         await locationNotifier.getCurrentPosition();
       }
@@ -523,24 +424,23 @@ class _MapPageState extends ConsumerState<MapPage> with WidgetsBindingObserver {
       final position = ref.read(locationProvider).position;
       if (position != null) {
         print('✅ 현재 위치: ${position.latitude}, ${position.longitude}');
-        
-        // 지도 중심 좌표 업데이트
+
         _currentMapCenterLat = position.latitude;
         _currentMapCenterLng = position.longitude;
-        
-        // 카카오맵 SDK 카메라 이동
-        await _mapController.moveCamera(
-          CameraUpdate.newCenterPosition(
-            LatLng(position.latitude, position.longitude),
+
+        await _mapController!.animateCamera(
+          CameraUpdate.newCameraPosition(
+            CameraPosition(
+              target: LatLng(position.latitude, position.longitude),
+              zoom: 15.0,
+            ),
           ),
-          animation: const CameraAnimation(500), // 0.5초 애니메이션
         );
-        
-        // 지도 이동 후 보이는 영역 업데이트 및 필터링
-        _onMapMoved();
-        
+
+        await _onMapMoved();
+
         print('🗺️ 지도 이동 완료');
-        
+
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('현재 위치로 이동했습니다', style: TextStyle(fontSize: 14.sp)),
@@ -575,14 +475,10 @@ class _MapPageState extends ConsumerState<MapPage> with WidgetsBindingObserver {
     }
   }
 
-  // 주변 식당 마커 표시 (사용 안함 - 대신 _searchRestaurantsAtCurrentLocation 사용)
   Future<void> _showRestaurantMarkers() async {
     print('📍 _showRestaurantMarkers 호출됨 (deprecated)');
-    // 이 함수는 더 이상 사용하지 않음
-    // 대신 "이 위치에서 검색" 버튼을 통해 _searchRestaurantsAtCurrentLocation 호출
   }
 
-  /// 검색 결과를 지도에 마커로 표시 (카카오맵 베스트 프랙티스)
   Future<void> _showRestaurantMarkersOnMap(List<RestaurantModel> restaurants) async {
     if (!_isMapReady) {
       print('❌ 지도가 준비되지 않음');
@@ -590,164 +486,83 @@ class _MapPageState extends ConsumerState<MapPage> with WidgetsBindingObserver {
     }
 
     try {
-      // 1. 기존 마커 모두 제거
       print('🗑️ 기존 마커 ${_markers.length}개 제거 시작');
-      for (var marker in _markers.values) {
-        try {
-          await _mapController.labelLayer.removePoi(marker);
-        } catch (e) {
-          print('⚠️ 마커 제거 실패: $e');
-        }
-      }
-      _markers.clear();
-      print('✅ 기존 마커 제거 완료');
 
-      // 2. 마커 스타일 정의 (카카오맵 베스트 프랙티스)
-      // assets/icons/marker.png 파일 사용
-      // 20x30px 파란색 위치 마커 PNG
-      final poiStyle = PoiStyle(
-        icon: KImage.fromAsset('assets/icons/marker.png', 20, 30),
-      );
+      final newMarkers = <Marker>{};
 
-      // 3. 새 마커 추가
       print('📍 ${restaurants.length}개 마커 추가 시작');
-      
+
       for (final restaurant in restaurants) {
         try {
-          // 마커 추가 (카카오맵 공식 방법)
-          // 참고: 카카오맵 SDK는 마커 클릭 이벤트를 직접 지원하지 않음
-          // 대신 리스트에서 식당을 선택하면 지도에 표시됩니다
-          final poi = await _mapController.labelLayer.addPoi(
-            LatLng(restaurant.latitude, restaurant.longitude),
-            style: poiStyle,
+          final marker = Marker(
+            markerId: MarkerId(restaurant.id),
+            position: LatLng(restaurant.latitude, restaurant.longitude),
+            infoWindow: InfoWindow(
+              title: restaurant.name,
+              snippet: restaurant.category,
+            ),
+            onTap: () => _onRestaurantSelected(restaurant),
           );
-          
-          _markers[restaurant.id] = poi; // ID를 key로 사용
+
+          newMarkers.add(marker);
           print('  ✅ 마커 추가 성공: ${restaurant.name}');
         } catch (e) {
           print('  ❌ 마커 추가 실패 (${restaurant.name}): $e');
         }
       }
 
+      setState(() {
+        _markers = newMarkers;
+      });
+
       print('🎯 마커 추가 완료: ${_markers.length}개');
-      
+
     } catch (e) {
       print('❌❌❌ 마커 표시 중 오류: $e');
-      print('   💡 assets/icons/marker.png 파일이 있는지 확인하세요');
-      print('   💡 pubspec.yaml에 assets 경로가 등록되었는지 확인하세요');
     }
   }
 
-  /// 두 좌표 사이의 거리를 미터로 계산 (Haversine formula)
   double _calculateDistance(double lat1, double lon1, double lat2, double lon2) {
-    const earthRadius = 6371000; // 지구 반지름 (미터)
-    
+    const earthRadius = 6371000;
+
     final dLat = _toRadians(lat2 - lat1);
     final dLon = _toRadians(lon2 - lon1);
-    
+
     final a = sin(dLat / 2) * sin(dLat / 2) +
         cos(_toRadians(lat1)) * cos(_toRadians(lat2)) *
         sin(dLon / 2) * sin(dLon / 2);
-    
+
     final c = 2 * atan2(sqrt(a), sqrt(1 - a));
-    
-    return earthRadius * c; // 거리 (미터)
+
+    return earthRadius * c;
   }
-  
+
   double _toRadians(double degree) {
     return degree * pi / 180;
   }
 
-  /// 지도 탭 시 가장 가까운 마커(식당) 찾기 - 개선된 버전
-  Future<void> _onMapTap(Offset tapPosition) async {
-    if (_visibleRestaurants.isEmpty || !_isMapReady) return;
-    
-    try {
-      // 1. 탭 위치를 지도 좌표로 변환
-      final screenSize = MediaQuery.of(context).size;
-      final cameraPosition = await _mapController.getCameraPosition();
-      
-      // 줌 레벨에 따른 정확한 스케일 계산
-      // 줌 레벨 15에서 약 0.01도 = 1.1km
-      final scale = pow(2, 15 - cameraPosition.zoomLevel).toDouble();
-      final delta = 0.01 * scale;
-      final latPerPixel = (delta * 2) / screenSize.height;
-      final lngPerPixel = (delta * 2) / screenSize.width;
-      
-      // 2. 상단 UI 제외한 지도 영역 계산
-      final topPadding = MediaQuery.of(context).padding.top + 170.h;
-      final adjustedY = tapPosition.dy - topPadding;
-      
-      // 3. 탭 위치의 위도/경도 계산
-      final centerLat = cameraPosition.position.latitude;
-      final centerLng = cameraPosition.position.longitude;
-      
-      final tapLat = centerLat + (screenSize.height / 2 - adjustedY) * latPerPixel;
-      final tapLng = centerLng + (tapPosition.dx - screenSize.width / 2) * lngPerPixel;
-      
-      print('🖱️ 지도 탭: 픽셀(${ tapPosition.dx.toStringAsFixed(0)}, ${tapPosition.dy.toStringAsFixed(0)})');
-      print('   좌표: lat=${tapLat.toStringAsFixed(6)}, lng=${tapLng.toStringAsFixed(6)}');
-      print('   줌 레벨: ${cameraPosition.zoomLevel}');
-      
-      // 4. 탭 위치에서 가장 가까운 식당 찾기 (실제 거리 계산)
-      RestaurantModel? nearestRestaurant;
-      double minDistance = 100.0; // 100미터 이내로 클릭 범위 확대
-      
-      for (final restaurant in _visibleRestaurants) {
-        final distance = _calculateDistance(
-          tapLat, tapLng,
-          restaurant.latitude, restaurant.longitude
-        );
-        
-        print('   📍 ${restaurant.name}: ${distance.toStringAsFixed(1)}m');
-        
-        if (distance < minDistance) {
-          minDistance = distance;
-          nearestRestaurant = restaurant;
-        }
-      }
-      
-      // 5. 가까운 식당을 찾았으면 선택
-      if (nearestRestaurant != null) {
-        print('🎯 마커 클릭! ${nearestRestaurant.name} (${minDistance.toStringAsFixed(1)}m)');
-        _onRestaurantSelected(nearestRestaurant);
-      } else {
-        print('❌ 100m 이내에 마커 없음');
-        // 선택 해제
-        setState(() {
-          _selectedRestaurant = null;
-        });
-      }
-    } catch (e) {
-      print('⚠️ 지도 탭 처리 실패: $e');
-    }
-  }
-
-  /// 식당 리스트에서 선택 시 호출
   void _onRestaurantSelected(RestaurantModel restaurant) {
     print('🎯 식당 선택: ${restaurant.name}');
-    
+
     setState(() {
       _selectedRestaurant = restaurant;
     });
-    
-    // 지도를 해당 위치로 이동
-    _mapController.moveCamera(
-      CameraUpdate.newCenterPosition(
-        LatLng(restaurant.latitude, restaurant.longitude),
+
+    _mapController?.animateCamera(
+      CameraUpdate.newCameraPosition(
+        CameraPosition(
+          target: LatLng(restaurant.latitude, restaurant.longitude),
+          zoom: 17.0,
+        ),
       ),
-      animation: const CameraAnimation(300),
     );
-    
-    // 슬라이드 패널 열기
+
     if (!_panelController.isPanelOpen) {
       _panelController.open();
     }
-    
-    // 필터링 업데이트
+
     _filterVisibleRestaurants();
-    
-    // 스낵바 표시
+
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text('${restaurant.name} 선택됨', style: TextStyle(fontSize: 14.sp)),
@@ -757,7 +572,6 @@ class _MapPageState extends ConsumerState<MapPage> with WidgetsBindingObserver {
     );
   }
 
-  /// 카테고리 필터 빌드
   Widget _buildCategoryFilter() {
     return SizedBox(
       height: 42.h,
@@ -780,8 +594,6 @@ class _MapPageState extends ConsumerState<MapPage> with WidgetsBindingObserver {
                   } else {
                     _selectedCategory = category;
                   }
-                  // 마커 갱신 (나중에 활성화)
-                  // _showRestaurantMarkers();
                 });
               },
               child: Container(
@@ -811,7 +623,6 @@ class _MapPageState extends ConsumerState<MapPage> with WidgetsBindingObserver {
     );
   }
 
-  /// "이 화면에서 검색" 버튼 빌드
   Widget _buildSearchHereButton() {
     return Material(
       elevation: 4,
@@ -855,31 +666,26 @@ class _MapPageState extends ConsumerState<MapPage> with WidgetsBindingObserver {
     );
   }
 
-  /// 현재 화면에서 음식점 검색 (화면 중심 기반)
   Future<void> _searchRestaurantsAtCurrentLocation() async {
     setState(() {
       _isSearching = true;
-      _selectedRestaurant = null; // 선택 초기화
+      _selectedRestaurant = null;
     });
 
     try {
-      // 1. 먼저 현재 화면 중심 좌표를 가져옴
       await _updateVisibleArea();
-      
+
       print('🔍 화면 중심에서 검색 시작: lat=$_currentMapCenterLat, lng=$_currentMapCenterLng');
-      
-      // 2. 보이는 영역의 대략적인 반경 계산 (위도 차이를 km로 변환)
+
       final latDiff = _mapNorthLatitude - _mapSouthLatitude;
-      final radiusInKm = (latDiff * 111.0) / 2; // 위도 1도 ≈ 111km
-      final radiusInMeters = (radiusInKm * 1000).toInt().clamp(500, 20000); // 최소 500m, 최대 20km
+      final radiusInKm = (latDiff * 111.0) / 2;
+      final radiusInMeters = (radiusInKm * 1000).toInt().clamp(500, 20000);
 
       print('📐 검색 반경: ${radiusInMeters}m (화면 기반)');
 
-      // 3. 카카오 로컬 API로 음식점 검색
       final allRestaurants = <RestaurantModel>[];
       int pageCount = 0;
-      
-      // 모든 페이지 가져오기 (API가 끝날 때까지)
+
       for (int page = 1; page <= 3; page++) {
         try {
           final response = await _kakaoLocalService.searchByCategory(
@@ -890,26 +696,26 @@ class _MapPageState extends ConsumerState<MapPage> with WidgetsBindingObserver {
             size: 15,
             page: page,
           );
-          
+
           final documents = response['documents'] as List<dynamic>? ?? [];
           print('📄 페이지 $page: ${documents.length}개 발견');
-          
+
           if (documents.isEmpty) {
             print('📄 페이지 $page: 결과 없음 - 검색 중단');
             break;
           }
-          
+
           final restaurants = documents
               .map((doc) => RestaurantModel.fromKakaoApi(doc as Map<String, dynamic>))
               .toList();
-          
+
           allRestaurants.addAll(restaurants);
           pageCount++;
-          
+
           final meta = response['meta'] as Map<String, dynamic>?;
           final isEnd = meta?['is_end'] as bool? ?? true;
           print('📄 페이지 $page: is_end=$isEnd');
-          
+
           if (isEnd) {
             print('📄 마지막 페이지 도달 - 검색 완료');
             break;
@@ -922,18 +728,14 @@ class _MapPageState extends ConsumerState<MapPage> with WidgetsBindingObserver {
 
       print('✅ 검색 완료: 총 ${allRestaurants.length}개 음식점 발견 ($pageCount 페이지)');
 
-      // 4. 전체 식당 목록 저장
       setState(() {
         _restaurants = allRestaurants;
       });
 
-      // 5. 지도에 마커 표시
       await _showRestaurantMarkersOnMap(allRestaurants);
 
-      // 6. 화면에 보이는 영역만 필터링
       await _onMapMoved();
 
-      // 7. 결과 안내
       if (allRestaurants.isEmpty) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -948,7 +750,7 @@ class _MapPageState extends ConsumerState<MapPage> with WidgetsBindingObserver {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(
-                '화면에 ${_visibleRestaurants.length}곳 표시 중 (전체 ${allRestaurants.length}곳)', 
+                '화면에 ${_visibleRestaurants.length}곳 표시 중 (전체 ${allRestaurants.length}곳)',
                 style: TextStyle(fontSize: 14.sp)
               ),
               duration: const Duration(seconds: 2),
@@ -977,21 +779,17 @@ class _MapPageState extends ConsumerState<MapPage> with WidgetsBindingObserver {
     }
   }
 
-  /// 하단 식당 리스트 빌드
   Widget _buildRestaurantList() {
-    // 선택된 식당이 있으면 그것만, 없으면 보이는 영역의 식당들 표시
     final displayRestaurants = _selectedRestaurant != null
         ? [_selectedRestaurant!]
         : _visibleRestaurants;
-    
-    // 카테고리 필터링
+
     final filteredRestaurants = _selectedCategory == null
         ? displayRestaurants
         : displayRestaurants.where((r) => r.category == _selectedCategory).toList();
 
     return Column(
       children: [
-        // 드래그 핸들
         Container(
           margin: EdgeInsets.only(top: 12.h),
           width: 40.w,
@@ -1002,7 +800,6 @@ class _MapPageState extends ConsumerState<MapPage> with WidgetsBindingObserver {
           ),
         ),
 
-        // 헤더
         Padding(
           padding: EdgeInsets.all(16.w),
           child: Row(
@@ -1057,7 +854,6 @@ class _MapPageState extends ConsumerState<MapPage> with WidgetsBindingObserver {
               IconButton(
                 icon: Icon(Icons.list, size: 24.sp),
                 onPressed: () {
-                  // 패널 열기/닫기
                   if (_panelController.isPanelOpen) {
                     _panelController.close();
                   } else {
@@ -1069,7 +865,6 @@ class _MapPageState extends ConsumerState<MapPage> with WidgetsBindingObserver {
           ),
         ),
 
-        // 식당 리스트
         Expanded(
           child: filteredRestaurants.isEmpty
               ? Center(
@@ -1102,23 +897,21 @@ class _MapPageState extends ConsumerState<MapPage> with WidgetsBindingObserver {
     );
   }
 
-  /// 식당 카드 빌드
   Widget _buildRestaurantCard(RestaurantModel restaurant) {
     final isSelected = _selectedRestaurant?.id == restaurant.id;
-    
+
     return Card(
       margin: EdgeInsets.only(bottom: 12.h),
       elevation: isSelected ? 4 : 1,
       color: isSelected ? AppColors.primaryLight : Colors.white,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12.r),
-        side: isSelected 
+        side: isSelected
             ? BorderSide(color: AppColors.primary, width: 2)
             : BorderSide.none,
       ),
       child: InkWell(
         onTap: () {
-          // 선택되지 않았으면 선택, 선택되었으면 상세 정보 표시
           if (!isSelected) {
             _onRestaurantSelected(restaurant);
           } else {
@@ -1130,12 +923,10 @@ class _MapPageState extends ConsumerState<MapPage> with WidgetsBindingObserver {
           padding: EdgeInsets.all(16.w),
           child: Row(
             children: [
-              // 식당 정보
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // 이름
                     Text(
                       restaurant.name,
                       style: TextStyle(
@@ -1146,7 +937,6 @@ class _MapPageState extends ConsumerState<MapPage> with WidgetsBindingObserver {
                     ),
                     SizedBox(height: 4.h),
 
-                    // 카테고리 및 거리
                     Row(
                       children: [
                         Container(
@@ -1184,7 +974,6 @@ class _MapPageState extends ConsumerState<MapPage> with WidgetsBindingObserver {
                       ],
                     ),
 
-                    // 평점
                     SizedBox(height: 4.h),
                     Row(
                       children: [
@@ -1204,7 +993,6 @@ class _MapPageState extends ConsumerState<MapPage> with WidgetsBindingObserver {
                 ),
               ),
 
-              // 화살표 아이콘
               Icon(
                 Icons.chevron_right,
                 color: AppColors.mutedForeground,
@@ -1217,7 +1005,6 @@ class _MapPageState extends ConsumerState<MapPage> with WidgetsBindingObserver {
     );
   }
 
-  // 식당 정보 표시
   void _showRestaurantInfo(RestaurantModel restaurant) {
     showModalBottomSheet(
       context: context,
@@ -1230,7 +1017,6 @@ class _MapPageState extends ConsumerState<MapPage> with WidgetsBindingObserver {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // 식당 이름
             Text(
               restaurant.name,
               style: TextStyle(
@@ -1241,7 +1027,6 @@ class _MapPageState extends ConsumerState<MapPage> with WidgetsBindingObserver {
             ),
             SizedBox(height: 8.h),
 
-            // 카테고리 및 거리
             Row(
               children: [
                 Container(
@@ -1272,7 +1057,6 @@ class _MapPageState extends ConsumerState<MapPage> with WidgetsBindingObserver {
               ],
             ),
 
-            // 평점
             SizedBox(height: 8.h),
             Row(
               children: [
@@ -1289,7 +1073,6 @@ class _MapPageState extends ConsumerState<MapPage> with WidgetsBindingObserver {
               ],
             ),
 
-            // 설명
             if (restaurant.description != null) ...[
               SizedBox(height: 12.h),
               Text(
@@ -1303,13 +1086,11 @@ class _MapPageState extends ConsumerState<MapPage> with WidgetsBindingObserver {
 
             SizedBox(height: 16.h),
 
-            // 길찾기 버튼
             SizedBox(
               width: double.infinity,
               child: ElevatedButton.icon(
                 onPressed: () {
                   Navigator.pop(context);
-                  // 길찾기 기능은 추후 구현 예정
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
                       content: Text('길찾기 기능은 준비 중입니다', style: TextStyle(fontSize: 14.sp)),
