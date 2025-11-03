@@ -183,132 +183,60 @@ class _MapPageState extends ConsumerState<MapPage> with WidgetsBindingObserver {
 
     return Scaffold(
       backgroundColor: Colors.white,
-      body: Column(
+      body: Stack(
         children: [
-          Container(
-            color: Colors.white,
-            child: Column(
-              children: [
-                SizedBox(height: topPadding),
-
-                Padding(
-                  padding: EdgeInsets.all(16.w),
-                  child: Row(
-                    children: [
-                      Container(
-                        decoration: BoxDecoration(
-                          color: AppColors.background,
-                          borderRadius: BorderRadius.circular(12.r),
-                          border: Border.all(color: AppColors.border),
-                        ),
-                        child: IconButton(
-                          icon: const Icon(Icons.arrow_back),
-                          onPressed: () => Navigator.of(context).pop(),
-                        ),
-                      ),
-                      SizedBox(width: 12.w),
-
-                      Expanded(
-                        child: Container(
-                          padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
-                          decoration: BoxDecoration(
-                            color: AppColors.background,
-                            borderRadius: BorderRadius.circular(12.r),
-                            border: Border.all(color: AppColors.border),
-                          ),
-                          child: Row(
-                            children: [
-                              Icon(Icons.search, color: AppColors.mutedForeground, size: 20.sp),
-                              SizedBox(width: 8.w),
-                              Text(
-                                '맛집 검색',
-                                style: TextStyle(
-                                  fontSize: 14.sp,
-                                  color: AppColors.mutedForeground,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-
-                _buildCategoryFilter(),
-                SizedBox(height: 8.h),
-              ],
-            ),
-          ),
-
-          Expanded(
+          Positioned.fill(
             child: SlidingUpPanel(
               controller: _panelController,
-              minHeight: 140.h,
-              maxHeight: MediaQuery.of(context).size.height * 0.7,
-              borderRadius: BorderRadius.vertical(top: Radius.circular(24.r)),
+              minHeight: 180.h,
+              maxHeight: MediaQuery.of(context).size.height * 0.75,
+              borderRadius: BorderRadius.vertical(top: Radius.circular(16.r)),
               panel: _buildRestaurantList(),
               backdropEnabled: false,
-              renderPanelSheet: false,
+              color: Colors.transparent,
               onPanelSlide: (position) {
                 setState(() {
                   _panelPosition = position;
                 });
               },
-              body: Stack(
-                children: [
-                  Positioned.fill(
-                    child: GoogleMap(
-                      onMapCreated: _onMapReady,
-                      initialCameraPosition: CameraPosition(
-                        target: LatLng(_currentMapCenterLat, _currentMapCenterLng),
-                        zoom: 15.0,
-                      ),
-                      markers: _markers,
-                      myLocationEnabled: true,
-                      myLocationButtonEnabled: false,
-                      onCameraMove: (CameraPosition position) {
-                        _currentMapCenterLat = position.target.latitude;
-                        _currentMapCenterLng = position.target.longitude;
-                      },
-                      onCameraIdle: _onMapMoved,
-                    ),
-                  ),
-
-                  Positioned(
-                    top: 16.h,
-                    left: 0,
-                    right: 0,
-                    child: Center(
-                      child: Container(
-                        constraints: BoxConstraints(maxWidth: 200.w),
-                        child: _buildSearchHereButton(),
-                      ),
-                    ),
-                  ),
-
-                  Positioned(
-                    bottom: 16.h,
-                    right: 16.w,
-                    child: FloatingActionButton(
-                      heroTag: 'current_location',
-                      backgroundColor: Colors.white,
-                      elevation: 4,
-                      onPressed: _moveToCurrentLocation,
-                      child: _isLoadingLocation
-                          ? SizedBox(
-                              width: 24.w,
-                              height: 24.h,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                color: AppColors.primary,
-                              ),
-                            )
-                          : Icon(Icons.my_location, color: AppColors.primary, size: 24.sp),
-                    ),
-                  ),
-                ],
+              body: GoogleMap(
+                onMapCreated: _onMapReady,
+                initialCameraPosition: CameraPosition(
+                  target: LatLng(_currentMapCenterLat, _currentMapCenterLng),
+                  zoom: 15.0,
+                ),
+                markers: _markers,
+                myLocationEnabled: false,
+                myLocationButtonEnabled: false,
+                onCameraMove: (CameraPosition position) {
+                  _currentMapCenterLat = position.target.latitude;
+                  _currentMapCenterLng = position.target.longitude;
+                },
+                onCameraIdle: _onMapMoved,
               ),
+            ),
+          ),
+
+          Positioned(
+            top: topPadding + 8.h,
+            left: 16.w,
+            right: 16.w,
+            child: _buildTopSearchBar(),
+          ),
+
+          Positioned(
+            top: topPadding + 68.h,
+            left: 0,
+            right: 0,
+            child: _buildCategoryFilter(),
+          ),
+
+          Positioned(
+            top: topPadding + 130.h,
+            left: 0,
+            right: 0,
+            child: Center(
+              child: _buildSearchHereButton(),
             ),
           ),
         ],
@@ -572,9 +500,48 @@ class _MapPageState extends ConsumerState<MapPage> with WidgetsBindingObserver {
     );
   }
 
+  Widget _buildTopSearchBar() {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12.r),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.1),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: TextField(
+        controller: _searchController,
+        decoration: InputDecoration(
+          hintText: '장소·지하철·지역명 검색 (주소 검색 준비 중 🙏)',
+          hintStyle: TextStyle(
+            fontSize: 14.sp,
+            color: AppColors.mutedForeground,
+          ),
+          prefixIcon: Icon(Icons.search, color: AppColors.mutedForeground, size: 24.sp),
+          border: InputBorder.none,
+          contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
+        ),
+      ),
+    );
+  }
+
   Widget _buildCategoryFilter() {
-    return SizedBox(
-      height: 42.h,
+    return Container(
+      height: 48.h,
+      decoration: BoxDecoration(
+        color: const Color(0xFF34A853),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.1),
+            blurRadius: 4,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
       child: ListView.builder(
         scrollDirection: Axis.horizontal,
         padding: EdgeInsets.symmetric(horizontal: 16.w),
@@ -585,7 +552,7 @@ class _MapPageState extends ConsumerState<MapPage> with WidgetsBindingObserver {
               (_selectedCategory == null && category == '전체');
 
           return Padding(
-            padding: EdgeInsets.only(right: 8.w),
+            padding: EdgeInsets.only(right: 12.w),
             child: GestureDetector(
               onTap: () {
                 setState(() {
@@ -597,22 +564,19 @@ class _MapPageState extends ConsumerState<MapPage> with WidgetsBindingObserver {
                 });
               },
               child: Container(
-                padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
-                decoration: BoxDecoration(
-                  color: isSelected ? AppColors.primary : Colors.white,
-                  borderRadius: BorderRadius.circular(20.r),
-                  border: Border.all(
-                    color: isSelected ? AppColors.primary : AppColors.border,
-                    width: 1,
-                  ),
-                ),
                 alignment: Alignment.center,
+                padding: EdgeInsets.symmetric(horizontal: 4.w),
+                decoration: BoxDecoration(
+                  border: isSelected
+                      ? Border(bottom: BorderSide(color: Colors.white, width: 3))
+                      : null,
+                ),
                 child: Text(
                   category,
                   style: TextStyle(
-                    fontSize: 13.sp,
-                    color: isSelected ? Colors.white : AppColors.foreground,
-                    fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+                    fontSize: 14.sp,
+                    color: Colors.white,
+                    fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
                   ),
                 ),
               ),
@@ -626,15 +590,15 @@ class _MapPageState extends ConsumerState<MapPage> with WidgetsBindingObserver {
   Widget _buildSearchHereButton() {
     return Material(
       elevation: 4,
-      borderRadius: BorderRadius.circular(24.r),
+      borderRadius: BorderRadius.circular(20.r),
       child: InkWell(
         onTap: _isSearching ? null : _searchRestaurantsAtCurrentLocation,
-        borderRadius: BorderRadius.circular(24.r),
+        borderRadius: BorderRadius.circular(20.r),
         child: Container(
-          padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 10.h),
+          padding: EdgeInsets.symmetric(horizontal: 18.w, vertical: 10.h),
           decoration: BoxDecoration(
-            color: _isSearching ? AppColors.muted : AppColors.primary,
-            borderRadius: BorderRadius.circular(24.r),
+            color: _isSearching ? Colors.grey[600] : const Color(0xFF34A853),
+            borderRadius: BorderRadius.circular(20.r),
           ),
           child: Row(
             mainAxisSize: MainAxisSize.min,
@@ -643,18 +607,18 @@ class _MapPageState extends ConsumerState<MapPage> with WidgetsBindingObserver {
                 SizedBox(
                   width: 18.w,
                   height: 18.h,
-                  child: CircularProgressIndicator(
+                  child: const CircularProgressIndicator(
                     strokeWidth: 2,
                     color: Colors.white,
                   ),
                 )
               else
-                Icon(Icons.refresh, color: Colors.white, size: 18.sp),
+                Icon(Icons.refresh, color: Colors.white, size: 20.sp),
               SizedBox(width: 6.w),
               Text(
-                _isSearching ? '검색 중...' : '이 화면에서 검색',
+                _isSearching ? '검색 중...' : '이 위치로 검색',
                 style: TextStyle(
-                  fontSize: 13.sp,
+                  fontSize: 14.sp,
                   fontWeight: FontWeight.w600,
                   color: Colors.white,
                 ),
@@ -788,112 +752,99 @@ class _MapPageState extends ConsumerState<MapPage> with WidgetsBindingObserver {
         ? displayRestaurants
         : displayRestaurants.where((r) => r.category == _selectedCategory).toList();
 
-    return Column(
-      children: [
-        Container(
-          margin: EdgeInsets.only(top: 12.h),
-          width: 40.w,
-          height: 4.h,
-          decoration: BoxDecoration(
-            color: AppColors.muted,
-            borderRadius: BorderRadius.circular(2.r),
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.95),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16.r)),
+      ),
+      child: Column(
+        children: [
+          Container(
+            margin: EdgeInsets.only(top: 8.h),
+            width: 40.w,
+            height: 4.h,
+            decoration: BoxDecoration(
+              color: Colors.grey[300],
+              borderRadius: BorderRadius.circular(2.r),
+            ),
           ),
-        ),
 
-        Padding(
-          padding: EdgeInsets.all(16.w),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Row(
-                children: [
-                  Text(
-                    _selectedRestaurant != null
-                        ? '선택된 맛집'
-                        : '화면에 보이는 맛집 ${filteredRestaurants.length}곳',
-                    style: TextStyle(
-                      fontSize: 16.sp,
-                      fontWeight: FontWeight.w700,
-                      color: AppColors.foreground,
-                    ),
-                  ),
-                  if (_selectedRestaurant != null) ...[
-                    SizedBox(width: 8.w),
-                    GestureDetector(
-                      onTap: () {
-                        setState(() {
-                          _selectedRestaurant = null;
-                        });
-                        _filterVisibleRestaurants();
-                      },
-                      child: Container(
-                        padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
-                        decoration: BoxDecoration(
-                          color: AppColors.primaryLight,
-                          borderRadius: BorderRadius.circular(12.r),
-                        ),
-                        child: Row(
-                          children: [
-                            Text(
-                              '전체보기',
-                              style: TextStyle(
-                                fontSize: 12.sp,
-                                color: AppColors.primary,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                            SizedBox(width: 4.w),
-                            Icon(Icons.close, size: 14.sp, color: AppColors.primary),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ],
-                ],
-              ),
-              IconButton(
-                icon: Icon(Icons.list, size: 24.sp),
-                onPressed: () {
-                  if (_panelController.isPanelOpen) {
-                    _panelController.close();
-                  } else {
-                    _panelController.open();
-                  }
-                },
-              ),
-            ],
+          Container(
+            padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
+            child: Row(
+              children: [
+                _buildFilterButton('최신등록순', Icons.new_releases_outlined),
+                SizedBox(width: 8.w),
+                _buildFilterButton('거리순', Icons.navigation_outlined),
+                SizedBox(width: 8.w),
+                _buildFilterButton('마감임박순', Icons.access_time_outlined),
+              ],
+            ),
           ),
-        ),
 
-        Expanded(
-          child: filteredRestaurants.isEmpty
-              ? Center(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        _restaurants.isEmpty
-                            ? '"이 화면에서 검색" 버튼을 눌러주세요'
-                            : '화면에 보이는 맛집이 없습니다\n지도를 이동해보세요',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          fontSize: 14.sp,
-                          color: AppColors.mutedForeground,
+          Expanded(
+            child: filteredRestaurants.isEmpty
+                ? Center(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          _restaurants.isEmpty
+                              ? '"이 위치로 검색" 버튼을 눌러주세요'
+                              : '화면에 보이는 맛집이 없습니다\n지도를 이동해보세요',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            fontSize: 14.sp,
+                            color: AppColors.mutedForeground,
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
+                  )
+                : ListView.builder(
+                    padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
+                    itemCount: filteredRestaurants.length,
+                    itemBuilder: (context, index) {
+                      final restaurant = filteredRestaurants[index];
+                      return _buildRestaurantCard(restaurant);
+                    },
                   ),
-                )
-              : ListView.builder(
-                  padding: EdgeInsets.symmetric(horizontal: 16.w),
-                  itemCount: filteredRestaurants.length,
-                  itemBuilder: (context, index) {
-                    final restaurant = filteredRestaurants[index];
-                    return _buildRestaurantCard(restaurant);
-                  },
-                ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildFilterButton(String label, IconData icon) {
+    final isSelected = label == '최신등록순';
+    return Container(
+      padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
+      decoration: BoxDecoration(
+        color: isSelected ? const Color(0xFF34A853) : Colors.white,
+        borderRadius: BorderRadius.circular(20.r),
+        border: Border.all(
+          color: isSelected ? const Color(0xFF34A853) : Colors.grey[300]!,
         ),
-      ],
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            icon,
+            size: 16.sp,
+            color: isSelected ? Colors.white : Colors.grey[700],
+          ),
+          SizedBox(width: 4.w),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 12.sp,
+              color: isSelected ? Colors.white : Colors.grey[700],
+              fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+            ),
+          ),
+        ],
+      ),
     );
   }
 
