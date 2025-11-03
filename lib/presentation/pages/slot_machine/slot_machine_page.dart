@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../providers/recommendation_provider.dart';
-import '../../mock/mock_restaurants.dart';
 import '../../widgets/slot_machine_roller.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_dimensions.dart';
@@ -142,7 +141,7 @@ class SlotMachinePage extends ConsumerWidget {
       children: [
         // 슬롯머신 롤링 애니메이션
         SlotMachineRoller(
-          restaurants: MockRestaurants.restaurants,
+          restaurants: const [], // TODO: Google Places API 연동 필요
           finalRestaurant: state.restaurant!,
         ),
         SizedBox(height: AppDimensions.spacing4.h),
