@@ -181,7 +181,7 @@ class _MapPageState extends ConsumerState<MapPage> with WidgetsBindingObserver {
     print('🏗️ MapPage build 호출됨');
     final topPadding = MediaQuery.of(context).padding.top;
     final searchButtonTop = topPadding + 130.h;
-    final maxPanelHeight = searchButtonTop - 20.h;
+    final categoryBarHeight = topPadding + 116.h;
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -191,45 +191,43 @@ class _MapPageState extends ConsumerState<MapPage> with WidgetsBindingObserver {
             top: 0,
             left: 0,
             right: 0,
+            height: categoryBarHeight,
+            child: Container(color: Colors.white),
+          ),
+
+          Positioned(
+            top: categoryBarHeight,
+            left: 0,
+            right: 0,
             bottom: 0,
-            child: Column(
-              children: [
-                Container(
-                  height: topPadding + 116.h,
-                  color: Colors.white,
+            child: SlidingUpPanel(
+              controller: _panelController,
+              minHeight: 180.h,
+              maxHeight: MediaQuery.of(context).size.height - searchButtonTop - 60.h,
+              borderRadius: BorderRadius.vertical(top: Radius.circular(16.r)),
+              panel: _buildRestaurantList(),
+              backdropEnabled: false,
+              color: Colors.transparent,
+              onPanelSlide: (position) {
+                setState(() {
+                  _panelPosition = position;
+                });
+              },
+              body: GoogleMap(
+                onMapCreated: _onMapReady,
+                initialCameraPosition: CameraPosition(
+                  target: LatLng(_currentMapCenterLat, _currentMapCenterLng),
+                  zoom: 15.0,
                 ),
-                Expanded(
-                  child: SlidingUpPanel(
-                    controller: _panelController,
-                    minHeight: 180.h,
-                    maxHeight: maxPanelHeight,
-                    borderRadius: BorderRadius.vertical(top: Radius.circular(16.r)),
-                    panel: _buildRestaurantList(),
-                    backdropEnabled: false,
-                    color: Colors.transparent,
-                    onPanelSlide: (position) {
-                      setState(() {
-                        _panelPosition = position;
-                      });
-                    },
-                    body: GoogleMap(
-                      onMapCreated: _onMapReady,
-                      initialCameraPosition: CameraPosition(
-                        target: LatLng(_currentMapCenterLat, _currentMapCenterLng),
-                        zoom: 15.0,
-                      ),
-                      markers: _markers,
-                      myLocationEnabled: false,
-                      myLocationButtonEnabled: false,
-                      onCameraMove: (CameraPosition position) {
-                        _currentMapCenterLat = position.target.latitude;
-                        _currentMapCenterLng = position.target.longitude;
-                      },
-                      onCameraIdle: _onMapMoved,
-                    ),
-                  ),
-                ),
-              ],
+                markers: _markers,
+                myLocationEnabled: false,
+                myLocationButtonEnabled: false,
+                onCameraMove: (CameraPosition position) {
+                  _currentMapCenterLat = position.target.latitude;
+                  _currentMapCenterLng = position.target.longitude;
+                },
+                onCameraIdle: _onMapMoved,
+              ),
             ),
           ),
 
@@ -253,6 +251,27 @@ class _MapPageState extends ConsumerState<MapPage> with WidgetsBindingObserver {
             right: 0,
             child: Center(
               child: _buildSearchHereButton(),
+            ),
+          ),
+
+          Positioned(
+            bottom: 200.h,
+            right: 16.w,
+            child: FloatingActionButton(
+              heroTag: 'current_location',
+              backgroundColor: Colors.white,
+              elevation: 4,
+              onPressed: _moveToCurrentLocation,
+              child: _isLoadingLocation
+                  ? SizedBox(
+                      width: 24.w,
+                      height: 24.h,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: AppColors.primary,
+                      ),
+                    )
+                  : Icon(Icons.my_location, color: AppColors.primary, size: 24.sp),
             ),
           ),
         ],
