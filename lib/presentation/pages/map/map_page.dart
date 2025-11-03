@@ -213,7 +213,6 @@ class _MapPageState extends ConsumerState<MapPage> with WidgetsBindingObserver {
               panel: _buildRestaurantList(),
               backdropEnabled: false,
               color: Colors.transparent,
-              snapingEnabled: false, // Disable snapping - panel stays where user stops
               onPanelSlide: (position) {
                 setState(() {
                   _panelPosition = position;
