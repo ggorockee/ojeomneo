@@ -30,7 +30,6 @@ class _MapPageState extends ConsumerState<MapPage> with WidgetsBindingObserver {
   bool _dialogShown = false;
   bool _isMapReady = false;
   Set<Marker> _markers = {};
-  double _panelPosition = 0.0;
   bool _showLocationButton = true;
 
   final _googlePlacesService = GooglePlacesService();
@@ -49,7 +48,6 @@ class _MapPageState extends ConsumerState<MapPage> with WidgetsBindingObserver {
   final TextEditingController _searchController = TextEditingController();
 
   Timer? _mapMoveTimer;
-  LatLng? _lastCameraPosition;
 
   String? _selectedCategory;
   final List<Map<String, String>> _categories = [
@@ -211,6 +209,78 @@ class _MapPageState extends ConsumerState<MapPage> with WidgetsBindingObserver {
             child: _buildFloatingSearchBar(),
           ),
 
+          // 중앙 하단 검색 버튼
+          Positioned(
+            bottom: bottomPadding + 16.h,
+            left: 0,
+            right: 0,
+            child: Center(
+              child: !_isSearching
+                  ? ElevatedButton.icon(
+                      onPressed: _searchRestaurantsAtCurrentLocation,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.white,
+                        foregroundColor: AppColors.foreground,
+                        elevation: 4,
+                        padding: EdgeInsets.symmetric(
+                          horizontal: 24.w,
+                          vertical: 12.h,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(24.r),
+                        ),
+                      ),
+                      icon: Icon(Icons.search, size: 20.sp),
+                      label: Text(
+                        '이 위치로 검색',
+                        style: TextStyle(
+                          fontSize: 14.sp,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    )
+                  : Container(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: 24.w,
+                        vertical: 12.h,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(24.r),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.15),
+                            blurRadius: 8,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          SizedBox(
+                            width: 16.w,
+                            height: 16.h,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: AppColors.primary,
+                            ),
+                          ),
+                          SizedBox(width: 12.w),
+                          Text(
+                            '검색 중...',
+                            style: TextStyle(
+                              fontSize: 14.sp,
+                              fontWeight: FontWeight.w600,
+                              color: AppColors.foreground,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+            ),
+          ),
+
           // 우측 하단 버튼들
           Positioned(
             bottom: bottomPadding + 16.h,
@@ -235,36 +305,6 @@ class _MapPageState extends ConsumerState<MapPage> with WidgetsBindingObserver {
                     size: 20.sp,
                   ),
                 ),
-                SizedBox(height: 12.h),
-
-                // 검색 버튼
-                if (!_isSearching)
-                  FloatingActionButton(
-                    heroTag: 'search',
-                    backgroundColor: AppColors.primary,
-                    elevation: 4,
-                    onPressed: _searchRestaurantsAtCurrentLocation,
-                    child: Icon(
-                      Icons.search,
-                      color: Colors.white,
-                      size: 24.sp,
-                    ),
-                  )
-                else
-                  FloatingActionButton(
-                    heroTag: 'searching',
-                    backgroundColor: Colors.grey[600],
-                    elevation: 4,
-                    onPressed: null,
-                    child: SizedBox(
-                      width: 24.w,
-                      height: 24.h,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        color: Colors.white,
-                      ),
-                    ),
-                  ),
                 SizedBox(height: 12.h),
 
                 // 내 위치 버튼
@@ -567,6 +607,9 @@ class _MapPageState extends ConsumerState<MapPage> with WidgetsBindingObserver {
 
   /// 구글맵 스타일 장소 상세 정보 (전체 화면 Bottom Sheet)
   void _showPlaceDetails(RestaurantModel restaurant) {
+    // Place Details API 호출
+    final detailsFuture = _googlePlacesService.getPlaceDetails(placeId: restaurant.id);
+
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -579,13 +622,29 @@ class _MapPageState extends ConsumerState<MapPage> with WidgetsBindingObserver {
         maxChildSize: 0.95,
         expand: false,
         builder: (context, scrollController) {
-          return SingleChildScrollView(
-            controller: scrollController,
-            child: Container(
-              padding: EdgeInsets.all(24.w),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
+          return FutureBuilder<Map<String, dynamic>>(
+            future: detailsFuture,
+            builder: (context, snapshot) {
+              // 상세 정보가 로드되면 업데이트된 RestaurantModel 사용
+              RestaurantModel displayRestaurant = restaurant;
+              if (snapshot.hasData) {
+                final result = snapshot.data!['result'] as Map<String, dynamic>?;
+                if (result != null) {
+                  displayRestaurant = RestaurantModel.fromPlaceDetails(
+                    result,
+                    _currentMapCenterLat,
+                    _currentMapCenterLng,
+                  );
+                }
+              }
+
+              return SingleChildScrollView(
+                controller: scrollController,
+                child: Container(
+                  padding: EdgeInsets.all(24.w),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
                   // 드래그 핸들
                   Center(
                     child: Container(
@@ -601,7 +660,7 @@ class _MapPageState extends ConsumerState<MapPage> with WidgetsBindingObserver {
 
                   // 장소명
                   Text(
-                    restaurant.name,
+                    displayRestaurant.name,
                     style: TextStyle(
                       fontSize: 24.sp,
                       fontWeight: FontWeight.bold,
@@ -620,7 +679,7 @@ class _MapPageState extends ConsumerState<MapPage> with WidgetsBindingObserver {
                           borderRadius: BorderRadius.circular(4.r),
                         ),
                         child: Text(
-                          restaurant.category,
+                          displayRestaurant.category,
                           style: TextStyle(
                             fontSize: 12.sp,
                             color: AppColors.primary,
@@ -632,7 +691,7 @@ class _MapPageState extends ConsumerState<MapPage> with WidgetsBindingObserver {
                       Icon(Icons.location_on, size: 16.sp, color: AppColors.mutedForeground),
                       SizedBox(width: 4.w),
                       Text(
-                        restaurant.distanceText,
+                        displayRestaurant.distanceText,
                         style: TextStyle(
                           fontSize: 14.sp,
                           color: AppColors.mutedForeground,
@@ -644,27 +703,29 @@ class _MapPageState extends ConsumerState<MapPage> with WidgetsBindingObserver {
                   SizedBox(height: 12.h),
 
                   // 평점
-                  if (restaurant.rating > 0)
+                  if (displayRestaurant.rating > 0)
                     Row(
                       children: [
                         Icon(Icons.star, size: 20.sp, color: Colors.amber),
                         SizedBox(width: 4.w),
                         Text(
-                          restaurant.rating.toStringAsFixed(1),
+                          displayRestaurant.rating.toStringAsFixed(1),
                           style: TextStyle(
                             fontSize: 16.sp,
                             fontWeight: FontWeight.w600,
                             color: AppColors.foreground,
                           ),
                         ),
-                        SizedBox(width: 4.w),
-                        Text(
-                          '(Google 평점)',
-                          style: TextStyle(
-                            fontSize: 14.sp,
-                            color: AppColors.mutedForeground,
+                        if (displayRestaurant.userRatingsTotal != null) ...[
+                          SizedBox(width: 4.w),
+                          Text(
+                            '(${displayRestaurant.userRatingsTotal}개)',
+                            style: TextStyle(
+                              fontSize: 14.sp,
+                              color: AppColors.mutedForeground,
+                            ),
                           ),
-                        ),
+                        ],
                       ],
                     )
                   else
@@ -676,7 +737,7 @@ class _MapPageState extends ConsumerState<MapPage> with WidgetsBindingObserver {
                       ),
                     ),
 
-                  if (restaurant.address != null) ...[
+                  if (displayRestaurant.address != null) ...[
                     SizedBox(height: 16.h),
                     Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -685,7 +746,7 @@ class _MapPageState extends ConsumerState<MapPage> with WidgetsBindingObserver {
                         SizedBox(width: 8.w),
                         Expanded(
                           child: Text(
-                            restaurant.address!,
+                            displayRestaurant.address!,
                             style: TextStyle(
                               fontSize: 14.sp,
                               color: AppColors.foreground,
@@ -696,14 +757,14 @@ class _MapPageState extends ConsumerState<MapPage> with WidgetsBindingObserver {
                     ),
                   ],
 
-                  if (restaurant.phone != null) ...[
+                  if (displayRestaurant.phone != null) ...[
                     SizedBox(height: 12.h),
                     Row(
                       children: [
                         Icon(Icons.phone, size: 20.sp, color: AppColors.mutedForeground),
                         SizedBox(width: 8.w),
                         Text(
-                          restaurant.phone!,
+                          displayRestaurant.phone!,
                           style: TextStyle(
                             fontSize: 14.sp,
                             color: AppColors.foreground,
@@ -762,20 +823,53 @@ class _MapPageState extends ConsumerState<MapPage> with WidgetsBindingObserver {
                     ],
                   ),
 
-                  SizedBox(height: 24.h),
-
-                  // TODO: Google Places Details API 연동 필요
-                  Text(
-                    '리뷰, 사진, 영업시간 등 상세 정보는 Google Places Details API 연동 후 표시됩니다.',
-                    style: TextStyle(
-                      fontSize: 12.sp,
-                      color: AppColors.mutedForeground,
-                      fontStyle: FontStyle.italic,
+                  // 로딩 상태
+                  if (snapshot.connectionState == ConnectionState.waiting) ...[
+                    SizedBox(height: 16.h),
+                    Center(
+                      child: CircularProgressIndicator(color: AppColors.primary),
                     ),
-                  ),
+                    SizedBox(height: 8.h),
+                    Center(
+                      child: Text(
+                        '상세 정보 로딩 중...',
+                        style: TextStyle(
+                          fontSize: 14.sp,
+                          color: AppColors.mutedForeground,
+                        ),
+                      ),
+                    ),
+                  ],
+
+                  // 웹사이트 정보
+                  if (displayRestaurant.website != null) ...[
+                    SizedBox(height: 16.h),
+                    Row(
+                      children: [
+                        Icon(Icons.language, size: 20.sp, color: AppColors.mutedForeground),
+                        SizedBox(width: 8.w),
+                        Expanded(
+                          child: Text(
+                            displayRestaurant.website!,
+                            style: TextStyle(
+                              fontSize: 14.sp,
+                              color: AppColors.primary,
+                              decoration: TextDecoration.underline,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+
+                  SizedBox(height: 24.h),
                 ],
               ),
             ),
+          );
+            },
           );
         },
       ),

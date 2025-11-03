@@ -62,24 +62,63 @@ class GooglePlacesService {
     }
   }
 
-  /// 장소 상세 정보 조회
+  /// 장소 상세 정보 조회 (Place Details API)
   ///
   /// [placeId] - Google Place ID
+  ///
+  /// 반환되는 정보:
+  /// - 기본 정보: name, rating, user_ratings_total
+  /// - 연락처: formatted_phone_number, international_phone_number, website
+  /// - 주소: formatted_address, address_components
+  /// - 위치: geometry (location, viewport)
+  /// - 영업 정보: opening_hours, business_status
+  /// - 미디어: photos (최대 10개)
+  /// - 리뷰: reviews (최대 5개, 평점/텍스트/작성자/시간)
+  /// - 기타: types, price_level, url
   Future<Map<String, dynamic>> getPlaceDetails({
     required String placeId,
   }) async {
     try {
+      print('📍 Place Details API 요청: $placeId');
+
       final response = await _dio.get(
         '/details/json',
         queryParameters: {
           'place_id': placeId,
           'key': _apiKey,
           'language': 'ko',
-          'fields': 'name,rating,formatted_phone_number,formatted_address,geometry,types,photos,reviews',
+          'fields': [
+            // 기본 정보
+            'name',
+            'rating',
+            'user_ratings_total',
+            // 연락처 정보
+            'formatted_phone_number',
+            'international_phone_number',
+            'website',
+            // 주소 정보
+            'formatted_address',
+            'address_components',
+            // 위치 정보
+            'geometry',
+            // 영업 정보
+            'opening_hours',
+            'business_status',
+            // 사진 및 리뷰
+            'photos',
+            'reviews',
+            // 기타 정보
+            'types',
+            'price_level',
+            'url',
+          ].join(','),
         },
       );
 
-      return response.data;
+      final data = response.data as Map<String, dynamic>;
+      print('✅ Place Details API 응답: ${data['result']?['name']}');
+
+      return data;
     } catch (e) {
       print('❌ Google Places Details API 에러: $e');
       rethrow;

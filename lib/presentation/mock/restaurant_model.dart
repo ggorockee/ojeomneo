@@ -13,6 +13,16 @@ class RestaurantModel {
   final String? address;
   final String? placeUrl;
 
+  // Place Details API에서 가져오는 추가 정보
+  final int? userRatingsTotal; // 평점 개수
+  final String? website; // 웹사이트
+  final String? internationalPhoneNumber; // 국제 전화번호
+  final Map<String, dynamic>? openingHours; // 영업시간 정보
+  final String? businessStatus; // 영업 상태 (OPERATIONAL, CLOSED_TEMPORARILY 등)
+  final List<Map<String, dynamic>>? photos; // 사진 정보
+  final List<Map<String, dynamic>>? reviews; // 리뷰 정보
+  final int? priceLevel; // 가격 수준 (0-4)
+
   const RestaurantModel({
     required this.id,
     required this.name,
@@ -20,14 +30,22 @@ class RestaurantModel {
     required this.distance,
     required this.latitude,
     required this.longitude,
-    this.rating = 4.0,
+    this.rating = 0.0,
     this.description,
     this.phone,
     this.address,
     this.placeUrl,
+    this.userRatingsTotal,
+    this.website,
+    this.internationalPhoneNumber,
+    this.openingHours,
+    this.businessStatus,
+    this.photos,
+    this.reviews,
+    this.priceLevel,
   });
 
-  /// Google Places API 응답을 RestaurantModel로 변환
+  /// Google Places API 응답을 RestaurantModel로 변환 (Nearby Search)
   factory RestaurantModel.fromGooglePlaces(
     Map<String, dynamic> json,
     double userLat,
@@ -56,10 +74,106 @@ class RestaurantModel {
       distance: distance,
       latitude: lat,
       longitude: lng,
-      rating: rating, // Google Places API 실제 평점 사용
+      rating: rating,
       phone: json['formatted_phone_number'] as String?,
       address: json['vicinity'] as String? ?? json['formatted_address'] as String?,
-      placeUrl: null, // Google Places는 URL을 직접 제공하지 않음
+      placeUrl: json['url'] as String?,
+    );
+  }
+
+  /// Google Place Details API 응답을 RestaurantModel로 변환
+  factory RestaurantModel.fromPlaceDetails(
+    Map<String, dynamic> json,
+    double userLat,
+    double userLng,
+  ) {
+    // 좌표 추출
+    final geometry = json['geometry'] as Map<String, dynamic>?;
+    final location = geometry?['location'] as Map<String, dynamic>?;
+    final lat = (location?['lat'] as num?)?.toDouble() ?? 0.0;
+    final lng = (location?['lng'] as num?)?.toDouble() ?? 0.0;
+
+    // 거리 계산
+    final distance = _calculateDistance(userLat, userLng, lat, lng);
+
+    // 카테고리 추출
+    final types = (json['types'] as List<dynamic>?)?.cast<String>() ?? [];
+    final category = _getCategoryFromTypes(types);
+
+    // 평점 정보
+    final rating = (json['rating'] as num?)?.toDouble() ?? 0.0;
+    final userRatingsTotal = json['user_ratings_total'] as int?;
+
+    // 영업시간 정보
+    final openingHours = json['opening_hours'] as Map<String, dynamic>?;
+
+    // 사진 정보
+    final photosJson = json['photos'] as List<dynamic>?;
+    final photos = photosJson
+        ?.map((photo) => photo as Map<String, dynamic>)
+        .toList();
+
+    // 리뷰 정보
+    final reviewsJson = json['reviews'] as List<dynamic>?;
+    final reviews = reviewsJson
+        ?.map((review) => review as Map<String, dynamic>)
+        .toList();
+
+    return RestaurantModel(
+      id: json['place_id'] as String? ?? '',
+      name: json['name'] as String? ?? '이름 없음',
+      category: category,
+      distance: distance,
+      latitude: lat,
+      longitude: lng,
+      rating: rating,
+      phone: json['formatted_phone_number'] as String?,
+      address: json['formatted_address'] as String?,
+      placeUrl: json['url'] as String?,
+      userRatingsTotal: userRatingsTotal,
+      website: json['website'] as String?,
+      internationalPhoneNumber: json['international_phone_number'] as String?,
+      openingHours: openingHours,
+      businessStatus: json['business_status'] as String?,
+      photos: photos,
+      reviews: reviews,
+      priceLevel: json['price_level'] as int?,
+    );
+  }
+
+  /// 기존 RestaurantModel을 Place Details 정보로 업데이트
+  RestaurantModel copyWithDetails({
+    int? userRatingsTotal,
+    String? website,
+    String? internationalPhoneNumber,
+    Map<String, dynamic>? openingHours,
+    String? businessStatus,
+    List<Map<String, dynamic>>? photos,
+    List<Map<String, dynamic>>? reviews,
+    int? priceLevel,
+    String? phone,
+    String? address,
+  }) {
+    return RestaurantModel(
+      id: id,
+      name: name,
+      category: category,
+      distance: distance,
+      latitude: latitude,
+      longitude: longitude,
+      rating: rating,
+      description: description,
+      phone: phone ?? this.phone,
+      address: address ?? this.address,
+      placeUrl: placeUrl,
+      userRatingsTotal: userRatingsTotal ?? this.userRatingsTotal,
+      website: website ?? this.website,
+      internationalPhoneNumber: internationalPhoneNumber ?? this.internationalPhoneNumber,
+      openingHours: openingHours ?? this.openingHours,
+      businessStatus: businessStatus ?? this.businessStatus,
+      photos: photos ?? this.photos,
+      reviews: reviews ?? this.reviews,
+      priceLevel: priceLevel ?? this.priceLevel,
     );
   }
 
