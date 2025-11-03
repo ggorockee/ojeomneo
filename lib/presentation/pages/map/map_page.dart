@@ -5,12 +5,12 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:geolocator/geolocator.dart';
-import 'package:sliding_up_panel/sliding_up_panel.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../data/services/google_places_service.dart';
 import '../../mock/restaurant_model.dart';
 import '../../providers/location_provider.dart';
 import '../../widgets/location_permission_dialog.dart';
+import '../../widgets/place_bottom_card.dart';
 
 class MapPage extends ConsumerStatefulWidget {
   final String? category;
@@ -44,8 +44,8 @@ class _MapPageState extends ConsumerState<MapPage> with WidgetsBindingObserver {
   double _mapEastLongitude = 126.7168;
 
   bool _isSearching = false;
+  bool _showCategoryMenu = false; // 카테고리 메뉴 표시 여부
 
-  final PanelController _panelController = PanelController();
   final TextEditingController _searchController = TextEditingController();
 
   Timer? _mapMoveTimer;
@@ -181,110 +181,142 @@ class _MapPageState extends ConsumerState<MapPage> with WidgetsBindingObserver {
   Widget build(BuildContext context) {
     print('🏗️ MapPage build 호출됨');
     final topPadding = MediaQuery.of(context).padding.top;
-    final searchButtonTop = topPadding + 130.h;
-    final categoryBarHeight = topPadding + 116.h;
+    final bottomPadding = MediaQuery.of(context).padding.bottom;
 
     return Scaffold(
-      backgroundColor: Colors.white,
       body: Stack(
         children: [
-          Positioned(
-            top: 0,
-            left: 0,
-            right: 0,
-            height: categoryBarHeight,
-            child: Container(color: Colors.white),
-          ),
-
-          Positioned(
-            top: categoryBarHeight,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            child: SlidingUpPanel(
-              controller: _panelController,
-              minHeight: 180.h,
-              maxHeight: MediaQuery.of(context).size.height - searchButtonTop - 60.h,
-              borderRadius: BorderRadius.vertical(top: Radius.circular(16.r)),
-              panel: _buildRestaurantList(),
-              backdropEnabled: false,
-              color: Colors.transparent,
-              panelSnapping: false, // Disable snapping - stops at exact drag position
-              onPanelSlide: (position) {
-                setState(() {
-                  _panelPosition = position;
-                  // Hide location button when panel slides up
-                  _showLocationButton = position == 0.0;
-                });
-              },
-              body: GestureDetector(
-                onTap: () {
-                  // Close panel when map is tapped
-                  if (_panelPosition > 0) {
-                    _panelController.close();
-                  }
-                },
-                child: GoogleMap(
-                  onMapCreated: _onMapReady,
-                  initialCameraPosition: CameraPosition(
-                    target: LatLng(_currentMapCenterLat, _currentMapCenterLng),
-                    zoom: 15.0,
-                  ),
-                  markers: _markers,
-                  myLocationEnabled: true,
-                  myLocationButtonEnabled: false,
-                  onCameraMove: (CameraPosition position) {
-                    _currentMapCenterLat = position.target.latitude;
-                    _currentMapCenterLng = position.target.longitude;
-                  },
-                  onCameraIdle: _onMapMoved,
-                ),
-              ),
+          // 전체 화면 지도
+          GoogleMap(
+            onMapCreated: _onMapReady,
+            initialCameraPosition: CameraPosition(
+              target: LatLng(_currentMapCenterLat, _currentMapCenterLng),
+              zoom: 15.0,
             ),
+            markers: _markers,
+            myLocationEnabled: true,
+            myLocationButtonEnabled: false,
+            onCameraMove: (CameraPosition position) {
+              _currentMapCenterLat = position.target.latitude;
+              _currentMapCenterLng = position.target.longitude;
+            },
+            onCameraIdle: _onMapMoved,
           ),
 
+          // 상단 검색바 (Floating)
           Positioned(
-            top: topPadding + 8.h,
+            top: topPadding + 12.h,
             left: 16.w,
             right: 16.w,
-            child: _buildTopSearchBar(),
+            child: _buildFloatingSearchBar(),
           ),
 
+          // 우측 하단 버튼들
           Positioned(
-            top: topPadding + 68.h,
-            left: 0,
-            right: 0,
-            child: _buildCategoryFilter(),
-          ),
+            bottom: bottomPadding + 16.h,
+            right: 16.w,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // 카테고리 버튼
+                FloatingActionButton(
+                  heroTag: 'category',
+                  backgroundColor: Colors.white,
+                  elevation: 4,
+                  mini: true,
+                  onPressed: () {
+                    setState(() {
+                      _showCategoryMenu = !_showCategoryMenu;
+                    });
+                  },
+                  child: Icon(
+                    Icons.filter_list,
+                    color: AppColors.primary,
+                    size: 20.sp,
+                  ),
+                ),
+                SizedBox(height: 12.h),
 
-          Positioned(
-            top: searchButtonTop,
-            left: 0,
-            right: 0,
-            child: Center(
-              child: _buildSearchHereButton(),
+                // 검색 버튼
+                if (!_isSearching)
+                  FloatingActionButton(
+                    heroTag: 'search',
+                    backgroundColor: AppColors.primary,
+                    elevation: 4,
+                    onPressed: _searchRestaurantsAtCurrentLocation,
+                    child: Icon(
+                      Icons.search,
+                      color: Colors.white,
+                      size: 24.sp,
+                    ),
+                  )
+                else
+                  FloatingActionButton(
+                    heroTag: 'searching',
+                    backgroundColor: Colors.grey[600],
+                    elevation: 4,
+                    onPressed: null,
+                    child: SizedBox(
+                      width: 24.w,
+                      height: 24.h,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+                SizedBox(height: 12.h),
+
+                // 내 위치 버튼
+                if (_showLocationButton)
+                  FloatingActionButton(
+                    heroTag: 'current_location',
+                    backgroundColor: Colors.white,
+                    elevation: 4,
+                    mini: true,
+                    onPressed: _moveToCurrentLocation,
+                    child: _isLoadingLocation
+                        ? SizedBox(
+                            width: 20.w,
+                            height: 20.h,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: Colors.blue[600],
+                            ),
+                          )
+                        : Icon(
+                            Icons.my_location,
+                            color: Colors.blue[600],
+                            size: 20.sp,
+                          ),
+                  ),
+              ],
             ),
           ),
 
-          if (_showLocationButton)
+          // 카테고리 메뉴 (Floating)
+          if (_showCategoryMenu)
             Positioned(
-              bottom: 200.h,
+              bottom: bottomPadding + 150.h,
               right: 16.w,
-              child: FloatingActionButton(
-                heroTag: 'current_location',
-                backgroundColor: Colors.white,
-                elevation: 4,
-                onPressed: _moveToCurrentLocation,
-                child: _isLoadingLocation
-                    ? SizedBox(
-                        width: 24.w,
-                        height: 24.h,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          color: Colors.blue[600],
-                        ),
-                      )
-                    : Icon(Icons.my_location, color: Colors.blue[600], size: 24.sp),
+              child: _buildCategoryMenu(),
+            ),
+
+          // 하단 장소 카드
+          if (_selectedRestaurant != null)
+            Positioned(
+              left: 0,
+              right: 0,
+              bottom: bottomPadding,
+              child: PlaceBottomCard(
+                restaurant: _selectedRestaurant!,
+                onTap: () => _showPlaceDetails(_selectedRestaurant!),
+                onClose: () {
+                  setState(() {
+                    _selectedRestaurant = null;
+                    _showLocationButton = true;
+                  });
+                },
               ),
             ),
         ],
@@ -518,46 +550,248 @@ class _MapPageState extends ConsumerState<MapPage> with WidgetsBindingObserver {
   }
 
   void _onRestaurantSelected(RestaurantModel restaurant) {
-    print('🎯 식당 선택: ${restaurant.name}');
+    print('🎯 장소 선택: ${restaurant.name}');
 
     setState(() {
       _selectedRestaurant = restaurant;
-      _showLocationButton = false; // Hide button when marker selected
+      _showLocationButton = false;
     });
 
+    // 구글맵 스타일: 마커 위치로 카메라 이동
     _mapController?.animateCamera(
-      CameraUpdate.newCameraPosition(
-        CameraPosition(
-          target: LatLng(restaurant.latitude, restaurant.longitude),
-          zoom: 17.0,
-        ),
-      ),
-    );
-
-    if (!_panelController.isPanelOpen) {
-      _panelController.open();
-    }
-
-    _filterVisibleRestaurants();
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('${restaurant.name} 선택됨', style: TextStyle(fontSize: 14.sp)),
-        duration: const Duration(seconds: 1),
-        backgroundColor: AppColors.primary,
+      CameraUpdate.newLatLng(
+        LatLng(restaurant.latitude, restaurant.longitude),
       ),
     );
   }
 
-  Widget _buildTopSearchBar() {
+  /// 구글맵 스타일 장소 상세 정보 (전체 화면 Bottom Sheet)
+  void _showPlaceDetails(RestaurantModel restaurant) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20.r)),
+      ),
+      builder: (context) => DraggableScrollableSheet(
+        initialChildSize: 0.7,
+        minChildSize: 0.5,
+        maxChildSize: 0.95,
+        expand: false,
+        builder: (context, scrollController) {
+          return SingleChildScrollView(
+            controller: scrollController,
+            child: Container(
+              padding: EdgeInsets.all(24.w),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // 드래그 핸들
+                  Center(
+                    child: Container(
+                      width: 40.w,
+                      height: 4.h,
+                      decoration: BoxDecoration(
+                        color: Colors.grey[300],
+                        borderRadius: BorderRadius.circular(2.r),
+                      ),
+                    ),
+                  ),
+                  SizedBox(height: 16.h),
+
+                  // 장소명
+                  Text(
+                    restaurant.name,
+                    style: TextStyle(
+                      fontSize: 24.sp,
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.foreground,
+                    ),
+                  ),
+                  SizedBox(height: 8.h),
+
+                  // 카테고리 & 거리
+                  Row(
+                    children: [
+                      Container(
+                        padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
+                        decoration: BoxDecoration(
+                          color: AppColors.primaryLight,
+                          borderRadius: BorderRadius.circular(4.r),
+                        ),
+                        child: Text(
+                          restaurant.category,
+                          style: TextStyle(
+                            fontSize: 12.sp,
+                            color: AppColors.primary,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                      SizedBox(width: 8.w),
+                      Icon(Icons.location_on, size: 16.sp, color: AppColors.mutedForeground),
+                      SizedBox(width: 4.w),
+                      Text(
+                        restaurant.distanceText,
+                        style: TextStyle(
+                          fontSize: 14.sp,
+                          color: AppColors.mutedForeground,
+                        ),
+                      ),
+                    ],
+                  ),
+
+                  SizedBox(height: 12.h),
+
+                  // 평점
+                  if (restaurant.rating > 0)
+                    Row(
+                      children: [
+                        Icon(Icons.star, size: 20.sp, color: Colors.amber),
+                        SizedBox(width: 4.w),
+                        Text(
+                          restaurant.rating.toStringAsFixed(1),
+                          style: TextStyle(
+                            fontSize: 16.sp,
+                            fontWeight: FontWeight.w600,
+                            color: AppColors.foreground,
+                          ),
+                        ),
+                        SizedBox(width: 4.w),
+                        Text(
+                          '(Google 평점)',
+                          style: TextStyle(
+                            fontSize: 14.sp,
+                            color: AppColors.mutedForeground,
+                          ),
+                        ),
+                      ],
+                    )
+                  else
+                    Text(
+                      '평점 정보 없음',
+                      style: TextStyle(
+                        fontSize: 14.sp,
+                        color: AppColors.mutedForeground,
+                      ),
+                    ),
+
+                  if (restaurant.address != null) ...[
+                    SizedBox(height: 16.h),
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Icon(Icons.place, size: 20.sp, color: AppColors.mutedForeground),
+                        SizedBox(width: 8.w),
+                        Expanded(
+                          child: Text(
+                            restaurant.address!,
+                            style: TextStyle(
+                              fontSize: 14.sp,
+                              color: AppColors.foreground,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+
+                  if (restaurant.phone != null) ...[
+                    SizedBox(height: 12.h),
+                    Row(
+                      children: [
+                        Icon(Icons.phone, size: 20.sp, color: AppColors.mutedForeground),
+                        SizedBox(width: 8.w),
+                        Text(
+                          restaurant.phone!,
+                          style: TextStyle(
+                            fontSize: 14.sp,
+                            color: AppColors.foreground,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+
+                  SizedBox(height: 24.h),
+
+                  // 액션 버튼
+                  Row(
+                    children: [
+                      Expanded(
+                        child: OutlinedButton.icon(
+                          onPressed: () {
+                            Navigator.pop(context);
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text('길찾기 기능은 준비 중입니다',
+                                    style: TextStyle(fontSize: 14.sp)),
+                              ),
+                            );
+                          },
+                          icon: Icon(Icons.directions, size: 20.sp),
+                          label: Text('길찾기', style: TextStyle(fontSize: 16.sp)),
+                          style: OutlinedButton.styleFrom(
+                            padding: EdgeInsets.symmetric(vertical: 14.h),
+                            side: BorderSide(color: AppColors.primary),
+                            foregroundColor: AppColors.primary,
+                          ),
+                        ),
+                      ),
+                      SizedBox(width: 12.w),
+                      Expanded(
+                        child: ElevatedButton.icon(
+                          onPressed: () {
+                            Navigator.pop(context);
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text('전화 기능은 준비 중입니다',
+                                    style: TextStyle(fontSize: 14.sp)),
+                              ),
+                            );
+                          },
+                          icon: Icon(Icons.call, size: 20.sp),
+                          label: Text('전화', style: TextStyle(fontSize: 16.sp)),
+                          style: ElevatedButton.styleFrom(
+                            padding: EdgeInsets.symmetric(vertical: 14.h),
+                            backgroundColor: AppColors.primary,
+                            foregroundColor: Colors.white,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+
+                  SizedBox(height: 24.h),
+
+                  // TODO: Google Places Details API 연동 필요
+                  Text(
+                    '리뷰, 사진, 영업시간 등 상세 정보는 Google Places Details API 연동 후 표시됩니다.',
+                    style: TextStyle(
+                      fontSize: 12.sp,
+                      color: AppColors.mutedForeground,
+                      fontStyle: FontStyle.italic,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  /// 구글맵 스타일 Floating 검색바
+  Widget _buildFloatingSearchBar() {
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(12.r),
+        borderRadius: BorderRadius.circular(28.r),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.1),
-            blurRadius: 8,
+            color: Colors.black.withOpacity(0.15),
+            blurRadius: 12,
             offset: const Offset(0, 2),
           ),
         ],
@@ -565,74 +799,85 @@ class _MapPageState extends ConsumerState<MapPage> with WidgetsBindingObserver {
       child: TextField(
         controller: _searchController,
         decoration: InputDecoration(
-          hintText: '장소·지하철·지역명 검색 (주소 검색 준비 중 🙏)',
+          hintText: '장소 검색',
           hintStyle: TextStyle(
-            fontSize: 14.sp,
+            fontSize: 16.sp,
             color: AppColors.mutedForeground,
           ),
-          prefixIcon: Icon(Icons.search, color: AppColors.mutedForeground, size: 24.sp),
+          prefixIcon: IconButton(
+            icon: Icon(Icons.arrow_back, color: AppColors.foreground, size: 24.sp),
+            onPressed: () => Navigator.pop(context),
+          ),
+          suffixIcon: Icon(Icons.mic, color: AppColors.mutedForeground, size: 24.sp),
           border: InputBorder.none,
           contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
         ),
+        onSubmitted: (value) {
+          // TODO: Google Places Autocomplete 구현
+        },
       ),
     );
   }
 
-  Widget _buildCategoryFilter() {
+  /// 구글맵 스타일 카테고리 메뉴 (Popup)
+  Widget _buildCategoryMenu() {
     return Container(
-      height: 48.h,
+      width: 180.w,
       decoration: BoxDecoration(
-        color: AppColors.primary,
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12.r),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.1),
-            blurRadius: 4,
+            color: Colors.black.withOpacity(0.15),
+            blurRadius: 12,
             offset: const Offset(0, 2),
           ),
         ],
       ),
-      child: ListView.builder(
-        scrollDirection: Axis.horizontal,
-        padding: EdgeInsets.symmetric(horizontal: 16.w),
-        itemCount: _categories.length,
-        itemBuilder: (context, index) {
-          final category = _categories[index];
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: _categories.map((category) {
           final categoryName = category['name']!;
           final isSelected = _selectedCategory == categoryName ||
               (_selectedCategory == null && categoryName == '전체');
 
-          return Padding(
-            padding: EdgeInsets.only(right: 12.w),
-            child: GestureDetector(
-              onTap: () {
-                setState(() {
-                  if (categoryName == '전체') {
-                    _selectedCategory = null;
-                  } else {
-                    _selectedCategory = categoryName;
-                  }
-                });
-              },
-              child: Container(
-                alignment: Alignment.center,
-                padding: EdgeInsets.symmetric(horizontal: 4.w),
-                decoration: BoxDecoration(
-                  border: isSelected
-                      ? Border(bottom: BorderSide(color: Colors.white, width: 3))
-                      : null,
+          return InkWell(
+            onTap: () {
+              setState(() {
+                if (categoryName == '전체') {
+                  _selectedCategory = null;
+                } else {
+                  _selectedCategory = categoryName;
+                }
+                _showCategoryMenu = false;
+              });
+            },
+            child: Container(
+              padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
+              decoration: BoxDecoration(
+                color: isSelected ? AppColors.primary.withOpacity(0.1) : Colors.transparent,
+                border: Border(
+                  bottom: BorderSide(color: Colors.grey[200]!, width: 1),
                 ),
-                child: Text(
-                  categoryName,
-                  style: TextStyle(
-                    fontSize: 14.sp,
-                    color: Colors.white,
-                    fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+              ),
+              child: Row(
+                children: [
+                  if (isSelected)
+                    Icon(Icons.check, color: AppColors.primary, size: 20.sp),
+                  if (isSelected) SizedBox(width: 8.w),
+                  Text(
+                    categoryName,
+                    style: TextStyle(
+                      fontSize: 14.sp,
+                      color: isSelected ? AppColors.primary : AppColors.foreground,
+                      fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
+                    ),
                   ),
-                ),
+                ],
               ),
             ),
           );
-        },
+        }).toList(),
       ),
     );
   }
