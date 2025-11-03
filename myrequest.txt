@@ -87,3 +87,19 @@ YbiRfmLczScamYWnzeDeN1b2tiM=
 - 핀을 누르면 슬라이드업했을때 그것 만 나오고
 
 내말이 정확히 뭔지 알지?
+
+
+/sc:implement
+
+git agent로 git을 최신화해주고 google map으로 전환하기 위한 feature 브랜치를 만들어줘
+그리고 작업은 feature 브랜치에서 할거야 
+API Key: AIzaSyAErzB1kQHvit41AK0mXf9T5iBgiN5siJI
+google map flutter: google_maps_flutter: ^2.13.1
+
+이 내용을 가지고 현재 카카오맵으로 지정되어있는걸 googlemap으로 전환할거야 
+
+작업이 완료되면 git agent로 feature 브랜치에 커밋해줘
+
+
+
+
