@@ -201,83 +201,84 @@ class _MapPageState extends ConsumerState<MapPage> with WidgetsBindingObserver {
             onCameraIdle: _onMapMoved,
           ),
 
-          // 상단 검색바 (Floating)
+          // 상단 검색바 및 "이 위치로 검색" 버튼
           Positioned(
             top: topPadding + 12.h,
             left: 16.w,
             right: 16.w,
-            child: _buildFloatingSearchBar(),
-          ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // 검색바
+                _buildFloatingSearchBar(),
+                SizedBox(height: 12.h),
 
-          // 중앙 하단 검색 버튼
-          Positioned(
-            bottom: bottomPadding + 16.h,
-            left: 0,
-            right: 0,
-            child: Center(
-              child: !_isSearching
-                  ? ElevatedButton.icon(
-                      onPressed: _searchRestaurantsAtCurrentLocation,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.white,
-                        foregroundColor: AppColors.foreground,
-                        elevation: 4,
-                        padding: EdgeInsets.symmetric(
-                          horizontal: 24.w,
-                          vertical: 12.h,
-                        ),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(24.r),
-                        ),
-                      ),
-                      icon: Icon(Icons.search, size: 20.sp),
-                      label: Text(
-                        '이 위치로 검색',
-                        style: TextStyle(
-                          fontSize: 14.sp,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    )
-                  : Container(
+                // "이 위치로 검색" 버튼
+                if (!_isSearching)
+                  ElevatedButton.icon(
+                    onPressed: _searchRestaurantsAtCurrentLocation,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.white,
+                      foregroundColor: AppColors.foreground,
+                      elevation: 4,
                       padding: EdgeInsets.symmetric(
                         horizontal: 24.w,
                         vertical: 12.h,
                       ),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
+                      shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(24.r),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.15),
-                            blurRadius: 8,
-                            offset: const Offset(0, 2),
-                          ),
-                        ],
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          SizedBox(
-                            width: 16.w,
-                            height: 16.h,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              color: AppColors.primary,
-                            ),
-                          ),
-                          SizedBox(width: 12.w),
-                          Text(
-                            '검색 중...',
-                            style: TextStyle(
-                              fontSize: 14.sp,
-                              fontWeight: FontWeight.w600,
-                              color: AppColors.foreground,
-                            ),
-                          ),
-                        ],
                       ),
                     ),
+                    icon: Icon(Icons.search, size: 20.sp),
+                    label: Text(
+                      '이 위치로 검색',
+                      style: TextStyle(
+                        fontSize: 14.sp,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  )
+                else
+                  Container(
+                    padding: EdgeInsets.symmetric(
+                      horizontal: 24.w,
+                      vertical: 12.h,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(24.r),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.15),
+                          blurRadius: 8,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        SizedBox(
+                          width: 16.w,
+                          height: 16.h,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: AppColors.primary,
+                          ),
+                        ),
+                        SizedBox(width: 12.w),
+                        Text(
+                          '검색 중...',
+                          style: TextStyle(
+                            fontSize: 14.sp,
+                            fontWeight: FontWeight.w600,
+                            color: AppColors.foreground,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+              ],
             ),
           ),
 
