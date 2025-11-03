@@ -31,6 +31,7 @@ class _MapPageState extends ConsumerState<MapPage> with WidgetsBindingObserver {
   bool _isMapReady = false;
   Set<Marker> _markers = {};
   double _panelPosition = 0.0;
+  bool _showLocationButton = true;
 
   final _kakaoLocalService = KakaoLocalService();
 
@@ -96,6 +97,10 @@ class _MapPageState extends ConsumerState<MapPage> with WidgetsBindingObserver {
       if (locationState.isGranted && _isMapReady) {
         print('🔄 앱 재개 - 권한 있음, 마커 표시');
         _showRestaurantMarkers();
+        // Show location button when returning to app
+        setState(() {
+          _showLocationButton = true;
+        });
       }
     }
   }
@@ -211,6 +216,8 @@ class _MapPageState extends ConsumerState<MapPage> with WidgetsBindingObserver {
               onPanelSlide: (position) {
                 setState(() {
                   _panelPosition = position;
+                  // Hide location button when panel slides up
+                  _showLocationButton = position == 0.0;
                 });
               },
               body: GoogleMap(
@@ -220,7 +227,7 @@ class _MapPageState extends ConsumerState<MapPage> with WidgetsBindingObserver {
                   zoom: 15.0,
                 ),
                 markers: _markers,
-                myLocationEnabled: false,
+                myLocationEnabled: true,
                 myLocationButtonEnabled: false,
                 onCameraMove: (CameraPosition position) {
                   _currentMapCenterLat = position.target.latitude;
@@ -254,26 +261,27 @@ class _MapPageState extends ConsumerState<MapPage> with WidgetsBindingObserver {
             ),
           ),
 
-          Positioned(
-            bottom: 200.h,
-            right: 16.w,
-            child: FloatingActionButton(
-              heroTag: 'current_location',
-              backgroundColor: Colors.white,
-              elevation: 4,
-              onPressed: _moveToCurrentLocation,
-              child: _isLoadingLocation
-                  ? SizedBox(
-                      width: 24.w,
-                      height: 24.h,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        color: AppColors.primary,
-                      ),
-                    )
-                  : Icon(Icons.my_location, color: AppColors.primary, size: 24.sp),
+          if (_showLocationButton)
+            Positioned(
+              bottom: 200.h,
+              right: 16.w,
+              child: FloatingActionButton(
+                heroTag: 'current_location',
+                backgroundColor: Colors.white,
+                elevation: 4,
+                onPressed: _moveToCurrentLocation,
+                child: _isLoadingLocation
+                    ? SizedBox(
+                        width: 24.w,
+                        height: 24.h,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: Colors.blue[600],
+                        ),
+                      )
+                    : Icon(Icons.my_location, color: Colors.blue[600], size: 24.sp),
+              ),
             ),
-          ),
         ],
       ),
     );
@@ -509,6 +517,7 @@ class _MapPageState extends ConsumerState<MapPage> with WidgetsBindingObserver {
 
     setState(() {
       _selectedRestaurant = restaurant;
+      _showLocationButton = false; // Hide button when marker selected
     });
 
     _mapController?.animateCamera(
@@ -669,6 +678,7 @@ class _MapPageState extends ConsumerState<MapPage> with WidgetsBindingObserver {
     setState(() {
       _isSearching = true;
       _selectedRestaurant = null;
+      _showLocationButton = true; // Show button when searching
     });
 
     try {
@@ -992,6 +1002,11 @@ class _MapPageState extends ConsumerState<MapPage> with WidgetsBindingObserver {
   }
 
   void _showRestaurantInfo(RestaurantModel restaurant) {
+    // Hide location button when modal appears
+    setState(() {
+      _showLocationButton = false;
+    });
+
     showModalBottomSheet(
       context: context,
       shape: RoundedRectangleBorder(
@@ -1093,6 +1108,13 @@ class _MapPageState extends ConsumerState<MapPage> with WidgetsBindingObserver {
           ],
         ),
       ),
-    );
+    ).then((_) {
+      // Show location button when modal is dismissed
+      if (mounted) {
+        setState(() {
+          _showLocationButton = true;
+        });
+      }
+    });
   }
 }
