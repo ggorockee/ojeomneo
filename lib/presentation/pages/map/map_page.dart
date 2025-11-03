@@ -213,6 +213,7 @@ class _MapPageState extends ConsumerState<MapPage> with WidgetsBindingObserver {
               panel: _buildRestaurantList(),
               backdropEnabled: false,
               color: Colors.transparent,
+              snapingEnabled: false, // Disable snapping - panel stays where user stops
               onPanelSlide: (position) {
                 setState(() {
                   _panelPosition = position;
@@ -220,20 +221,28 @@ class _MapPageState extends ConsumerState<MapPage> with WidgetsBindingObserver {
                   _showLocationButton = position == 0.0;
                 });
               },
-              body: GoogleMap(
-                onMapCreated: _onMapReady,
-                initialCameraPosition: CameraPosition(
-                  target: LatLng(_currentMapCenterLat, _currentMapCenterLng),
-                  zoom: 15.0,
-                ),
-                markers: _markers,
-                myLocationEnabled: true,
-                myLocationButtonEnabled: false,
-                onCameraMove: (CameraPosition position) {
-                  _currentMapCenterLat = position.target.latitude;
-                  _currentMapCenterLng = position.target.longitude;
+              body: GestureDetector(
+                onTap: () {
+                  // Close panel when map is tapped
+                  if (_panelPosition > 0) {
+                    _panelController.close();
+                  }
                 },
-                onCameraIdle: _onMapMoved,
+                child: GoogleMap(
+                  onMapCreated: _onMapReady,
+                  initialCameraPosition: CameraPosition(
+                    target: LatLng(_currentMapCenterLat, _currentMapCenterLng),
+                    zoom: 15.0,
+                  ),
+                  markers: _markers,
+                  myLocationEnabled: true,
+                  myLocationButtonEnabled: false,
+                  onCameraMove: (CameraPosition position) {
+                    _currentMapCenterLat = position.target.latitude;
+                    _currentMapCenterLng = position.target.longitude;
+                  },
+                  onCameraIdle: _onMapMoved,
+                ),
               ),
             ),
           ),
