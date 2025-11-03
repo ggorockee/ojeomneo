@@ -994,20 +994,29 @@ class _MapPageState extends ConsumerState<MapPage> with WidgetsBindingObserver {
                     ),
 
                     SizedBox(height: 4.h),
-                    Row(
-                      children: [
-                        Icon(Icons.star, size: 14.sp, color: Colors.amber),
-                        SizedBox(width: 2.w),
-                        Text(
-                          restaurant.rating.toString(),
-                          style: TextStyle(
-                            fontSize: 12.sp,
-                            fontWeight: FontWeight.w600,
-                            color: AppColors.foreground,
+                    if (restaurant.rating > 0)
+                      Row(
+                        children: [
+                          Icon(Icons.star, size: 14.sp, color: Colors.amber),
+                          SizedBox(width: 2.w),
+                          Text(
+                            restaurant.rating.toStringAsFixed(1),
+                            style: TextStyle(
+                              fontSize: 12.sp,
+                              fontWeight: FontWeight.w600,
+                              color: AppColors.foreground,
+                            ),
                           ),
+                        ],
+                      )
+                    else
+                      Text(
+                        '평점 없음',
+                        style: TextStyle(
+                          fontSize: 12.sp,
+                          color: AppColors.mutedForeground,
                         ),
-                      ],
-                    ),
+                      ),
                   ],
                 ),
               ),
@@ -1082,20 +1091,29 @@ class _MapPageState extends ConsumerState<MapPage> with WidgetsBindingObserver {
             ),
 
             SizedBox(height: 8.h),
-            Row(
-              children: [
-                Icon(Icons.star, size: 16.sp, color: Colors.amber),
-                SizedBox(width: 4.w),
-                Text(
-                  restaurant.rating.toString(),
-                  style: TextStyle(
-                    fontSize: 14.sp,
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.foreground,
+            if (restaurant.rating > 0)
+              Row(
+                children: [
+                  Icon(Icons.star, size: 16.sp, color: Colors.amber),
+                  SizedBox(width: 4.w),
+                  Text(
+                    restaurant.rating.toStringAsFixed(1),
+                    style: TextStyle(
+                      fontSize: 14.sp,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.foreground,
+                    ),
                   ),
+                ],
+              )
+            else
+              Text(
+                '평점 정보 없음',
+                style: TextStyle(
+                  fontSize: 14.sp,
+                  color: AppColors.mutedForeground,
                 ),
-              ],
-            ),
+              ),
 
             if (restaurant.description != null) ...[
               SizedBox(height: 12.h),

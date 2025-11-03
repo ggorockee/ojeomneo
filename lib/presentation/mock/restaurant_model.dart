@@ -46,7 +46,7 @@ class RestaurantModel {
     final types = (json['types'] as List<dynamic>?)?.cast<String>() ?? [];
     final category = _getCategoryFromTypes(types);
 
-    // 평점 추출
+    // 평점 추출 (Google Places API 실제 평점)
     final rating = (json['rating'] as num?)?.toDouble() ?? 0.0;
 
     return RestaurantModel(
@@ -56,7 +56,7 @@ class RestaurantModel {
       distance: distance,
       latitude: lat,
       longitude: lng,
-      rating: rating > 0 ? rating : 4.0, // 평점이 없으면 기본값 4.0
+      rating: rating, // Google Places API 실제 평점 사용
       phone: json['formatted_phone_number'] as String?,
       address: json['vicinity'] as String? ?? json['formatted_address'] as String?,
       placeUrl: null, // Google Places는 URL을 직접 제공하지 않음
