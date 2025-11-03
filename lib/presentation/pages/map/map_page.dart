@@ -7,7 +7,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:sliding_up_panel/sliding_up_panel.dart';
 import '../../../core/theme/app_colors.dart';
-import '../../../data/services/kakao_local_service.dart';
+import '../../../data/services/google_places_service.dart';
 import '../../mock/restaurant_model.dart';
 import '../../providers/location_provider.dart';
 import '../../widgets/location_permission_dialog.dart';
@@ -33,7 +33,7 @@ class _MapPageState extends ConsumerState<MapPage> with WidgetsBindingObserver {
   double _panelPosition = 0.0;
   bool _showLocationButton = true;
 
-  final _kakaoLocalService = KakaoLocalService();
+  final _googlePlacesService = GooglePlacesService();
 
   double _currentMapCenterLat = 37.6161;
   double _currentMapCenterLng = 126.7168;
@@ -52,16 +52,12 @@ class _MapPageState extends ConsumerState<MapPage> with WidgetsBindingObserver {
   LatLng? _lastCameraPosition;
 
   String? _selectedCategory;
-  final List<String> _categories = [
-    '전체',
-    '한식',
-    '중식',
-    '일식',
-    '양식',
-    '패스트푸드',
-    '카페',
-    '디저트',
-    '분식',
+  final List<Map<String, String>> _categories = [
+    {'name': '전체', 'type': 'restaurant'},
+    {'name': '음식점', 'type': 'restaurant'},
+    {'name': '카페', 'type': 'cafe'},
+    {'name': '베이커리', 'type': 'bakery'},
+    {'name': '술집', 'type': 'bar'},
   ];
 
   @override
@@ -601,18 +597,19 @@ class _MapPageState extends ConsumerState<MapPage> with WidgetsBindingObserver {
         itemCount: _categories.length,
         itemBuilder: (context, index) {
           final category = _categories[index];
-          final isSelected = _selectedCategory == category ||
-              (_selectedCategory == null && category == '전체');
+          final categoryName = category['name']!;
+          final isSelected = _selectedCategory == categoryName ||
+              (_selectedCategory == null && categoryName == '전체');
 
           return Padding(
             padding: EdgeInsets.only(right: 12.w),
             child: GestureDetector(
               onTap: () {
                 setState(() {
-                  if (category == '전체') {
+                  if (categoryName == '전체') {
                     _selectedCategory = null;
                   } else {
-                    _selectedCategory = category;
+                    _selectedCategory = categoryName;
                   }
                 });
               },
@@ -625,7 +622,7 @@ class _MapPageState extends ConsumerState<MapPage> with WidgetsBindingObserver {
                       : null,
                 ),
                 child: Text(
-                  category,
+                  categoryName,
                   style: TextStyle(
                     fontSize: 14.sp,
                     color: Colors.white,
@@ -693,58 +690,75 @@ class _MapPageState extends ConsumerState<MapPage> with WidgetsBindingObserver {
     try {
       await _updateVisibleArea();
 
-      print('🔍 화면 중심에서 검색 시작: lat=$_currentMapCenterLat, lng=$_currentMapCenterLng');
+      print('🔍 Google Places API 검색 시작: lat=$_currentMapCenterLat, lng=$_currentMapCenterLng');
 
       final latDiff = _mapNorthLatitude - _mapSouthLatitude;
       final radiusInKm = (latDiff * 111.0) / 2;
-      final radiusInMeters = (radiusInKm * 1000).toInt().clamp(500, 20000);
+      final radiusInMeters = (radiusInKm * 1000).toInt().clamp(500, 50000);
 
       print('📐 검색 반경: ${radiusInMeters}m (화면 기반)');
 
-      final allRestaurants = <RestaurantModel>[];
-      int pageCount = 0;
+      // 현재 선택된 카테고리의 type 가져오기
+      final selectedType = _selectedCategory != null
+          ? _categories.firstWhere(
+              (cat) => cat['name'] == _selectedCategory,
+              orElse: () => _categories[0],
+            )['type']!
+          : 'restaurant';
 
-      for (int page = 1; page <= 3; page++) {
+      print('📂 카테고리: $_selectedCategory (type: $selectedType)');
+
+      final allRestaurants = <RestaurantModel>[];
+      String? nextPageToken;
+
+      // Google Places API는 최대 3페이지까지 지원
+      for (int page = 0; page < 3; page++) {
         try {
-          final response = await _kakaoLocalService.searchByCategory(
-            categoryGroupCode: 'FD6',
-            x: _currentMapCenterLng,
-            y: _currentMapCenterLat,
+          final response = await _googlePlacesService.searchNearby(
+            latitude: _currentMapCenterLat,
+            longitude: _currentMapCenterLng,
             radius: radiusInMeters,
-            size: 15,
-            page: page,
+            type: selectedType,
+            pageToken: nextPageToken,
           );
 
-          final documents = response['documents'] as List<dynamic>? ?? [];
-          print('📄 페이지 $page: ${documents.length}개 발견');
+          final results = response['results'] as List<dynamic>? ?? [];
+          print('📄 페이지 ${page + 1}: ${results.length}개 발견');
 
-          if (documents.isEmpty) {
-            print('📄 페이지 $page: 결과 없음 - 검색 중단');
+          if (results.isEmpty) {
+            print('📄 페이지 ${page + 1}: 결과 없음 - 검색 중단');
             break;
           }
 
-          final restaurants = documents
-              .map((doc) => RestaurantModel.fromKakaoApi(doc as Map<String, dynamic>))
+          final restaurants = results
+              .map((place) => RestaurantModel.fromGooglePlaces(
+                    place as Map<String, dynamic>,
+                    _currentMapCenterLat,
+                    _currentMapCenterLng,
+                  ))
               .toList();
 
           allRestaurants.addAll(restaurants);
-          pageCount++;
 
-          final meta = response['meta'] as Map<String, dynamic>?;
-          final isEnd = meta?['is_end'] as bool? ?? true;
-          print('📄 페이지 $page: is_end=$isEnd');
+          nextPageToken = response['next_page_token'] as String?;
+          print('📄 페이지 ${page + 1}: next_page_token=${nextPageToken != null ? "있음" : "없음"}');
 
-          if (isEnd) {
+          if (nextPageToken == null) {
             print('📄 마지막 페이지 도달 - 검색 완료');
             break;
           }
+
+          // Google Places API는 next_page_token 사용 전 약간의 대기가 필요
+          if (page < 2) {
+            await Future.delayed(const Duration(milliseconds: 1500));
+          }
         } catch (e) {
-          print('⚠️ 페이지 $page 요청 실패: $e');
+          print('⚠️ 페이지 ${page + 1} 요청 실패: $e');
           break;
         }
       }
 
-      print('✅ 검색 완료: 총 ${allRestaurants.length}개 음식점 발견 ($pageCount 페이지)');
+      print('✅ 검색 완료: 총 ${allRestaurants.length}개 장소 발견');
 
       setState(() {
         _restaurants = allRestaurants;

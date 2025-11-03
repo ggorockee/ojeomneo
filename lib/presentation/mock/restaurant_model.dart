@@ -1,3 +1,5 @@
+import 'dart:math' show sin, cos, sqrt, atan2, pi;
+
 class RestaurantModel {
   final String id;
   final String name;
@@ -25,36 +27,85 @@ class RestaurantModel {
     this.placeUrl,
   });
 
-  /// 카카오 로컬 API 응답을 RestaurantModel로 변환
-  factory RestaurantModel.fromKakaoApi(Map<String, dynamic> json) {
-    // 카테고리명 추출 (마지막 > 뒤의 내용만 사용)
-    final categoryName = json['category_name'] as String? ?? '';
-    final categoryParts = categoryName.split('>');
-    final simplifiedCategory = categoryParts.isNotEmpty 
-        ? categoryParts.last.trim() 
-        : '음식점';
+  /// Google Places API 응답을 RestaurantModel로 변환
+  factory RestaurantModel.fromGooglePlaces(
+    Map<String, dynamic> json,
+    double userLat,
+    double userLng,
+  ) {
+    // 좌표 추출
+    final geometry = json['geometry'] as Map<String, dynamic>?;
+    final location = geometry?['location'] as Map<String, dynamic>?;
+    final lat = (location?['lat'] as num?)?.toDouble() ?? 0.0;
+    final lng = (location?['lng'] as num?)?.toDouble() ?? 0.0;
 
-    // 거리 변환 (String -> double)
-    final distanceStr = json['distance'] as String? ?? '0';
-    final distance = double.tryParse(distanceStr) ?? 0.0;
+    // 거리 계산 (Haversine 공식)
+    final distance = _calculateDistance(userLat, userLng, lat, lng);
 
-    // 좌표 변환 (String -> double)
-    final x = double.tryParse(json['x'] as String? ?? '0') ?? 0.0;
-    final y = double.tryParse(json['y'] as String? ?? '0') ?? 0.0;
+    // 카테고리 추출 (types 배열에서)
+    final types = (json['types'] as List<dynamic>?)?.cast<String>() ?? [];
+    final category = _getCategoryFromTypes(types);
+
+    // 평점 추출
+    final rating = (json['rating'] as num?)?.toDouble() ?? 0.0;
 
     return RestaurantModel(
-      id: json['id'] as String? ?? '',
-      name: json['place_name'] as String? ?? '이름 없음',
-      category: simplifiedCategory,
+      id: json['place_id'] as String? ?? '',
+      name: json['name'] as String? ?? '이름 없음',
+      category: category,
       distance: distance,
-      latitude: y,
-      longitude: x,
-      rating: 4.0 + (distance % 10) / 10, // 임시 평점 (거리 기반)
-      phone: json['phone'] as String?,
-      address: json['address_name'] as String?,
-      placeUrl: json['place_url'] as String?,
+      latitude: lat,
+      longitude: lng,
+      rating: rating > 0 ? rating : 4.0, // 평점이 없으면 기본값 4.0
+      phone: json['formatted_phone_number'] as String?,
+      address: json['vicinity'] as String? ?? json['formatted_address'] as String?,
+      placeUrl: null, // Google Places는 URL을 직접 제공하지 않음
     );
   }
+
+  /// types 배열에서 한국어 카테고리명 추출
+  static String _getCategoryFromTypes(List<String> types) {
+    const typeMap = {
+      'restaurant': '음식점',
+      'cafe': '카페',
+      'bakery': '베이커리',
+      'bar': '술집',
+      'meal_takeaway': '테이크아웃',
+      'meal_delivery': '배달',
+      'food': '음식점',
+    };
+
+    for (final type in types) {
+      if (typeMap.containsKey(type)) {
+        return typeMap[type]!;
+      }
+    }
+
+    return '음식점';
+  }
+
+  /// Haversine 공식으로 두 좌표 사이의 거리 계산 (미터)
+  static double _calculateDistance(
+    double lat1,
+    double lon1,
+    double lat2,
+    double lon2,
+  ) {
+    const earthRadius = 6371000; // 지구 반경 (미터)
+
+    final dLat = _toRadians(lat2 - lat1);
+    final dLon = _toRadians(lon2 - lon1);
+
+    final a = sin(dLat / 2) * sin(dLat / 2) +
+        cos(_toRadians(lat1)) * cos(_toRadians(lat2)) *
+        sin(dLon / 2) * sin(dLon / 2);
+
+    final c = 2 * atan2(sqrt(a), sqrt(1 - a));
+
+    return earthRadius * c;
+  }
+
+  static double _toRadians(double degree) => degree * pi / 180;
 
   // 거리를 사람이 읽기 쉬운 형태로 변환
   String get distanceText {
