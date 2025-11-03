@@ -180,40 +180,56 @@ class _MapPageState extends ConsumerState<MapPage> with WidgetsBindingObserver {
   Widget build(BuildContext context) {
     print('🏗️ MapPage build 호출됨');
     final topPadding = MediaQuery.of(context).padding.top;
+    final searchButtonTop = topPadding + 130.h;
+    final maxPanelHeight = searchButtonTop - 20.h;
 
     return Scaffold(
       backgroundColor: Colors.white,
       body: Stack(
         children: [
-          Positioned.fill(
-            child: SlidingUpPanel(
-              controller: _panelController,
-              minHeight: 180.h,
-              maxHeight: MediaQuery.of(context).size.height * 0.75,
-              borderRadius: BorderRadius.vertical(top: Radius.circular(16.r)),
-              panel: _buildRestaurantList(),
-              backdropEnabled: false,
-              color: Colors.transparent,
-              onPanelSlide: (position) {
-                setState(() {
-                  _panelPosition = position;
-                });
-              },
-              body: GoogleMap(
-                onMapCreated: _onMapReady,
-                initialCameraPosition: CameraPosition(
-                  target: LatLng(_currentMapCenterLat, _currentMapCenterLng),
-                  zoom: 15.0,
+          Positioned(
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            child: Column(
+              children: [
+                Container(
+                  height: topPadding + 116.h,
+                  color: Colors.white,
                 ),
-                markers: _markers,
-                myLocationEnabled: false,
-                myLocationButtonEnabled: false,
-                onCameraMove: (CameraPosition position) {
-                  _currentMapCenterLat = position.target.latitude;
-                  _currentMapCenterLng = position.target.longitude;
-                },
-                onCameraIdle: _onMapMoved,
-              ),
+                Expanded(
+                  child: SlidingUpPanel(
+                    controller: _panelController,
+                    minHeight: 180.h,
+                    maxHeight: maxPanelHeight,
+                    borderRadius: BorderRadius.vertical(top: Radius.circular(16.r)),
+                    panel: _buildRestaurantList(),
+                    backdropEnabled: false,
+                    color: Colors.transparent,
+                    onPanelSlide: (position) {
+                      setState(() {
+                        _panelPosition = position;
+                      });
+                    },
+                    body: GoogleMap(
+                      onMapCreated: _onMapReady,
+                      initialCameraPosition: CameraPosition(
+                        target: LatLng(_currentMapCenterLat, _currentMapCenterLng),
+                        zoom: 15.0,
+                      ),
+                      markers: _markers,
+                      myLocationEnabled: false,
+                      myLocationButtonEnabled: false,
+                      onCameraMove: (CameraPosition position) {
+                        _currentMapCenterLat = position.target.latitude;
+                        _currentMapCenterLng = position.target.longitude;
+                      },
+                      onCameraIdle: _onMapMoved,
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
 
@@ -232,7 +248,7 @@ class _MapPageState extends ConsumerState<MapPage> with WidgetsBindingObserver {
           ),
 
           Positioned(
-            top: topPadding + 130.h,
+            top: searchButtonTop,
             left: 0,
             right: 0,
             child: Center(
@@ -533,7 +549,7 @@ class _MapPageState extends ConsumerState<MapPage> with WidgetsBindingObserver {
     return Container(
       height: 48.h,
       decoration: BoxDecoration(
-        color: const Color(0xFF34A853),
+        color: AppColors.primary,
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.1),
@@ -597,7 +613,7 @@ class _MapPageState extends ConsumerState<MapPage> with WidgetsBindingObserver {
         child: Container(
           padding: EdgeInsets.symmetric(horizontal: 18.w, vertical: 10.h),
           decoration: BoxDecoration(
-            color: _isSearching ? Colors.grey[600] : const Color(0xFF34A853),
+            color: _isSearching ? Colors.grey[600] : AppColors.primary,
             borderRadius: BorderRadius.circular(20.r),
           ),
           child: Row(
@@ -820,10 +836,10 @@ class _MapPageState extends ConsumerState<MapPage> with WidgetsBindingObserver {
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
       decoration: BoxDecoration(
-        color: isSelected ? const Color(0xFF34A853) : Colors.white,
+        color: isSelected ? AppColors.primary : Colors.white,
         borderRadius: BorderRadius.circular(20.r),
         border: Border.all(
-          color: isSelected ? const Color(0xFF34A853) : Colors.grey[300]!,
+          color: isSelected ? AppColors.primary : Colors.grey[300]!,
         ),
       ),
       child: Row(
