@@ -1,0 +1,11 @@
+my_ai_request.txt
+.venv/
+test_database/
+
+# Environment variables
+.env
+.env.local
+
+# Static files
+staticfiles/
+static/
