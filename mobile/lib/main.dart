@@ -11,7 +11,7 @@ void main() async {
 
   // 네이버 지도 초기화
   await NaverMapSdk.instance.initialize(
-    clientId: 'YOUR_NAVER_MAP_CLIENT_ID_HERE', // TODO: .env에서 로드
+    clientId: '1ounpz7chm',
     onAuthFailed: (ex) {
       debugPrint('❌ 네이버 지도 인증 실패: $ex');
     },
