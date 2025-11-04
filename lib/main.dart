@@ -17,9 +17,9 @@ void main() async {
         case NQuotaExceededException(:final message):
           debugPrint('❌ 네이버 지도 사용량 초과 (message: $message)');
           break;
-        case NUnauthorizedClientException() ||
-              NClientUnspecifiedException() ||
-              NAnotherAuthFailedException():
+        case NUnauthorizedClientException():
+        case NClientUnspecifiedException():
+        case NAnotherAuthFailedException():
           debugPrint('❌ 네이버 지도 인증 실패: $ex');
           break;
       }
