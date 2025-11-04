@@ -146,15 +146,17 @@ class NaverLocalService {
           .replaceAll('&gt;', '>');
     }
 
-    // 카텍 좌표를 WGS84 좌표로 변환 (간단한 근사 변환)
+    // 네이버 API 좌표를 WGS84 좌표로 변환
+    // 네이버 API는 경위도 * 10000 형태로 반환
+    // 예: 경도 126.748298 → mapx: 1267482, 위도 37.621668 → mapy: 376216
     double convertMapX(String mapx) {
       final x = double.parse(mapx);
-      return x / 1000000.0;
+      return x / 10000.0;
     }
 
     double convertMapY(String mapy) {
       final y = double.parse(mapy);
-      return y / 1000000.0;
+      return y / 10000.0;
     }
 
     return {
