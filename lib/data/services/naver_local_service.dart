@@ -4,8 +4,8 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 /// 네이버 지역 검색 API 서비스
 class NaverLocalService {
   static const String _baseUrl = 'https://openapi.naver.com/v1';
-  static final String _clientId = dotenv.env['NAVER_MAP_CLIENT_ID'] ?? '';
-  static final String _clientSecret = dotenv.env['NAVER_CLIENT_SECRET'] ?? '';
+  static final String _clientId = dotenv.env['NAVER_LOCAL_SEARCH_CLIENT_ID'] ?? '';
+  static final String _clientSecret = dotenv.env['NAVER_LOCAL_SEARCH_CLIENT_SECRET'] ?? '';
 
   final Dio _dio = Dio(
     BaseOptions(
