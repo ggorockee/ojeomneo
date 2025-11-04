@@ -6,7 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:sliding_up_panel/sliding_up_panel.dart';
 import '../../../core/theme/app_colors.dart';
-import '../../../data/services/google_places_service.dart';
+import '../../../data/services/naver_local_service.dart';
 import '../../mock/restaurant_model.dart';
 import '../../providers/location_provider.dart';
 import '../../widgets/location_permission_dialog.dart';
@@ -34,7 +34,7 @@ class _MapPageState extends ConsumerState<MapPage> with WidgetsBindingObserver {
   bool _showLocationButton = true;
   bool _isSearching = false;
 
-  final _googlePlacesService = GooglePlacesService();
+  final _naverLocalService = NaverLocalService();
 
   // 지도 중심 좌표
   double _currentMapCenterLat = 37.6161;
@@ -413,56 +413,30 @@ class _MapPageState extends ConsumerState<MapPage> with WidgetsBindingObserver {
     });
 
     try {
-      print('🔍 Google Places API 검색 시작: lat=$_currentMapCenterLat, lng=$_currentMapCenterLng');
+      print('🔍 네이버 지역 검색 API 검색 시작: lat=$_currentMapCenterLat, lng=$_currentMapCenterLng');
 
-      final radiusInMeters = 1000; // 1km
+      final selectedCategory = _selectedCategory ?? '음식점';
 
-      final selectedType = _selectedCategory != null
-          ? _categories.firstWhere(
-              (cat) => cat['name'] == _selectedCategory,
-              orElse: () => _categories[0],
-            )['type']!
-          : 'restaurant';
+      final response = await _naverLocalService.searchNearbyRestaurants(
+        latitude: _currentMapCenterLat,
+        longitude: _currentMapCenterLng,
+        category: selectedCategory,
+      );
 
-      final allRestaurants = <RestaurantModel>[];
-      String? nextPageToken;
+      final items = response['items'] as List<dynamic>? ?? [];
 
-      for (int page = 0; page < 3; page++) {
-        try {
-          final response = await _googlePlacesService.searchNearby(
-            latitude: _currentMapCenterLat,
-            longitude: _currentMapCenterLng,
-            radius: radiusInMeters,
-            type: selectedType,
-            pageToken: nextPageToken,
-          );
-
-          final results = response['results'] as List<dynamic>? ?? [];
-
-          if (results.isEmpty) break;
-
-          final restaurants = results
-              .map((place) => RestaurantModel.fromGooglePlaces(
-                    place as Map<String, dynamic>,
-                    _currentMapCenterLat,
-                    _currentMapCenterLng,
-                  ))
-              .toList();
-
-          allRestaurants.addAll(restaurants);
-
-          nextPageToken = response['next_page_token'] as String?;
-
-          if (nextPageToken == null) break;
-
-          if (page < 2) {
-            await Future.delayed(const Duration(milliseconds: 1500));
-          }
-        } catch (e) {
-          print('⚠️ 페이지 ${page + 1} 요청 실패: $e');
-          break;
-        }
-      }
+      final allRestaurants = items
+          .map((place) {
+            final converted = _naverLocalService.convertToAppModel(
+              place as Map<String, dynamic>,
+            );
+            return RestaurantModel.fromGooglePlaces(
+              converted,
+              _currentMapCenterLat,
+              _currentMapCenterLng,
+            );
+          })
+          .toList();
 
       print('✅ 검색 완료: 총 ${allRestaurants.length}개 장소 발견');
 
@@ -552,7 +526,8 @@ class _MapPageState extends ConsumerState<MapPage> with WidgetsBindingObserver {
   }
 
   void _showPlaceDetails(RestaurantModel restaurant) {
-    final detailsFuture = _googlePlacesService.getPlaceDetails(placeId: restaurant.id);
+    // 네이버 지역 검색 API는 상세 정보를 제공하지 않으므로 기본 정보만 표시
+    final displayRestaurant = restaurant;
 
     showModalBottomSheet(
       context: context,
@@ -566,20 +541,9 @@ class _MapPageState extends ConsumerState<MapPage> with WidgetsBindingObserver {
         maxChildSize: 0.95,
         expand: false,
         builder: (context, scrollController) {
-          return FutureBuilder<Map<String, dynamic>>(
-            future: detailsFuture,
+          return FutureBuilder<void>(
+            future: Future.value(),
             builder: (context, snapshot) {
-              RestaurantModel displayRestaurant = restaurant;
-              if (snapshot.hasData) {
-                final result = snapshot.data!['result'] as Map<String, dynamic>?;
-                if (result != null) {
-                  displayRestaurant = RestaurantModel.fromPlaceDetails(
-                    result,
-                    _currentMapCenterLat,
-                    _currentMapCenterLng,
-                  );
-                }
-              }
 
               return SingleChildScrollView(
                 controller: scrollController,

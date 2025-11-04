@@ -2,12 +2,17 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_naver_map/flutter_naver_map.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'core/theme/app_theme.dart';
 import 'presentation/routes/app_routes.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   print('✅ [main] 앱 초기화 완료');
+
+  // 환경 변수 로드
+  await dotenv.load(fileName: ".env");
+  debugPrint('✅ [main] 환경 변수 로드 완료');
 
   // 네이버 지도 초기화
   await FlutterNaverMap().init(

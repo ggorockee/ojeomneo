@@ -42,6 +42,9 @@ dependencies:
   # HTTP 클라이언트
   dio: ^5.4.0
 
+  # 환경 변수
+  flutter_dotenv: ^5.1.0
+
   # 지도
   flutter_naver_map: ^1.4.1+1
 
@@ -85,6 +88,7 @@ flutter:
     - assets/icons/marker.png
     - assets/icons/marker_f.png
     - assets/icons/marker_f2.png
+    - .env
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images
