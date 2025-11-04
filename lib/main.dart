@@ -10,10 +10,19 @@ void main() async {
   print('✅ [main] 앱 초기화 완료');
 
   // 네이버 지도 초기화
-  await NaverMapSdk.instance.initialize(
+  await FlutterNaverMap().init(
     clientId: '1ounpz7chm',
     onAuthFailed: (ex) {
-      debugPrint('❌ 네이버 지도 인증 실패: $ex');
+      switch (ex) {
+        case NQuotaExceededException(:final message):
+          debugPrint('❌ 네이버 지도 사용량 초과 (message: $message)');
+          break;
+        case NUnauthorizedClientException() ||
+              NClientUnspecifiedException() ||
+              NAnotherAuthFailedException():
+          debugPrint('❌ 네이버 지도 인증 실패: $ex');
+          break;
+      }
     },
   );
   debugPrint('✅ [main] 네이버 지도 초기화 완료');
