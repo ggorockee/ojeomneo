@@ -15,7 +15,7 @@ on:
 
 env:
   GO_VERSION: "1.23"
-  DOCKER_IMAGE: ggorockee/ojeomneo-server
+  DOCKER_IMAGE: ggorockee/ojeomneo-server-with-go
   INFRA_REPO: ggorockee/infra
   VALUES_FILE_PATH: charts/helm/prod/ojeomneo/values.yaml
 
