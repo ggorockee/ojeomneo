@@ -17,16 +17,17 @@ type Config struct {
 }
 
 // Load 환경변수에서 설정 로드
+// Kubernetes Secret 키 이름에 맞춰 POSTGRES_* 형식 사용
 func Load() *Config {
 	return &Config{
 		AppEnv:  getEnv("APP_ENV", "development"),
 		AppPort: getEnv("APP_PORT", "8080"),
 
-		DBHost:     getEnv("DB_HOST", "localhost"),
-		DBPort:     getEnv("DB_PORT", "5432"),
-		DBName:     getEnv("DB_NAME", "woohalabs"),
-		DBUser:     getEnv("DB_USER", "test"),
-		DBPassword: getEnv("DB_PASSWORD", "test1234"),
+		DBHost:     getEnv("POSTGRES_SERVER", "localhost"),
+		DBPort:     getEnv("POSTGRES_PORT", "5432"),
+		DBName:     getEnv("POSTGRES_DB", "ojeomneo"),
+		DBUser:     getEnv("POSTGRES_USER", "ojeomneo"),
+		DBPassword: getEnv("POSTGRES_PASSWORD", ""),
 	}
 }
 
