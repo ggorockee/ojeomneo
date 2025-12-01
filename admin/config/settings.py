@@ -113,10 +113,13 @@ STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 # Default primary key field type
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
+# App Version
+APP_VERSION = "1.0.0"
+
 # Django Unfold 설정
 UNFOLD = {
     "SITE_TITLE": "Ojeomneo Admin",
-    "SITE_HEADER": "Ojeomneo",
+    "SITE_HEADER": f"Ojeomneo v{APP_VERSION}",
     "SITE_SYMBOL": "restaurant",  # Material Symbols
     "SHOW_HISTORY": True,
     "SHOW_VIEW_ON_SITE": False,
