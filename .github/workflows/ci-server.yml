@@ -104,16 +104,20 @@ jobs:
           ref: main
           path: "infra"
 
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: pip install ruamel.yaml
+
       - name: Update values.yaml
         run: |
-          cd infra
-          # yq 사용하여 이미지 태그 업데이트
-          if command -v yq &> /dev/null; then
-            yq -i '.server.image.tag = "${{ needs.build-and-push.outputs.image_tag }}"' ${{ env.VALUES_FILE_PATH }}
-          else
-            # yq가 없으면 sed 사용
-            sed -i 's/tag: .*/tag: "${{ needs.build-and-push.outputs.image_tag }}"/' ${{ env.VALUES_FILE_PATH }}
-          fi
+          python .github/workflows/scripts/update_values.py \
+            infra/${{ env.VALUES_FILE_PATH }} \
+            server \
+            "${{ needs.build-and-push.outputs.image_tag }}"
 
       - name: Commit and push changes
         working-directory: ./infra
