@@ -17,15 +17,17 @@ Go Fiber v2 (API) + Django (Admin) 하이브리드 아키텍처 백엔드 서버
 
 ### URL 구조 (매우 중요)
 - **Base Domain**: `api.woohalabs.com`
-- **Service Prefix**: 모든 요청은 `/woohalabs`로 시작
+- **Service Prefix**: 모든 요청은 `/ojeomneo`로 시작
 - **API 버전**: `/v1` 사용
 
 | 경로 | 설명 |
 |------|------|
-| `/woohalabs/v1/*` | API 엔드포인트 |
-| `/woohalabs/v1/docs` | Swagger 문서 (필수) |
-| `/woohalabs/v1/healthcheck` | 헬스체크 |
-| `/woohalabs/metrics` | Prometheus 메트릭 |
+| `/ojeomneo/v1/*` | API 엔드포인트 |
+| `/ojeomneo/v1/docs` | Swagger 문서 (필수) |
+| `/ojeomneo/v1/healthcheck` | 헬스체크 |
+| `/ojeomneo/v1/healthcheck/live` | Kubernetes startup/liveness probe |
+| `/ojeomneo/v1/healthcheck/ready` | Kubernetes readiness probe |
+| `/ojeomneo/metrics` | Prometheus 메트릭 |
 | `/admin/` | Django Admin |
 
 ## 개발 환경
@@ -51,7 +53,7 @@ Go Fiber v2 (API) + Django (Admin) 하이브리드 아키텍처 백엔드 서버
 ## Observability (모니터링)
 
 ### Prometheus 메트릭
-- **엔드포인트**: `/woohalabs/metrics`
+- **엔드포인트**: `/ojeomneo/metrics`
 - **필수 메트릭**:
   - HTTP 요청 수 (method, path, status)
   - HTTP 요청 지연시간 (histogram)
@@ -164,7 +166,7 @@ DJANGO_DEBUG=True
 ## 개발 시 주의사항
 
 ### Go API 개발
-- 모든 API는 `/woohalabs/v1/` prefix 사용
+- 모든 API는 `/ojeomneo/v1/` prefix 사용
 - Swagger 어노테이션 필수 작성
 - 에러 응답 형식 통일
 - 메트릭 수집 미들웨어 적용
@@ -232,10 +234,18 @@ DJANGO_DEBUG=True
 
 ## 헬스체크 응답
 
+### Kubernetes Probe 엔드포인트
+| 엔드포인트 | 용도 | DB 실패 시 |
+|-----------|------|-----------|
+| `/ojeomneo/v1/healthcheck/live` | startup/liveness probe | **200** |
+| `/ojeomneo/v1/healthcheck/ready` | readiness probe | **503** |
+| `/ojeomneo/v1/healthcheck` | 모니터링/디버깅 | **200** (상태만 표시) |
+
+### 상세 헬스체크 응답 예시
 ```json
 {
   "status": "ok",
-  "service": "woohalabs-api",
+  "service": "ojeomneo-api",
   "version": "1.0.0",
   "database": {
     "connected": true,

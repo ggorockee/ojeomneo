@@ -18,7 +18,7 @@ import (
 	_ "github.com/ggorockee/ojeomneo/server/docs"
 )
 
-// @title Woohalabs API
+// @title Ojeomneo API
 // @version 1.0.0
 // @description Go Fiber v2 기반 REST API 서버
 // @termsOfService http://swagger.io/terms/
@@ -30,7 +30,7 @@ import (
 // @license.url http://www.apache.org/licenses/LICENSE-2.0.html
 
 // @host api.woohalabs.com
-// @BasePath /woohalabs/v1
+// @BasePath /ojeomneo/v1
 
 // @schemes https http
 func main() {
@@ -51,8 +51,8 @@ func main() {
 
 	// Fiber 앱 생성
 	app := fiber.New(fiber.Config{
-		AppName:      "Woohalabs API v1.0.0",
-		ServerHeader: "Woohalabs",
+		AppName:      "Ojeomneo API v1.0.0",
+		ServerHeader: "Ojeomneo",
 		ErrorHandler: handler.CustomErrorHandler,
 	})
 
@@ -69,35 +69,35 @@ func main() {
 	}))
 
 	// ============================================
-	// /woohalabs 그룹 (Ingress에서 전달받는 prefix)
+	// /ojeomneo 그룹 (Ingress에서 전달받는 prefix)
 	// Swagger 정적 파일 로딩 문제 방지를 위해 Fiber에서 전체 경로 처리
 	// ============================================
-	woohalabs := app.Group("/woohalabs")
+	ojeomneo := app.Group("/ojeomneo")
 
 	// Prometheus 메트릭 (내부망 접근 제한)
-	woohalabs.Get("/metrics", middleware.InternalOnly(), middleware.PrometheusHandler())
+	ojeomneo.Get("/metrics", middleware.InternalOnly(), middleware.PrometheusHandler())
 
 	// API v1 라우터
-	v1 := woohalabs.Group("/v1")
+	v1 := ojeomneo.Group("/v1")
 
 	// Prometheus 미들웨어 (API 요청만 측정)
 	v1.Use(middleware.PrometheusMiddleware())
 
-	// Swagger 문서 - /woohalabs/v1/docs
+	// Swagger 문서 - /ojeomneo/v1/docs
 	v1.Get("/docs/*", swagger.New(swagger.Config{
-		URL:          "/woohalabs/v1/docs/doc.json",
+		URL:          "/ojeomneo/v1/docs/doc.json",
 		DeepLinking:  true,
 		DocExpansion: "list",
-		Title:        "Woohalabs API Documentation",
+		Title:        "Ojeomneo API Documentation",
 	}))
 
 	// 핸들러 등록
 	healthHandler := handler.NewHealthHandler(db)
 
 	// Health Check 엔드포인트
-	// /woohalabs/v1/healthcheck - 상세 상태 (모니터링용, 항상 200)
-	// /woohalabs/v1/healthcheck/live - Kubernetes startup/liveness probe용 (항상 200)
-	// /woohalabs/v1/healthcheck/ready - Kubernetes readiness probe용 (DB 연결 시 200)
+	// /ojeomneo/v1/healthcheck - 상세 상태 (모니터링용, 항상 200)
+	// /ojeomneo/v1/healthcheck/live - Kubernetes startup/liveness probe용 (항상 200)
+	// /ojeomneo/v1/healthcheck/ready - Kubernetes readiness probe용 (DB 연결 시 200)
 	v1.Get("/healthcheck", healthHandler.HealthCheck)
 	v1.Get("/healthcheck/live", healthHandler.LivenessCheck)
 	v1.Get("/healthcheck/ready", healthHandler.ReadinessCheck)
@@ -109,8 +109,8 @@ func main() {
 	}
 
 	log.Printf("🚀 Server starting on port %s", port)
-	log.Printf("📚 Swagger: http://localhost:%s/woohalabs/v1/docs", port)
-	log.Printf("📊 Metrics: http://localhost:%s/woohalabs/metrics (internal only)", port)
+	log.Printf("📚 Swagger: http://localhost:%s/ojeomneo/v1/docs", port)
+	log.Printf("📊 Metrics: http://localhost:%s/ojeomneo/metrics (internal only)", port)
 
 	if err := app.Listen(":" + port); err != nil {
 		log.Fatalf("Failed to start server: %v", err)
