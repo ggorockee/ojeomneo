@@ -1,0 +1,32 @@
+[project]
+name = "ojeomneo-admin"
+version = "0.1.0"
+description = "Ojeomneo Django Admin Panel"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "django>=5.1",
+    "django-unfold>=0.40.0",
+    "psycopg[binary]>=3.2",
+    "python-dotenv>=1.0",
+    "gunicorn>=23.0",
+    "whitenoise>=6.8",
+]
+
+[project.optional-dependencies]
+dev = [
+    "ruff>=0.8",
+    "pytest>=8.0",
+    "pytest-django>=4.9",
+]
+
+[tool.ruff]
+line-length = 120
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP"]
+ignore = ["E501"]
+
+[tool.ruff.format]
+quote-style = "double"
