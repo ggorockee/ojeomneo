@@ -1,11 +1,33 @@
-my_ai_request.txt
-.venv/
-test_database/
+# Go
+bin/
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.test
+*.out
+vendor/
 
 # Environment variables
 .env
 .env.local
 
-# Static files
-staticfiles/
-static/
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Test database
+test_database/
+
+# Logs
+*.log
+
+# Build cache
+tmp/
