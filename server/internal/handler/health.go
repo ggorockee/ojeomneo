@@ -26,6 +26,21 @@ type HealthResponse struct {
 	Database DatabaseStatus `json:"database"`
 }
 
+// LivenessResponse Liveness 체크 응답
+// @Description Kubernetes liveness/startup probe용 간단한 응답
+type LivenessResponse struct {
+	Status  string `json:"status" example:"ok"`
+	Service string `json:"service" example:"woohalabs-api"`
+}
+
+// ReadinessResponse Readiness 체크 응답
+// @Description Kubernetes readiness probe용 응답
+type ReadinessResponse struct {
+	Status   string `json:"status" example:"ok"`
+	Ready    bool   `json:"ready" example:"true"`
+	Database bool   `json:"database" example:"true"`
+}
+
 // DatabaseStatus 데이터베이스 상태
 // @Description 데이터베이스 연결 상태
 type DatabaseStatus struct {
@@ -34,14 +49,70 @@ type DatabaseStatus struct {
 	Message   string `json:"message,omitempty" example:"Database connection successful"`
 }
 
-// HealthCheck godoc
-// @Summary 서버 헬스체크
-// @Description 서버 및 데이터베이스 상태 확인
+// LivenessCheck godoc
+// @Summary Liveness 체크 (Kubernetes startup/liveness probe용)
+// @Description 서버가 살아있는지 확인 (DB 연결 무관)
 // @Tags Health
 // @Accept json
 // @Produce json
-// @Success 200 {object} HealthResponse "서버 정상"
-// @Failure 503 {object} HealthResponse "서버 비정상 (DB 연결 실패)"
+// @Success 200 {object} LivenessResponse "서버 정상 가동 중"
+// @Router /healthcheck/live [get]
+func (h *HealthHandler) LivenessCheck(c *fiber.Ctx) error {
+	return c.JSON(LivenessResponse{
+		Status:  "ok",
+		Service: "woohalabs-api",
+	})
+}
+
+// ReadinessCheck godoc
+// @Summary Readiness 체크 (Kubernetes readiness probe용)
+// @Description 서버가 트래픽을 받을 준비가 됐는지 확인 (DB 연결 포함)
+// @Tags Health
+// @Accept json
+// @Produce json
+// @Success 200 {object} ReadinessResponse "트래픽 수신 준비 완료"
+// @Failure 503 {object} ReadinessResponse "트래픽 수신 불가 (DB 연결 실패)"
+// @Router /healthcheck/ready [get]
+func (h *HealthHandler) ReadinessCheck(c *fiber.Ctx) error {
+	response := ReadinessResponse{
+		Status: "ok",
+		Ready:  true,
+	}
+
+	// DB 연결 체크
+	if h.db == nil {
+		response.Status = "not_ready"
+		response.Ready = false
+		response.Database = false
+		return c.Status(fiber.StatusServiceUnavailable).JSON(response)
+	}
+
+	sqlDB, err := h.db.DB()
+	if err != nil {
+		response.Status = "not_ready"
+		response.Ready = false
+		response.Database = false
+		return c.Status(fiber.StatusServiceUnavailable).JSON(response)
+	}
+
+	if err = sqlDB.Ping(); err != nil {
+		response.Status = "not_ready"
+		response.Ready = false
+		response.Database = false
+		return c.Status(fiber.StatusServiceUnavailable).JSON(response)
+	}
+
+	response.Database = true
+	return c.JSON(response)
+}
+
+// HealthCheck godoc
+// @Summary 서버 상세 헬스체크
+// @Description 서버 및 데이터베이스 상태 상세 확인 (모니터링/디버깅용)
+// @Tags Health
+// @Accept json
+// @Produce json
+// @Success 200 {object} HealthResponse "상태 정보 반환 (DB 연결 실패해도 200)"
 // @Router /healthcheck [get]
 func (h *HealthHandler) HealthCheck(c *fiber.Ctx) error {
 	response := HealthResponse{
@@ -57,7 +128,8 @@ func (h *HealthHandler) HealthCheck(c *fiber.Ctx) error {
 			LatencyMs: 0,
 			Message:   "Database not configured",
 		}
-		return c.Status(fiber.StatusServiceUnavailable).JSON(response)
+		// 모니터링용이므로 항상 200 반환 (상태 정보만 제공)
+		return c.JSON(response)
 	}
 
 	// DB 연결 체크 및 레이턴시 측정
@@ -71,7 +143,7 @@ func (h *HealthHandler) HealthCheck(c *fiber.Ctx) error {
 			LatencyMs: 0,
 			Message:   "Failed to get database connection",
 		}
-		return c.Status(fiber.StatusServiceUnavailable).JSON(response)
+		return c.JSON(response)
 	}
 
 	// Ping 테스트
@@ -85,7 +157,7 @@ func (h *HealthHandler) HealthCheck(c *fiber.Ctx) error {
 			LatencyMs: latency,
 			Message:   "Database ping failed: " + err.Error(),
 		}
-		return c.Status(fiber.StatusServiceUnavailable).JSON(response)
+		return c.JSON(response)
 	}
 
 	// 정상 응답
