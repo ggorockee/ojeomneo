@@ -1,0 +1,119 @@
+basePath: /woohalabs/v1
+definitions:
+  handler.DatabaseStatus:
+    description: 데이터베이스 연결 상태
+    properties:
+      connected:
+        example: true
+        type: boolean
+      latency_ms:
+        example: 5
+        type: integer
+      message:
+        example: Database connection successful
+        type: string
+    type: object
+  handler.HealthResponse:
+    description: 서버 헬스체크 응답
+    properties:
+      database:
+        $ref: '#/definitions/handler.DatabaseStatus'
+      service:
+        example: woohalabs-api
+        type: string
+      status:
+        example: ok
+        type: string
+      version:
+        example: 1.0.0
+        type: string
+    type: object
+  handler.LivenessResponse:
+    description: Kubernetes liveness/startup probe용 간단한 응답
+    properties:
+      service:
+        example: woohalabs-api
+        type: string
+      status:
+        example: ok
+        type: string
+    type: object
+  handler.ReadinessResponse:
+    description: Kubernetes readiness probe용 응답
+    properties:
+      database:
+        example: true
+        type: boolean
+      ready:
+        example: true
+        type: boolean
+      status:
+        example: ok
+        type: string
+    type: object
+host: api.woohalabs.com
+info:
+  contact:
+    email: support@woohalabs.com
+    name: API Support
+  description: Go Fiber v2 기반 REST API 서버
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  termsOfService: http://swagger.io/terms/
+  title: Woohalabs API
+  version: 1.0.0
+paths:
+  /healthcheck:
+    get:
+      consumes:
+      - application/json
+      description: 서버 및 데이터베이스 상태 상세 확인 (모니터링/디버깅용)
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 상태 정보 반환 (DB 연결 실패해도 200)
+          schema:
+            $ref: '#/definitions/handler.HealthResponse'
+      summary: 서버 상세 헬스체크
+      tags:
+      - Health
+  /healthcheck/live:
+    get:
+      consumes:
+      - application/json
+      description: 서버가 살아있는지 확인 (DB 연결 무관)
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 서버 정상 가동 중
+          schema:
+            $ref: '#/definitions/handler.LivenessResponse'
+      summary: Liveness 체크 (Kubernetes startup/liveness probe용)
+      tags:
+      - Health
+  /healthcheck/ready:
+    get:
+      consumes:
+      - application/json
+      description: 서버가 트래픽을 받을 준비가 됐는지 확인 (DB 연결 포함)
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 트래픽 수신 준비 완료
+          schema:
+            $ref: '#/definitions/handler.ReadinessResponse'
+        "503":
+          description: 트래픽 수신 불가 (DB 연결 실패)
+          schema:
+            $ref: '#/definitions/handler.ReadinessResponse'
+      summary: Readiness 체크 (Kubernetes readiness probe용)
+      tags:
+      - Health
+schemes:
+- https
+- http
+swagger: "2.0"

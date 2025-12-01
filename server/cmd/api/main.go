@@ -94,8 +94,13 @@ func main() {
 	// 핸들러 등록
 	healthHandler := handler.NewHealthHandler(db)
 
-	// Health Check - /woohalabs/v1/healthcheck
+	// Health Check 엔드포인트
+	// /woohalabs/v1/healthcheck - 상세 상태 (모니터링용, 항상 200)
+	// /woohalabs/v1/healthcheck/live - Kubernetes startup/liveness probe용 (항상 200)
+	// /woohalabs/v1/healthcheck/ready - Kubernetes readiness probe용 (DB 연결 시 200)
 	v1.Get("/healthcheck", healthHandler.HealthCheck)
+	v1.Get("/healthcheck/live", healthHandler.LivenessCheck)
+	v1.Get("/healthcheck/ready", healthHandler.ReadinessCheck)
 
 	// 서버 시작
 	port := os.Getenv("APP_PORT")
