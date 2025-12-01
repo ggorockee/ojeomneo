@@ -180,6 +180,36 @@ DJANGO_DEBUG=True
 - 스키마 변경은 Django 마이그레이션으로 관리
 - Go GORM은 AutoMigrate 사용 금지 (Django 마이그레이션과 충돌 방지)
 
+## ⚠️ DB 스키마 동기화 규칙 (매우 중요!)
+
+**Go API (server/)와 Django Admin (admin/)은 동일한 DB를 공유합니다.**
+
+### 필수 동기화 절차
+| 변경 위치 | 필수 작업 |
+|-----------|----------|
+| Go `internal/model/` 변경 | Django `admin/` 모델 동기화 + makemigrations + migrate |
+| Django 모델 변경 | Go GORM 모델 동기화 |
+| DB 스키마 변경 | **양쪽 모두** 업데이트 |
+
+### 동기화 명령어
+```bash
+# Django 마이그레이션 생성 및 적용
+cd /home/woohaen88/woohalabs/ojeomneo/admin
+uv run python manage.py makemigrations
+uv run python manage.py migrate
+```
+
+### 규칙
+1. **DB 스키마 변경은 Django 마이그레이션으로 관리** (단일 진실 공급원)
+2. **Go GORM AutoMigrate 사용 금지** (충돌 방지)
+3. **모델 변경 시 반드시 양쪽 프로젝트 동기화**
+4. **테이블명은 Django `db_table` 메타로 명시적 지정**
+
+### 테이블 매핑 예시
+| Django 모델 | Go GORM 모델 | 테이블명 |
+|-------------|--------------|----------|
+| `accounts.User` | `model.User` | `users` |
+
 ## API 응답 형식
 
 ### 성공 응답
