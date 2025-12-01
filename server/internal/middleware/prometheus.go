@@ -17,7 +17,7 @@ var (
 	// HTTP 요청 수
 	httpRequestsTotal = promauto.NewCounterVec(
 		prometheus.CounterOpts{
-			Name: "woohalabs_http_requests_total",
+			Name: "ojeomneo_http_requests_total",
 			Help: "Total number of HTTP requests",
 		},
 		[]string{"method", "path", "status"},
@@ -26,7 +26,7 @@ var (
 	// HTTP 요청 지연시간 (히스토그램)
 	httpRequestDuration = promauto.NewHistogramVec(
 		prometheus.HistogramOpts{
-			Name:    "woohalabs_http_request_duration_seconds",
+			Name:    "ojeomneo_http_request_duration_seconds",
 			Help:    "HTTP request latency in seconds",
 			Buckets: []float64{.005, .01, .025, .05, .1, .25, .5, 1, 2.5, 5, 10},
 		},
@@ -36,7 +36,7 @@ var (
 	// 활성 연결 수
 	httpActiveConnections = promauto.NewGauge(
 		prometheus.GaugeOpts{
-			Name: "woohalabs_http_active_connections",
+			Name: "ojeomneo_http_active_connections",
 			Help: "Number of active HTTP connections",
 		},
 	)
@@ -44,7 +44,7 @@ var (
 	// 요청 크기 (Summary)
 	httpRequestSize = promauto.NewSummaryVec(
 		prometheus.SummaryOpts{
-			Name:       "woohalabs_http_request_size_bytes",
+			Name:       "ojeomneo_http_request_size_bytes",
 			Help:       "HTTP request size in bytes",
 			Objectives: map[float64]float64{0.5: 0.05, 0.9: 0.01, 0.99: 0.001},
 		},
@@ -54,7 +54,7 @@ var (
 	// 응답 크기 (Summary)
 	httpResponseSize = promauto.NewSummaryVec(
 		prometheus.SummaryOpts{
-			Name:       "woohalabs_http_response_size_bytes",
+			Name:       "ojeomneo_http_response_size_bytes",
 			Help:       "HTTP response size in bytes",
 			Objectives: map[float64]float64{0.5: 0.05, 0.9: 0.01, 0.99: 0.001},
 		},
