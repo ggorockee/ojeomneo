@@ -151,12 +151,12 @@ server/
 APP_ENV=development
 APP_PORT=8080
 
-# 데이터베이스
-DB_HOST=localhost
-DB_PORT=5432
-DB_NAME=woohalabs
-DB_USER=test
-DB_PASSWORD=test1234
+# 데이터베이스 (Kubernetes Secret 키 이름과 동일)
+POSTGRES_SERVER=localhost
+POSTGRES_PORT=5432
+POSTGRES_DB=ojeomneo
+POSTGRES_USER=ojeomneo
+POSTGRES_PASSWORD=your-password
 
 # Django
 DJANGO_SECRET_KEY=your-secret-key
