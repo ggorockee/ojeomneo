@@ -21,7 +21,7 @@ func NewHealthHandler(db *gorm.DB) *HealthHandler {
 // @Description 서버 헬스체크 응답
 type HealthResponse struct {
 	Status   string         `json:"status" example:"ok"`
-	Service  string         `json:"service" example:"woohalabs-api"`
+	Service  string         `json:"service" example:"ojeomneo-api"`
 	Version  string         `json:"version" example:"1.0.0"`
 	Database DatabaseStatus `json:"database"`
 }
@@ -30,7 +30,7 @@ type HealthResponse struct {
 // @Description Kubernetes liveness/startup probe용 간단한 응답
 type LivenessResponse struct {
 	Status  string `json:"status" example:"ok"`
-	Service string `json:"service" example:"woohalabs-api"`
+	Service string `json:"service" example:"ojeomneo-api"`
 }
 
 // ReadinessResponse Readiness 체크 응답
@@ -60,7 +60,7 @@ type DatabaseStatus struct {
 func (h *HealthHandler) LivenessCheck(c *fiber.Ctx) error {
 	return c.JSON(LivenessResponse{
 		Status:  "ok",
-		Service: "woohalabs-api",
+		Service: "ojeomneo-api",
 	})
 }
 
@@ -116,7 +116,7 @@ func (h *HealthHandler) ReadinessCheck(c *fiber.Ctx) error {
 // @Router /healthcheck [get]
 func (h *HealthHandler) HealthCheck(c *fiber.Ctx) error {
 	response := HealthResponse{
-		Service: "woohalabs-api",
+		Service: "ojeomneo-api",
 		Version: "1.0.0",
 	}
 

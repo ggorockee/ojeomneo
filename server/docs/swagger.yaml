@@ -1,4 +1,4 @@
-basePath: /woohalabs/v1
+basePath: /ojeomneo/v1
 definitions:
   handler.DatabaseStatus:
     description: 데이터베이스 연결 상태
@@ -19,7 +19,7 @@ definitions:
       database:
         $ref: '#/definitions/handler.DatabaseStatus'
       service:
-        example: woohalabs-api
+        example: ojeomneo-api
         type: string
       status:
         example: ok
@@ -32,7 +32,7 @@ definitions:
     description: Kubernetes liveness/startup probe용 간단한 응답
     properties:
       service:
-        example: woohalabs-api
+        example: ojeomneo-api
         type: string
       status:
         example: ok
@@ -61,7 +61,7 @@ info:
     name: Apache 2.0
     url: http://www.apache.org/licenses/LICENSE-2.0.html
   termsOfService: http://swagger.io/terms/
-  title: Woohalabs API
+  title: Ojeomneo API
   version: 1.0.0
 paths:
   /healthcheck:

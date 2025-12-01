@@ -127,7 +127,7 @@ const docTemplate = `{
                 },
                 "service": {
                     "type": "string",
-                    "example": "woohalabs-api"
+                    "example": "ojeomneo-api"
                 },
                 "status": {
                     "type": "string",
@@ -145,7 +145,7 @@ const docTemplate = `{
             "properties": {
                 "service": {
                     "type": "string",
-                    "example": "woohalabs-api"
+                    "example": "ojeomneo-api"
                 },
                 "status": {
                     "type": "string",
@@ -178,9 +178,9 @@ const docTemplate = `{
 var SwaggerInfo = &swag.Spec{
 	Version:          "1.0.0",
 	Host:             "api.woohalabs.com",
-	BasePath:         "/woohalabs/v1",
+	BasePath:         "/ojeomneo/v1",
 	Schemes:          []string{"https", "http"},
-	Title:            "Woohalabs API",
+	Title:            "Ojeomneo API",
 	Description:      "Go Fiber v2 기반 REST API 서버",
 	InfoInstanceName: "swagger",
 	SwaggerTemplate:  docTemplate,
