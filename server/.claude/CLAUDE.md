@@ -149,7 +149,7 @@ server/
 ```bash
 # 서버 설정
 APP_ENV=development
-APP_PORT=8080
+APP_PORT=3000
 
 # 데이터베이스 (Kubernetes Secret 키 이름과 동일)
 POSTGRES_SERVER=localhost
