@@ -7,11 +7,6 @@ on:
     paths:
       - "server/**"
       - ".github/workflows/ci-server.yml"
-  pull_request:
-    branches:
-      - main
-    paths:
-      - "server/**"
 
 env:
   GO_VERSION: "1.23"
