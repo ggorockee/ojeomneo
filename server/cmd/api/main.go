@@ -49,6 +49,17 @@ func main() {
 		log.Println("Server will start without database connection")
 	}
 
+	// Redis 연결
+	rdb, err := config.ConnectRedis(cfg)
+	if err != nil {
+		log.Printf("Warning: Failed to connect to redis: %v", err)
+		log.Println("Server will start without redis connection")
+	} else {
+		log.Println("Redis connection established")
+		defer rdb.Close()
+	}
+	_ = rdb // TODO: Rate Limiting, 캐싱 미들웨어에서 사용 예정
+
 	// Fiber 앱 생성
 	app := fiber.New(fiber.Config{
 		AppName:      "Ojeomneo API v1.0.0",
