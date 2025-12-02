@@ -8,6 +8,11 @@ on:
       - "admin/**"
       - ".github/workflows/ci-admin.yml"
 
+# infra repo 동시 업데이트 방지 (Server CI와 공유)
+concurrency:
+  group: ojeomneo-infra-update
+  cancel-in-progress: false
+
 env:
   PYTHON_VERSION: "3.12"
   DOCKER_IMAGE: ggorockee/ojeomneo-admin
