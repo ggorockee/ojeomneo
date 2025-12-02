@@ -102,9 +102,9 @@ Redis를 오점너 프로젝트 초기부터 도입하여 성능, 확장성, 실
 
 ### 4.2 Phase 2: 핵심 기능
 
-- [ ] Rate Limiting 미들웨어 (Server) - IP 기반 요청 제한
-- [ ] API 캐싱 레이어 (Server) - 인터셉터 패턴
-- [ ] Django 세션 마이그레이션 (Admin) - DB → Redis
+- [x] Rate Limiting 미들웨어 (Server) - IP 기반 요청 제한
+- [x] API 캐싱 레이어 (Server) - 인터셉터 패턴
+- [x] Django 세션 마이그레이션 (Admin) - DB → Redis (Phase 1에서 설정 완료)
 
 ### 4.3 Phase 3: 고급 기능 (필요 시)
 
