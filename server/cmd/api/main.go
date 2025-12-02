@@ -58,7 +58,6 @@ func main() {
 		log.Println("Redis connection established")
 		defer rdb.Close()
 	}
-	_ = rdb // TODO: Rate Limiting, 캐싱 미들웨어에서 사용 예정
 
 	// Fiber 앱 생성
 	app := fiber.New(fiber.Config{
@@ -90,6 +89,22 @@ func main() {
 
 	// API v1 라우터
 	v1 := ojeomneo.Group("/v1")
+
+	// Rate Limiting 미들웨어 (Redis 연결 시에만 활성화)
+	if rdb != nil {
+		rateLimitCfg := middleware.DefaultRateLimitConfig()
+		rateLimitCfg.RedisClient = rdb
+		v1.Use(middleware.RateLimiter(rateLimitCfg))
+		log.Println("Rate Limiting middleware enabled")
+	}
+
+	// API 캐싱 미들웨어 (Redis 연결 시에만 활성화)
+	if rdb != nil {
+		cacheCfg := middleware.DefaultCacheConfig()
+		cacheCfg.RedisClient = rdb
+		v1.Use(middleware.Cache(cacheCfg))
+		log.Println("API Cache middleware enabled")
+	}
 
 	// Prometheus 미들웨어 (API 요청만 측정)
 	v1.Use(middleware.PrometheusMiddleware())
