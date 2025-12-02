@@ -91,6 +91,12 @@ DATABASES = {
 # Custom User Model
 AUTH_USER_MODEL = "accounts.User"
 
+# Authentication Backends (이메일로 로그인 가능)
+AUTHENTICATION_BACKENDS = [
+    "accounts.backends.EmailAuthBackend",  # 이메일 + 비밀번호 로그인
+    "django.contrib.auth.backends.ModelBackend",  # 기본 username 로그인 (fallback)
+]
+
 # Password validation
 AUTH_PASSWORD_VALIDATORS = [
     {"NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"},
