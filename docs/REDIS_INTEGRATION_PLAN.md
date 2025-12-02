@@ -93,12 +93,12 @@ Redis를 오점너 프로젝트 초기부터 도입하여 성능, 확장성, 실
 
 > **우선순위**: Helm으로 Redis 설치/배포 → K8s ServiceMonitor로 메트릭 연결
 
-- [ ] Helm Chart에 Redis 추가 (Infra) - Bitnami Redis Chart 활용
-- [ ] Redis Secret 생성 (ojeomneo-redis-credentials)
-- [ ] Redis 환경변수 설정 (Server/Admin) - Secret으로 관리
-- [ ] go-redis 클라이언트 통합 (Server) - 연결 풀 설정
-- [ ] django-redis 설정 (Admin) - CACHES, SESSION_ENGINE 설정
-- [ ] ServiceMonitor 연결 확인
+- [x] Helm Chart에 Redis 추가 (Infra) - Bitnami Redis Chart 활용
+- [x] Redis Secret 생성 (ojeomneo-redis-credentials)
+- [x] Redis 환경변수 설정 (Server/Admin) - Secret으로 관리
+- [x] go-redis 클라이언트 통합 (Server) - 연결 풀 설정
+- [x] django-redis 설정 (Admin) - CACHES, SESSION_ENGINE 설정
+- [x] ServiceMonitor 연결 확인
 
 ### 4.2 Phase 2: 핵심 기능
 

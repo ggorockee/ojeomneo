@@ -11,6 +11,7 @@ dependencies = [
     "python-dotenv>=1.0",
     "gunicorn>=23.0",
     "whitenoise>=6.8",
+    "django-redis>=5.4",
 ]
 
 [project.optional-dependencies]

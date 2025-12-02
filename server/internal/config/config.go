@@ -14,10 +14,14 @@ type Config struct {
 	DBName     string
 	DBUser     string
 	DBPassword string
+
+	RedisHost     string
+	RedisPort     string
+	RedisPassword string
 }
 
 // Load 환경변수에서 설정 로드
-// Kubernetes Secret 키 이름에 맞춰 POSTGRES_* 형식 사용
+// Kubernetes Secret 키 이름에 맞춰 POSTGRES_*, REDIS_* 형식 사용
 func Load() *Config {
 	return &Config{
 		AppEnv:  getEnv("APP_ENV", "development"),
@@ -28,6 +32,10 @@ func Load() *Config {
 		DBName:     getEnv("POSTGRES_DB", "ojeomneo"),
 		DBUser:     getEnv("POSTGRES_USER", "ojeomneo"),
 		DBPassword: getEnv("POSTGRES_PASSWORD", ""),
+
+		RedisHost:     getEnv("REDIS_HOST", "localhost"),
+		RedisPort:     getEnv("REDIS_PORT", "6379"),
+		RedisPassword: getEnv("REDIS_PASSWORD", ""),
 	}
 }
 
