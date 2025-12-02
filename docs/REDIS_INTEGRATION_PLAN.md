@@ -178,10 +178,10 @@ Redis를 오점너 프로젝트 초기부터 도입하여 성능, 확장성, 실
 
 ### 8.1 Django 세션 마이그레이션
 
-- [ ] django-redis 패키지 설치 (롤백: 패키지 제거)
-- [ ] CACHES에 Redis 백엔드 추가 (롤백: 설정 원복)
-- [ ] SESSION_ENGINE을 캐시로 변경 (롤백: 설정 원복)
-- [ ] 기존 DB 세션 테이블 정리
+- [x] django-redis 패키지 설치 (롤백: 패키지 제거)
+- [x] CACHES에 Redis 백엔드 추가 (롤백: 설정 원복)
+- [x] SESSION_ENGINE을 캐시로 변경 (롤백: 설정 원복)
+- [x] 기존 DB 세션 테이블 정리 (cleanup_db_sessions 명령어 제공)
 
 ### 8.2 점진적 캐싱 도입
 
