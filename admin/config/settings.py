@@ -114,7 +114,7 @@ STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 # App Version
-APP_VERSION = "1.0.0"
+APP_VERSION = "1.0.1"
 
 # Django Unfold 설정
 UNFOLD = {
