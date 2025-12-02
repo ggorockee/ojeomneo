@@ -4,37 +4,44 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     initial = True
 
     dependencies = []
 
     operations = [
         migrations.CreateModel(
-            name='User',
+            name="User",
             fields=[
-                ('id', models.BigAutoField(primary_key=True, serialize=False)),
-                ('password', models.CharField(max_length=128, verbose_name='비밀번호')),
-                ('last_login', models.DateTimeField(blank=True, null=True, verbose_name='마지막 로그인')),
-                ('is_superuser', models.BooleanField(default=False, verbose_name='슈퍼유저 여부')),
-                ('username', models.CharField(max_length=150, unique=True, verbose_name='사용자명')),
-                ('first_name', models.CharField(blank=True, default='', max_length=150, verbose_name='이름')),
-                ('last_name', models.CharField(blank=True, default='', max_length=150, verbose_name='성')),
-                ('email', models.EmailField(max_length=254, verbose_name='이메일')),
-                ('is_staff', models.BooleanField(default=False, verbose_name='스태프 여부')),
-                ('is_active', models.BooleanField(default=True, verbose_name='활성화 여부')),
-                ('date_joined', models.DateTimeField(auto_now_add=True, verbose_name='가입일')),
-                ('login_method', models.CharField(choices=[('email', '이메일'), ('kakao', '카카오'), ('google', '구글'), ('apple', '애플')], default='email', max_length=20, verbose_name='로그인 방식')),
-                ('social_id', models.CharField(blank=True, default='', max_length=255, verbose_name='소셜 ID')),
-                ('created_at', models.DateTimeField(auto_now_add=True, verbose_name='생성일')),
-                ('updated_at', models.DateTimeField(auto_now=True, verbose_name='수정일')),
-                ('deleted_at', models.DateTimeField(blank=True, null=True, verbose_name='삭제일')),
+                ("id", models.BigAutoField(primary_key=True, serialize=False)),
+                ("password", models.CharField(max_length=128, verbose_name="비밀번호")),
+                ("last_login", models.DateTimeField(blank=True, null=True, verbose_name="마지막 로그인")),
+                ("is_superuser", models.BooleanField(default=False, verbose_name="슈퍼유저 여부")),
+                ("username", models.CharField(max_length=150, unique=True, verbose_name="사용자명")),
+                ("first_name", models.CharField(blank=True, default="", max_length=150, verbose_name="이름")),
+                ("last_name", models.CharField(blank=True, default="", max_length=150, verbose_name="성")),
+                ("email", models.EmailField(max_length=254, verbose_name="이메일")),
+                ("is_staff", models.BooleanField(default=False, verbose_name="스태프 여부")),
+                ("is_active", models.BooleanField(default=True, verbose_name="활성화 여부")),
+                ("date_joined", models.DateTimeField(auto_now_add=True, verbose_name="가입일")),
+                (
+                    "login_method",
+                    models.CharField(
+                        choices=[("email", "이메일"), ("kakao", "카카오"), ("google", "구글"), ("apple", "애플")],
+                        default="email",
+                        max_length=20,
+                        verbose_name="로그인 방식",
+                    ),
+                ),
+                ("social_id", models.CharField(blank=True, default="", max_length=255, verbose_name="소셜 ID")),
+                ("created_at", models.DateTimeField(auto_now_add=True, verbose_name="생성일")),
+                ("updated_at", models.DateTimeField(auto_now=True, verbose_name="수정일")),
+                ("deleted_at", models.DateTimeField(blank=True, null=True, verbose_name="삭제일")),
             ],
             options={
-                'verbose_name': '사용자',
-                'verbose_name_plural': '사용자',
-                'db_table': 'users',
-                'managed': False,
+                "verbose_name": "사용자",
+                "verbose_name_plural": "사용자",
+                "db_table": "users",
+                "managed": False,
             },
         ),
     ]
