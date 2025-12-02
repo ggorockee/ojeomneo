@@ -3,6 +3,7 @@ package config
 import (
 	"fmt"
 
+	"github.com/ggorockee/ojeomneo/server/internal/model"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
@@ -34,6 +35,20 @@ func ConnectDB(cfg *Config) (*gorm.DB, error) {
 
 	sqlDB.SetMaxIdleConns(10)
 	sqlDB.SetMaxOpenConns(100)
+
+	// AutoMigrate - 테이블 자동 생성/업데이트
+	if err := db.AutoMigrate(&model.User{}); err != nil {
+		return nil, fmt.Errorf("failed to auto migrate: %w", err)
+	}
+
+	// email + login_method 복합 unique constraint 추가
+	// GORM에서 복합 unique index는 수동으로 추가
+	if err := db.Exec(`
+		CREATE UNIQUE INDEX IF NOT EXISTS idx_unique_email_login_method
+		ON users (email, login_method)
+	`).Error; err != nil {
+		return nil, fmt.Errorf("failed to create unique index: %w", err)
+	}
 
 	return db, nil
 }
