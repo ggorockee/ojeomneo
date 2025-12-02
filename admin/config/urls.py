@@ -29,10 +29,12 @@ def liveness_check(request):
     Liveness 체크 (Kubernetes startup/liveness probe용)
     서버가 살아있는지 확인 (DB 연결 무관)
     """
-    return JsonResponse({
-        "status": "ok",
-        "service": "ojeomneo-admin",
-    })
+    return JsonResponse(
+        {
+            "status": "ok",
+            "service": "ojeomneo-admin",
+        }
+    )
 
 
 def readiness_check(request):
