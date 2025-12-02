@@ -6,6 +6,18 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## 🚨 최우선 규칙 (CRITICAL RULES)
 
+### ⚠️ Server-Admin 모델 동기화 (필수)
+
+**Server와 Admin은 한 덩어리입니다.**
+
+| 이벤트 | 필수 액션 |
+|--------|-----------|
+| Server 모델 **생성** | Admin에 `managed=False` 모델 추가 |
+| Server 모델 **수정** | Admin 모델 필드 동기화 |
+| Server 모델 **삭제** | Admin 모델도 삭제 |
+
+> **중요**: Server에서 모델 변경 시 반드시 Admin도 함께 업데이트해야 합니다.
+
 ### 아키텍처 원칙
 
 | 컴포넌트 | 역할 | 스키마 관리 |

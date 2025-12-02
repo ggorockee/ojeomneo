@@ -1,6 +1,6 @@
 basePath: /ojeomneo/v1
 definitions:
-  handler.DatabaseStatus:
+  internal_handler.DatabaseStatus:
     description: 데이터베이스 연결 상태
     properties:
       connected:
@@ -13,11 +13,11 @@ definitions:
         example: Database connection successful
         type: string
     type: object
-  handler.HealthResponse:
+  internal_handler.HealthResponse:
     description: 서버 헬스체크 응답
     properties:
       database:
-        $ref: '#/definitions/handler.DatabaseStatus'
+        $ref: '#/definitions/internal_handler.DatabaseStatus'
       service:
         example: ojeomneo-api
         type: string
@@ -28,7 +28,7 @@ definitions:
         example: 1.0.0
         type: string
     type: object
-  handler.LivenessResponse:
+  internal_handler.LivenessResponse:
     description: Kubernetes liveness/startup probe용 간단한 응답
     properties:
       service:
@@ -38,7 +38,7 @@ definitions:
         example: ok
         type: string
     type: object
-  handler.ReadinessResponse:
+  internal_handler.ReadinessResponse:
     description: Kubernetes readiness probe용 응답
     properties:
       database:
@@ -56,7 +56,7 @@ info:
   contact:
     email: support@woohalabs.com
     name: API Support
-  description: Go Fiber v2 기반 REST API 서버
+  description: Go Fiber v2 기반 REST API 서버 - 스케치 기반 메뉴 추천
   license:
     name: Apache 2.0
     url: http://www.apache.org/licenses/LICENSE-2.0.html
@@ -75,7 +75,7 @@ paths:
         "200":
           description: 상태 정보 반환 (DB 연결 실패해도 200)
           schema:
-            $ref: '#/definitions/handler.HealthResponse'
+            $ref: '#/definitions/internal_handler.HealthResponse'
       summary: 서버 상세 헬스체크
       tags:
       - Health
@@ -90,7 +90,7 @@ paths:
         "200":
           description: 서버 정상 가동 중
           schema:
-            $ref: '#/definitions/handler.LivenessResponse'
+            $ref: '#/definitions/internal_handler.LivenessResponse'
       summary: Liveness 체크 (Kubernetes startup/liveness probe용)
       tags:
       - Health
@@ -105,14 +105,203 @@ paths:
         "200":
           description: 트래픽 수신 준비 완료
           schema:
-            $ref: '#/definitions/handler.ReadinessResponse'
+            $ref: '#/definitions/internal_handler.ReadinessResponse'
         "503":
           description: 트래픽 수신 불가 (DB 연결 실패)
           schema:
-            $ref: '#/definitions/handler.ReadinessResponse'
+            $ref: '#/definitions/internal_handler.ReadinessResponse'
       summary: Readiness 체크 (Kubernetes readiness probe용)
       tags:
       - Health
+  /menus:
+    get:
+      consumes:
+      - application/json
+      description: 메뉴 목록을 조회합니다. 카테고리와 태그로 필터링할 수 있습니다.
+      parameters:
+      - description: 카테고리 필터 (korean, chinese, japanese, western, asian, snack, cafe,
+          other)
+        in: query
+        name: category
+        type: string
+      - description: 태그 필터
+        in: query
+        name: tag
+        type: string
+      - default: 1
+        description: 페이지 번호
+        in: query
+        name: page
+        type: integer
+      - default: 20
+        description: 페이지당 개수
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+      summary: 메뉴 목록 조회
+      tags:
+      - menu
+  /menus/{id}:
+    get:
+      consumes:
+      - application/json
+      description: 메뉴 ID로 상세 정보를 조회합니다.
+      parameters:
+      - description: 메뉴 ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+      summary: 메뉴 상세 조회
+      tags:
+      - menu
+  /menus/categories:
+    get:
+      consumes:
+      - application/json
+      description: 사용 가능한 메뉴 카테고리 목록을 조회합니다.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+      summary: 카테고리 목록 조회
+      tags:
+      - menu
+  /sketch/{id}:
+    get:
+      consumes:
+      - application/json
+      description: 스케치 ID로 상세 정보를 조회합니다
+      parameters:
+      - description: 스케치 UUID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+      summary: 스케치 상세 조회
+      tags:
+      - sketch
+  /sketch/analyze:
+    post:
+      consumes:
+      - multipart/form-data
+      description: 스케치 이미지를 분석하여 감정/분위기를 파악하고 어울리는 메뉴를 추천합니다
+      parameters:
+      - description: 스케치 이미지 (PNG/JPEG, max 5MB)
+        in: formData
+        name: image
+        required: true
+        type: file
+      - description: 추가 텍스트 입력
+        in: formData
+        name: text
+        type: string
+      - description: 디바이스 식별자
+        in: formData
+        name: device_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      summary: 스케치 분석 및 메뉴 추천
+      tags:
+      - sketch
+  /sketch/history:
+    get:
+      consumes:
+      - application/json
+      description: 디바이스별 스케치 분석 히스토리를 조회합니다
+      parameters:
+      - description: 디바이스 식별자
+        in: query
+        name: device_id
+        required: true
+        type: string
+      - default: 1
+        description: 페이지 번호
+        in: query
+        name: page
+        type: integer
+      - default: 10
+        description: 페이지당 개수
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+      summary: 스케치 히스토리 조회
+      tags:
+      - sketch
 schemes:
 - https
 - http

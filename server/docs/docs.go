@@ -40,7 +40,7 @@ const docTemplate = `{
                     "200": {
                         "description": "상태 정보 반환 (DB 연결 실패해도 200)",
                         "schema": {
-                            "$ref": "#/definitions/handler.HealthResponse"
+                            "$ref": "#/definitions/internal_handler.HealthResponse"
                         }
                     }
                 }
@@ -63,7 +63,7 @@ const docTemplate = `{
                     "200": {
                         "description": "서버 정상 가동 중",
                         "schema": {
-                            "$ref": "#/definitions/handler.LivenessResponse"
+                            "$ref": "#/definitions/internal_handler.LivenessResponse"
                         }
                     }
                 }
@@ -86,13 +86,290 @@ const docTemplate = `{
                     "200": {
                         "description": "트래픽 수신 준비 완료",
                         "schema": {
-                            "$ref": "#/definitions/handler.ReadinessResponse"
+                            "$ref": "#/definitions/internal_handler.ReadinessResponse"
                         }
                     },
                     "503": {
                         "description": "트래픽 수신 불가 (DB 연결 실패)",
                         "schema": {
-                            "$ref": "#/definitions/handler.ReadinessResponse"
+                            "$ref": "#/definitions/internal_handler.ReadinessResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/menus": {
+            "get": {
+                "description": "메뉴 목록을 조회합니다. 카테고리와 태그로 필터링할 수 있습니다.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "menu"
+                ],
+                "summary": "메뉴 목록 조회",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "카테고리 필터 (korean, chinese, japanese, western, asian, snack, cafe, other)",
+                        "name": "category",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "태그 필터",
+                        "name": "tag",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 1,
+                        "description": "페이지 번호",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 20,
+                        "description": "페이지당 개수",
+                        "name": "limit",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/menus/categories": {
+            "get": {
+                "description": "사용 가능한 메뉴 카테고리 목록을 조회합니다.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "menu"
+                ],
+                "summary": "카테고리 목록 조회",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/menus/{id}": {
+            "get": {
+                "description": "메뉴 ID로 상세 정보를 조회합니다.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "menu"
+                ],
+                "summary": "메뉴 상세 조회",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "메뉴 ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/sketch/analyze": {
+            "post": {
+                "description": "스케치 이미지를 분석하여 감정/분위기를 파악하고 어울리는 메뉴를 추천합니다",
+                "consumes": [
+                    "multipart/form-data"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "sketch"
+                ],
+                "summary": "스케치 분석 및 메뉴 추천",
+                "parameters": [
+                    {
+                        "type": "file",
+                        "description": "스케치 이미지 (PNG/JPEG, max 5MB)",
+                        "name": "image",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "추가 텍스트 입력",
+                        "name": "text",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "description": "디바이스 식별자",
+                        "name": "device_id",
+                        "in": "formData",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/sketch/history": {
+            "get": {
+                "description": "디바이스별 스케치 분석 히스토리를 조회합니다",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "sketch"
+                ],
+                "summary": "스케치 히스토리 조회",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "디바이스 식별자",
+                        "name": "device_id",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "default": 1,
+                        "description": "페이지 번호",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 10,
+                        "description": "페이지당 개수",
+                        "name": "limit",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/sketch/{id}": {
+            "get": {
+                "description": "스케치 ID로 상세 정보를 조회합니다",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "sketch"
+                ],
+                "summary": "스케치 상세 조회",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "스케치 UUID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
                         }
                     }
                 }
@@ -100,7 +377,7 @@ const docTemplate = `{
         }
     },
     "definitions": {
-        "handler.DatabaseStatus": {
+        "internal_handler.DatabaseStatus": {
             "description": "데이터베이스 연결 상태",
             "type": "object",
             "properties": {
@@ -118,12 +395,12 @@ const docTemplate = `{
                 }
             }
         },
-        "handler.HealthResponse": {
+        "internal_handler.HealthResponse": {
             "description": "서버 헬스체크 응답",
             "type": "object",
             "properties": {
                 "database": {
-                    "$ref": "#/definitions/handler.DatabaseStatus"
+                    "$ref": "#/definitions/internal_handler.DatabaseStatus"
                 },
                 "service": {
                     "type": "string",
@@ -139,7 +416,7 @@ const docTemplate = `{
                 }
             }
         },
-        "handler.LivenessResponse": {
+        "internal_handler.LivenessResponse": {
             "description": "Kubernetes liveness/startup probe용 간단한 응답",
             "type": "object",
             "properties": {
@@ -153,7 +430,7 @@ const docTemplate = `{
                 }
             }
         },
-        "handler.ReadinessResponse": {
+        "internal_handler.ReadinessResponse": {
             "description": "Kubernetes readiness probe용 응답",
             "type": "object",
             "properties": {
@@ -181,7 +458,7 @@ var SwaggerInfo = &swag.Spec{
 	BasePath:         "/ojeomneo/v1",
 	Schemes:          []string{"https", "http"},
 	Title:            "Ojeomneo API",
-	Description:      "Go Fiber v2 기반 REST API 서버",
+	Description:      "Go Fiber v2 기반 REST API 서버 - 스케치 기반 메뉴 추천",
 	InfoInstanceName: "swagger",
 	SwaggerTemplate:  docTemplate,
 	LeftDelim:        "{{",

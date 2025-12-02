@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     # 로컬 앱
     "accounts",
+    "menus",
 ]
 
 MIDDLEWARE = [

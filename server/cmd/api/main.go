@@ -14,13 +14,17 @@ import (
 	"github.com/ggorockee/ojeomneo/server/internal/config"
 	"github.com/ggorockee/ojeomneo/server/internal/handler"
 	"github.com/ggorockee/ojeomneo/server/internal/middleware"
+	"github.com/ggorockee/ojeomneo/server/internal/model"
+	"github.com/ggorockee/ojeomneo/server/internal/seed"
+	"github.com/ggorockee/ojeomneo/server/internal/service"
+	"github.com/ggorockee/ojeomneo/server/internal/service/llm"
 
 	_ "github.com/ggorockee/ojeomneo/server/docs"
 )
 
 // @title Ojeomneo API
 // @version 1.0.0
-// @description Go Fiber v2 기반 REST API 서버
+// @description Go Fiber v2 기반 REST API 서버 - 스케치 기반 메뉴 추천
 // @termsOfService http://swagger.io/terms/
 
 // @contact.name API Support
@@ -49,6 +53,29 @@ func main() {
 		log.Println("Server will start without database connection")
 	}
 
+	// AutoMigrate (스키마 동기화)
+	if db != nil {
+		log.Println("Running database migrations...")
+		if err := db.AutoMigrate(
+			&model.User{},
+			&model.Menu{},
+			&model.Sketch{},
+			&model.Recommendation{},
+		); err != nil {
+			log.Printf("Warning: Failed to run migrations: %v", err)
+		} else {
+			log.Println("Database migrations completed")
+		}
+
+		// 메뉴 시드 데이터 삽입 (SEED_DATA=true 일 때만)
+		if os.Getenv("SEED_DATA") == "true" {
+			log.Println("Seeding menu data...")
+			if err := seed.SeedMenus(db); err != nil {
+				log.Printf("Warning: Failed to seed menus: %v", err)
+			}
+		}
+	}
+
 	// Redis 연결
 	rdb, err := config.ConnectRedis(cfg)
 	if err != nil {
@@ -59,11 +86,24 @@ func main() {
 		defer rdb.Close()
 	}
 
+	// LLM 클라이언트 초기화
+	llmClient := llm.NewClient(cfg.OpenAIAPIKey, cfg.OpenAIModel)
+	if llmClient.IsAvailable() {
+		log.Printf("OpenAI client initialized (model: %s)", cfg.OpenAIModel)
+	} else {
+		log.Println("Warning: OpenAI API key not configured, using mock responses")
+	}
+
+	// 서비스 초기화
+	menuService := service.NewMenuService(db)
+	sketchService := service.NewSketchService(db, llmClient, menuService)
+
 	// Fiber 앱 생성
 	app := fiber.New(fiber.Config{
 		AppName:      "Ojeomneo API v1.0.0",
 		ServerHeader: "Ojeomneo",
 		ErrorHandler: handler.CustomErrorHandler,
+		BodyLimit:    10 * 1024 * 1024, // 10MB (스케치 이미지 업로드용)
 	})
 
 	// 전역 미들웨어 설정
@@ -117,8 +157,10 @@ func main() {
 		Title:        "Ojeomneo API Documentation",
 	}))
 
-	// 핸들러 등록
+	// 핸들러 초기화
 	healthHandler := handler.NewHealthHandler(db)
+	menuHandler := handler.NewMenuHandler(menuService)
+	sketchHandler := handler.NewSketchHandler(sketchService)
 
 	// Health Check 엔드포인트
 	// /ojeomneo/v1/healthcheck - 상세 상태 (모니터링용, 항상 200)
@@ -127,6 +169,16 @@ func main() {
 	v1.Get("/healthcheck", healthHandler.HealthCheck)
 	v1.Get("/healthcheck/live", healthHandler.LivenessCheck)
 	v1.Get("/healthcheck/ready", healthHandler.ReadinessCheck)
+
+	// Menu 엔드포인트
+	v1.Get("/menus", menuHandler.List)
+	v1.Get("/menus/categories", menuHandler.GetCategories)
+	v1.Get("/menus/:id", menuHandler.GetByID)
+
+	// Sketch 엔드포인트
+	v1.Post("/sketch/analyze", sketchHandler.Analyze)
+	v1.Get("/sketch/history", sketchHandler.GetHistory)
+	v1.Get("/sketch/:id", sketchHandler.GetByID)
 
 	// 서버 시작
 	port := os.Getenv("APP_PORT")
@@ -137,6 +189,7 @@ func main() {
 	log.Printf("🚀 Server starting on port %s", port)
 	log.Printf("📚 Swagger: http://localhost:%s/ojeomneo/v1/docs", port)
 	log.Printf("📊 Metrics: http://localhost:%s/ojeomneo/metrics (internal only)", port)
+	log.Printf("🎨 Sketch API: POST http://localhost:%s/ojeomneo/v1/sketch/analyze", port)
 
 	if err := app.Listen(":" + port); err != nil {
 		log.Fatalf("Failed to start server: %v", err)

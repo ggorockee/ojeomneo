@@ -18,6 +18,10 @@ type Config struct {
 	RedisHost     string
 	RedisPort     string
 	RedisPassword string
+
+	// OpenAI 설정
+	OpenAIAPIKey string
+	OpenAIModel  string
 }
 
 // Load 환경변수에서 설정 로드
@@ -36,6 +40,9 @@ func Load() *Config {
 		RedisHost:     getEnv("REDIS_HOST", "localhost"),
 		RedisPort:     getEnv("REDIS_PORT", "6379"),
 		RedisPassword: getEnv("REDIS_PASSWORD", ""),
+
+		OpenAIAPIKey: getEnv("OPENAI_API_KEY", ""),
+		OpenAIModel:  getEnv("OPENAI_MODEL", "gpt-4o-mini"),
 	}
 }
 
