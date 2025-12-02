@@ -8,6 +8,11 @@ on:
       - "server/**"
       - ".github/workflows/ci-server.yml"
 
+# infra repo 동시 업데이트 방지 (Admin CI와 공유)
+concurrency:
+  group: ojeomneo-infra-update
+  cancel-in-progress: false
+
 env:
   GO_VERSION: "1.23"
   DOCKER_IMAGE: ggorockee/ojeomneo-server-with-go
