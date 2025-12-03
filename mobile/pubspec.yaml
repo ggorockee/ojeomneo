@@ -28,6 +28,10 @@ dependencies:
 
   # Device info
   device_info_plus: ^10.1.2
+  package_info_plus: ^8.1.1
+
+  # URL launcher
+  url_launcher: ^6.3.1
 
   # Share functionality
   share_plus: ^10.0.3
