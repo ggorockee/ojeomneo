@@ -19,9 +19,12 @@ type Config struct {
 	RedisPort     string
 	RedisPassword string
 
-	// OpenAI 설정
-	OpenAIAPIKey string
-	OpenAIModel  string
+	// Gemini 설정
+	GeminiAPIKey string
+	GeminiModel  string
+
+	// OpenTelemetry 설정
+	OTLPEndpoint string
 }
 
 // Load 환경변수에서 설정 로드
@@ -41,8 +44,10 @@ func Load() *Config {
 		RedisPort:     getEnv("REDIS_PORT", "6379"),
 		RedisPassword: getEnv("REDIS_PASSWORD", ""),
 
-		OpenAIAPIKey: getEnv("OPENAI_API_KEY", ""),
-		OpenAIModel:  getEnv("OPENAI_MODEL", "gpt-4o-mini"),
+		GeminiAPIKey: getEnv("GEMINI_API_KEY", ""),
+		GeminiModel:  getEnv("GEMINI_MODEL", "gemini-1.5-flash"),
+
+		OTLPEndpoint: getEnv("OTEL_EXPORTER_OTLP_ENDPOINT", ""),
 	}
 }
 

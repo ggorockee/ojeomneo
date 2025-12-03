@@ -11,7 +11,7 @@ import (
 	"time"
 )
 
-// Client OpenAI API 클라이언트
+// Client Gemini API 클라이언트
 type Client struct {
 	apiKey     string
 	model      string
@@ -19,7 +19,7 @@ type Client struct {
 	baseURL    string
 }
 
-// NewClient 새 OpenAI 클라이언트 생성
+// NewClient 새 Gemini 클라이언트 생성
 func NewClient(apiKey, model string) *Client {
 	return &Client{
 		apiKey: apiKey,
@@ -27,7 +27,7 @@ func NewClient(apiKey, model string) *Client {
 		httpClient: &http.Client{
 			Timeout: 30 * time.Second,
 		},
-		baseURL: "https://api.openai.com/v1",
+		baseURL: "https://generativelanguage.googleapis.com/v1beta",
 	}
 }
 
@@ -36,11 +36,6 @@ type AnalysisResult struct {
 	Emotion  string   `json:"emotion"`
 	Keywords []string `json:"keywords"`
 	Mood     string   `json:"mood"`
-}
-
-// RecommendationReason 추천 이유 생성 결과
-type RecommendationReason struct {
-	Reason string `json:"reason"`
 }
 
 // AnalyzeSketch 스케치 이미지를 분석하여 감정/키워드/분위기 추출
@@ -71,37 +66,32 @@ func (c *Client) AnalyzeSketch(ctx context.Context, imageData []byte, inputText 
 %s`, inputText, userPrompt)
 	}
 
-	messages := []map[string]interface{}{
-		{
-			"role":    "system",
-			"content": systemPrompt,
+	reqBody := map[string]interface{}{
+		"system_instruction": map[string]interface{}{
+			"parts": []map[string]string{
+				{"text": systemPrompt},
+			},
 		},
-		{
-			"role": "user",
-			"content": []map[string]interface{}{
-				{
-					"type": "text",
-					"text": userPrompt,
-				},
-				{
-					"type": "image_url",
-					"image_url": map[string]string{
-						"url":    fmt.Sprintf("data:image/png;base64,%s", base64Image),
-						"detail": "low",
+		"contents": []map[string]interface{}{
+			{
+				"parts": []map[string]interface{}{
+					{"text": userPrompt},
+					{
+						"inline_data": map[string]string{
+							"mime_type": "image/png",
+							"data":      base64Image,
+						},
 					},
 				},
 			},
 		},
+		"generationConfig": map[string]interface{}{
+			"temperature":     0.7,
+			"maxOutputTokens": 500,
+		},
 	}
 
-	reqBody := map[string]interface{}{
-		"model":       c.model,
-		"messages":    messages,
-		"max_tokens":  500,
-		"temperature": 0.7,
-	}
-
-	respBody, err := c.doRequest(ctx, "/chat/completions", reqBody)
+	respBody, err := c.doRequest(ctx, reqBody)
 	if err != nil {
 		return nil, fmt.Errorf("failed to analyze sketch: %w", err)
 	}
@@ -132,21 +122,21 @@ func (c *Client) GenerateRecommendationReason(ctx context.Context, emotion strin
 왜 이 음식이 어울리는지 2문장 이내로 따뜻하고 공감가는 문체로 설명해주세요.
 설명만 출력하고 다른 텍스트는 포함하지 마세요.`, emotion, keywords, menuName)
 
-	messages := []map[string]interface{}{
-		{
-			"role":    "user",
-			"content": prompt,
+	reqBody := map[string]interface{}{
+		"contents": []map[string]interface{}{
+			{
+				"parts": []map[string]string{
+					{"text": prompt},
+				},
+			},
+		},
+		"generationConfig": map[string]interface{}{
+			"temperature":     0.8,
+			"maxOutputTokens": 200,
 		},
 	}
 
-	reqBody := map[string]interface{}{
-		"model":       c.model,
-		"messages":    messages,
-		"max_tokens":  200,
-		"temperature": 0.8,
-	}
-
-	respBody, err := c.doRequest(ctx, "/chat/completions", reqBody)
+	respBody, err := c.doRequest(ctx, reqBody)
 	if err != nil {
 		return "", fmt.Errorf("failed to generate reason: %w", err)
 	}
@@ -160,19 +150,19 @@ func (c *Client) GenerateRecommendationReason(ctx context.Context, emotion strin
 }
 
 // doRequest HTTP 요청 실행
-func (c *Client) doRequest(ctx context.Context, endpoint string, body map[string]interface{}) (map[string]interface{}, error) {
+func (c *Client) doRequest(ctx context.Context, body map[string]interface{}) (map[string]interface{}, error) {
 	jsonBody, err := json.Marshal(body)
 	if err != nil {
 		return nil, err
 	}
 
-	req, err := http.NewRequestWithContext(ctx, "POST", c.baseURL+endpoint, bytes.NewBuffer(jsonBody))
+	url := fmt.Sprintf("%s/models/%s:generateContent?key=%s", c.baseURL, c.model, c.apiKey)
+	req, err := http.NewRequestWithContext(ctx, "POST", url, bytes.NewBuffer(jsonBody))
 	if err != nil {
 		return nil, err
 	}
 
 	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("Authorization", "Bearer "+c.apiKey)
 
 	resp, err := c.httpClient.Do(req)
 	if err != nil {
@@ -197,23 +187,35 @@ func (c *Client) doRequest(ctx context.Context, endpoint string, body map[string
 	return result, nil
 }
 
-// extractContent 응답에서 content 추출
+// extractContent Gemini 응답에서 content 추출
 func (c *Client) extractContent(resp map[string]interface{}) (string, error) {
-	choices, ok := resp["choices"].([]interface{})
-	if !ok || len(choices) == 0 {
-		return "", fmt.Errorf("no choices in response")
+	candidates, ok := resp["candidates"].([]interface{})
+	if !ok || len(candidates) == 0 {
+		return "", fmt.Errorf("no candidates in response")
 	}
 
-	choice := choices[0].(map[string]interface{})
-	message := choice["message"].(map[string]interface{})
-	content := message["content"].(string)
+	candidate := candidates[0].(map[string]interface{})
+	content, ok := candidate["content"].(map[string]interface{})
+	if !ok {
+		return "", fmt.Errorf("no content in candidate")
+	}
 
-	return content, nil
+	parts, ok := content["parts"].([]interface{})
+	if !ok || len(parts) == 0 {
+		return "", fmt.Errorf("no parts in content")
+	}
+
+	part := parts[0].(map[string]interface{})
+	text, ok := part["text"].(string)
+	if !ok {
+		return "", fmt.Errorf("no text in part")
+	}
+
+	return text, nil
 }
 
 // mockAnalysis API 키가 없을 때 사용하는 목업 응답
 func (c *Client) mockAnalysis(inputText string) *AnalysisResult {
-	// 입력 텍스트에 따라 다른 응답 반환
 	if inputText != "" {
 		return &AnalysisResult{
 			Emotion:  "뭔가 특별한 것을 원하는",
