@@ -35,9 +35,9 @@ Prometheus → SigNoz 전환 작업계획서
   - `cmd/api/main.go`에 미들웨어 추가
 - [x] GORM 트레이싱 연동 (DB 쿼리 추적)
   - `internal/config/database.go`에 otelgorm 플러그인 추가
-- [ ] SigNoz에서 트레이스 수신 확인
-  - K8s 배포 후 확인 필요
-  - 환경변수: `OTEL_EXPORTER_OTLP_ENDPOINT=signoz-otel-collector.signoz:4317`
+- [x] SigNoz에서 트레이스 수신 확인
+  - K8s 배포 완료 (2025-12-03)
+  - 환경변수: `OTEL_EXPORTER_OTLP_ENDPOINT=signoz-otel-collector.monitoring:4317`
 
 ## Phase 3: Prometheus 메트릭 연동
 
