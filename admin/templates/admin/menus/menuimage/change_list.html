@@ -1,0 +1,11 @@
+{% extends "admin/change_list.html" %}
+{% load i18n %}
+
+{% block object-tools-items %}
+    <li>
+        <a href="{{ upload_url }}" class="addlink">
+            {% translate "이미지 업로드" %}
+        </a>
+    </li>
+    {{ block.super }}
+{% endblock %}

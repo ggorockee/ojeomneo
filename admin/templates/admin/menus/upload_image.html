@@ -1,0 +1,91 @@
+{% extends "admin/base_site.html" %}
+{% load i18n %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto">
+    <div class="bg-white dark:bg-gray-800 shadow rounded-lg p-6">
+        <h2 class="text-xl font-semibold mb-6 text-gray-900 dark:text-white">{{ title }}</h2>
+
+        <form method="post" enctype="multipart/form-data" class="space-y-6">
+            {% csrf_token %}
+
+            <div class="space-y-4">
+                <div>
+                    <label for="id_menu" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                        메뉴 *
+                    </label>
+                    <select name="menu" id="id_menu" required
+                            class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-purple-500 focus:border-purple-500 dark:bg-gray-700 dark:text-white">
+                        <option value="">---------</option>
+                        {% for choice in form.menu.field.queryset %}
+                            <option value="{{ choice.pk }}" {% if form.menu.value == choice.pk|stringformat:"i" %}selected{% endif %}>
+                                {{ choice }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                    {% if form.menu.errors %}
+                        <p class="mt-1 text-sm text-red-600">{{ form.menu.errors.0 }}</p>
+                    {% endif %}
+                </div>
+
+                <div>
+                    <label for="id_image" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                        이미지 파일 *
+                    </label>
+                    <input type="file" name="image" id="id_image" accept="image/*" required
+                           class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-purple-500 focus:border-purple-500 dark:bg-gray-700 dark:text-white file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-purple-50 file:text-purple-700 hover:file:bg-purple-100">
+                    <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                        jpg, jpeg, png, gif, webp 형식 (최대 10MB)
+                    </p>
+                    {% if form.image.errors %}
+                        <p class="mt-1 text-sm text-red-600">{{ form.image.errors.0 }}</p>
+                    {% endif %}
+                </div>
+
+                <div class="flex items-center">
+                    <input type="checkbox" name="is_primary" id="id_is_primary"
+                           class="h-4 w-4 text-purple-600 focus:ring-purple-500 border-gray-300 rounded">
+                    <label for="id_is_primary" class="ml-2 block text-sm text-gray-700 dark:text-gray-300">
+                        대표 이미지로 설정
+                    </label>
+                </div>
+            </div>
+
+            <div id="preview-container" class="hidden">
+                <p class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">미리보기</p>
+                <img id="image-preview" src="" alt="미리보기" class="max-w-full h-auto max-h-64 rounded-lg shadow">
+            </div>
+
+            <div class="flex justify-end space-x-3">
+                <a href="{% url 'admin:menus_menuimage_changelist' %}"
+                   class="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
+                    취소
+                </a>
+                <button type="submit"
+                        class="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500">
+                    업로드
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+document.getElementById('id_image').addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    const previewContainer = document.getElementById('preview-container');
+    const previewImage = document.getElementById('image-preview');
+
+    if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            previewImage.src = e.target.result;
+            previewContainer.classList.remove('hidden');
+        };
+        reader.readAsDataURL(file);
+    } else {
+        previewContainer.classList.add('hidden');
+    }
+});
+</script>
+{% endblock %}

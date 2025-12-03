@@ -5,6 +5,7 @@ Django Unfold를 사용하여 모던한 UI 제공.
 """
 
 from django.contrib import admin
+from django.urls import reverse
 from django.utils.html import format_html
 from unfold.admin import ModelAdmin, TabularInline
 
@@ -127,6 +128,16 @@ class MenuImageAdmin(ModelAdmin):
             },
         ),
     ]
+
+    def changelist_view(self, request, extra_context=None):
+        """목록 뷰에 업로드 버튼 추가"""
+        extra_context = extra_context or {}
+        extra_context["upload_url"] = reverse("menus:upload_image")
+        return super().changelist_view(request, extra_context=extra_context)
+
+    def has_add_permission(self, request):
+        """기본 추가 버튼 비활성화 (업로드 버튼 사용)"""
+        return False
 
     def image_preview(self, obj):
         """이미지 미리보기 (상세)"""

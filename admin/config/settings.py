@@ -156,6 +156,9 @@ SESSION_COOKIE_AGE = 86400  # 24시간
 # App Version
 APP_VERSION = "1.0.1"
 
+# Server API URL (Cloudflare Images 업로드용)
+SERVER_API_URL = os.getenv("SERVER_API_URL", "http://localhost:3000/ojeomneo/v1")
+
 # Django Unfold 설정
 UNFOLD = {
     "SITE_TITLE": "Ojeomneo Admin",

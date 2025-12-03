@@ -12,6 +12,7 @@ dependencies = [
     "gunicorn>=23.0",
     "whitenoise>=6.8",
     "django-redis>=5.4",
+    "requests>=2.32",
 ]
 
 [project.optional-dependencies]
