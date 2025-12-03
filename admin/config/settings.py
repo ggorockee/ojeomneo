@@ -42,6 +42,7 @@ INSTALLED_APPS = [
     # 로컬 앱
     "accounts",
     "menus",
+    "settings",
 ]
 
 MIDDLEWARE = [
