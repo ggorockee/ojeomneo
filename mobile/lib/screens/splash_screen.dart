@@ -77,7 +77,7 @@ class _SplashScreenState extends State<SplashScreen>
                         borderRadius: BorderRadius.circular(30),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withOpacity(0.1),
+                            color: const Color.fromRGBO(0, 0, 0, 0.1),
                             blurRadius: 20,
                             offset: const Offset(0, 10),
                           ),
@@ -102,23 +102,23 @@ class _SplashScreenState extends State<SplashScreen>
                     ),
                     const SizedBox(height: 12),
                     // Tagline
-                    Text(
+                    const Text(
                       '오늘 점심 뭐 먹지?',
                       style: TextStyle(
                         fontSize: 16,
-                        color: Colors.white.withOpacity(0.9),
+                        color: Color.fromRGBO(255, 255, 255, 0.9),
                         letterSpacing: 0.5,
                       ),
                     ),
                     const SizedBox(height: 60),
                     // Loading indicator
-                    SizedBox(
+                    const SizedBox(
                       width: 24,
                       height: 24,
                       child: CircularProgressIndicator(
                         strokeWidth: 2,
                         valueColor: AlwaysStoppedAnimation<Color>(
-                          Colors.white.withOpacity(0.8),
+                          Color.fromRGBO(255, 255, 255, 0.8),
                         ),
                       ),
                     ),
