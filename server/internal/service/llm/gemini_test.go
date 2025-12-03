@@ -10,31 +10,31 @@ import (
 
 func TestClient_NewClient(t *testing.T) {
 	t.Run("API 키 있는 클라이언트 생성", func(t *testing.T) {
-		client := NewClient("test-api-key", "gpt-4o-mini")
+		client := NewClient("test-api-key", "gemini-1.5-flash")
 		assert.True(t, client.IsAvailable())
-		assert.Equal(t, "gpt-4o-mini", client.model)
+		assert.Equal(t, "gemini-1.5-flash", client.model)
 	})
 
 	t.Run("API 키 없는 클라이언트 생성", func(t *testing.T) {
-		client := NewClient("", "gpt-4o-mini")
+		client := NewClient("", "gemini-1.5-flash")
 		assert.False(t, client.IsAvailable())
 	})
 }
 
 func TestClient_IsAvailable(t *testing.T) {
 	t.Run("API 키 있으면 true", func(t *testing.T) {
-		client := NewClient("sk-test-key", "gpt-4o-mini")
+		client := NewClient("AIzaSy-test-key", "gemini-1.5-flash")
 		assert.True(t, client.IsAvailable())
 	})
 
 	t.Run("API 키 없으면 false", func(t *testing.T) {
-		client := NewClient("", "gpt-4o-mini")
+		client := NewClient("", "gemini-1.5-flash")
 		assert.False(t, client.IsAvailable())
 	})
 }
 
 func TestClient_MockAnalysis(t *testing.T) {
-	client := NewClient("", "gpt-4o-mini")
+	client := NewClient("", "gemini-1.5-flash")
 	ctx := context.Background()
 
 	t.Run("입력 텍스트 없는 경우 기본 응답", func(t *testing.T) {
@@ -59,7 +59,7 @@ func TestClient_MockAnalysis(t *testing.T) {
 }
 
 func TestClient_MockReason(t *testing.T) {
-	client := NewClient("", "gpt-4o-mini")
+	client := NewClient("", "gemini-1.5-flash")
 	ctx := context.Background()
 
 	t.Run("된장찌개 추천 이유", func(t *testing.T) {

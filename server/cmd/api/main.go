@@ -1,9 +1,11 @@
 package main
 
 import (
+	"context"
 	"log"
 	"os"
 
+	"github.com/gofiber/contrib/otelfiber/v2"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/gofiber/fiber/v2/middleware/logger"
@@ -18,6 +20,7 @@ import (
 	"github.com/ggorockee/ojeomneo/server/internal/seed"
 	"github.com/ggorockee/ojeomneo/server/internal/service"
 	"github.com/ggorockee/ojeomneo/server/internal/service/llm"
+	"github.com/ggorockee/ojeomneo/server/internal/telemetry"
 
 	_ "github.com/ggorockee/ojeomneo/server/docs"
 )
@@ -45,6 +48,21 @@ func main() {
 
 	// 설정 로드
 	cfg := config.Load()
+
+	// OpenTelemetry 초기화 (OTLP endpoint가 설정된 경우에만)
+	if cfg.OTLPEndpoint != "" {
+		shutdown, err := telemetry.InitTracer(telemetry.Config{
+			ServiceName:    "ojeomneo-server",
+			ServiceVersion: "1.0.0",
+			Environment:    cfg.AppEnv,
+			OTLPEndpoint:   cfg.OTLPEndpoint,
+		})
+		if err != nil {
+			log.Printf("Warning: Failed to initialize OpenTelemetry: %v", err)
+		} else {
+			defer shutdown(context.Background())
+		}
+	}
 
 	// 데이터베이스 연결
 	db, err := config.ConnectDB(cfg)
@@ -86,12 +104,12 @@ func main() {
 		defer rdb.Close()
 	}
 
-	// LLM 클라이언트 초기화
-	llmClient := llm.NewClient(cfg.OpenAIAPIKey, cfg.OpenAIModel)
+	// LLM 클라이언트 초기화 (Gemini)
+	llmClient := llm.NewClient(cfg.GeminiAPIKey, cfg.GeminiModel)
 	if llmClient.IsAvailable() {
-		log.Printf("OpenAI client initialized (model: %s)", cfg.OpenAIModel)
+		log.Printf("Gemini client initialized (model: %s)", cfg.GeminiModel)
 	} else {
-		log.Println("Warning: OpenAI API key not configured, using mock responses")
+		log.Println("Warning: Gemini API key not configured, using mock responses")
 	}
 
 	// 서비스 초기화
@@ -108,6 +126,13 @@ func main() {
 
 	// 전역 미들웨어 설정
 	app.Use(recover.New())
+
+	// OpenTelemetry 트레이싱 미들웨어 (OTLP endpoint가 설정된 경우에만)
+	if cfg.OTLPEndpoint != "" {
+		app.Use(otelfiber.Middleware())
+		log.Println("OpenTelemetry tracing middleware enabled")
+	}
+
 	app.Use(logger.New(logger.Config{
 		Format:     "${time} | ${status} | ${latency} | ${ip} | ${method} | ${path}\n",
 		TimeFormat: "2006-01-02 15:04:05",

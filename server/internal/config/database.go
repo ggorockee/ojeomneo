@@ -2,8 +2,10 @@ package config
 
 import (
 	"fmt"
+	"os"
 
 	"github.com/ggorockee/ojeomneo/server/internal/model"
+	"github.com/uptrace/opentelemetry-go-extra/otelgorm"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
@@ -25,6 +27,13 @@ func ConnectDB(cfg *Config) (*gorm.DB, error) {
 	})
 	if err != nil {
 		return nil, fmt.Errorf("failed to connect to database: %w", err)
+	}
+
+	// OpenTelemetry GORM 플러그인 (OTLP endpoint가 설정된 경우에만)
+	if os.Getenv("OTEL_EXPORTER_OTLP_ENDPOINT") != "" {
+		if err := db.Use(otelgorm.NewPlugin()); err != nil {
+			return nil, fmt.Errorf("failed to use otelgorm plugin: %w", err)
+		}
 	}
 
 	// 연결 풀 설정
