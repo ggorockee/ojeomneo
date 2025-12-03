@@ -19,6 +19,7 @@ import (
 	"github.com/ggorockee/ojeomneo/server/internal/model"
 	"github.com/ggorockee/ojeomneo/server/internal/seed"
 	"github.com/ggorockee/ojeomneo/server/internal/service"
+	"github.com/ggorockee/ojeomneo/server/internal/service/cloudflare"
 	"github.com/ggorockee/ojeomneo/server/internal/service/llm"
 	"github.com/ggorockee/ojeomneo/server/internal/telemetry"
 
@@ -113,6 +114,14 @@ func main() {
 		log.Println("Warning: Gemini API key not configured, using mock responses")
 	}
 
+	// Cloudflare Images 클라이언트 초기화
+	cfImages := cloudflare.NewImagesClient(cfg.CloudflareAccountID, cfg.CloudflareAccountHash, cfg.CloudflareAPIKey)
+	if cfImages.IsAvailable() {
+		log.Println("Cloudflare Images client initialized")
+	} else {
+		log.Println("Warning: Cloudflare Images not configured, image upload disabled")
+	}
+
 	// 서비스 초기화
 	menuService := service.NewMenuService(db)
 	sketchService := service.NewSketchService(db, llmClient, menuService)
@@ -188,6 +197,7 @@ func main() {
 	menuHandler := handler.NewMenuHandler(menuService)
 	sketchHandler := handler.NewSketchHandler(sketchService)
 	appVersionHandler := handler.NewAppVersionHandler(db)
+	imageHandler := handler.NewImageHandler(cfImages)
 
 	// Health Check 엔드포인트
 	// /ojeomneo/v1/healthcheck - 상세 상태 (모니터링용, 항상 200)
@@ -210,6 +220,11 @@ func main() {
 	// App 엔드포인트
 	v1.Get("/app/version", appVersionHandler.CheckVersion)
 
+	// Image 엔드포인트
+	v1.Post("/images/upload", imageHandler.Upload)
+	v1.Post("/images/upload-url", imageHandler.UploadFromURL)
+	v1.Delete("/images/:id", imageHandler.Delete)
+
 	// 서버 시작
 	port := os.Getenv("APP_PORT")
 	if port == "" {
@@ -220,6 +235,7 @@ func main() {
 	log.Printf("📚 Swagger: http://localhost:%s/ojeomneo/v1/docs", port)
 	log.Printf("📊 Metrics: http://localhost:%s/ojeomneo/metrics (internal only)", port)
 	log.Printf("🎨 Sketch API: POST http://localhost:%s/ojeomneo/v1/sketch/analyze", port)
+	log.Printf("🖼️ Image API: POST http://localhost:%s/ojeomneo/v1/images/upload", port)
 
 	if err := app.Listen(":" + port); err != nil {
 		log.Fatalf("Failed to start server: %v", err)

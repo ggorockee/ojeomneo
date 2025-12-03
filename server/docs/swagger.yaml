@@ -1,6 +1,6 @@
 basePath: /ojeomneo/v1
 definitions:
-  internal_handler.DatabaseStatus:
+  handler.DatabaseStatus:
     description: 데이터베이스 연결 상태
     properties:
       connected:
@@ -13,11 +13,11 @@ definitions:
         example: Database connection successful
         type: string
     type: object
-  internal_handler.HealthResponse:
+  handler.HealthResponse:
     description: 서버 헬스체크 응답
     properties:
       database:
-        $ref: '#/definitions/internal_handler.DatabaseStatus'
+        $ref: '#/definitions/handler.DatabaseStatus'
       service:
         example: ojeomneo-api
         type: string
@@ -28,7 +28,7 @@ definitions:
         example: 1.0.0
         type: string
     type: object
-  internal_handler.LivenessResponse:
+  handler.LivenessResponse:
     description: Kubernetes liveness/startup probe용 간단한 응답
     properties:
       service:
@@ -38,7 +38,7 @@ definitions:
         example: ok
         type: string
     type: object
-  internal_handler.ReadinessResponse:
+  handler.ReadinessResponse:
     description: Kubernetes readiness probe용 응답
     properties:
       database:
@@ -49,6 +49,13 @@ definitions:
         type: boolean
       status:
         example: ok
+        type: string
+    type: object
+  handler.UploadFromURLRequest:
+    properties:
+      type:
+        type: string
+      url:
         type: string
     type: object
 host: api.woohalabs.com
@@ -64,6 +71,43 @@ info:
   title: Ojeomneo API
   version: 1.0.0
 paths:
+  /app/version:
+    get:
+      consumes:
+      - application/json
+      description: 앱 버전을 확인하고 강제 업데이트 여부를 반환합니다
+      parameters:
+      - description: 플랫폼 (ios/android)
+        in: query
+        name: platform
+        required: true
+        type: string
+      - description: '현재 앱 버전 (예: 1.0.0)'
+        in: query
+        name: current_version
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 버전 정보
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: 잘못된 요청
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: 버전 정보 없음
+          schema:
+            additionalProperties: true
+            type: object
+      summary: 앱 버전 확인
+      tags:
+      - App
   /healthcheck:
     get:
       consumes:
@@ -75,7 +119,7 @@ paths:
         "200":
           description: 상태 정보 반환 (DB 연결 실패해도 200)
           schema:
-            $ref: '#/definitions/internal_handler.HealthResponse'
+            $ref: '#/definitions/handler.HealthResponse'
       summary: 서버 상세 헬스체크
       tags:
       - Health
@@ -90,7 +134,7 @@ paths:
         "200":
           description: 서버 정상 가동 중
           schema:
-            $ref: '#/definitions/internal_handler.LivenessResponse'
+            $ref: '#/definitions/handler.LivenessResponse'
       summary: Liveness 체크 (Kubernetes startup/liveness probe용)
       tags:
       - Health
@@ -105,14 +149,115 @@ paths:
         "200":
           description: 트래픽 수신 준비 완료
           schema:
-            $ref: '#/definitions/internal_handler.ReadinessResponse'
+            $ref: '#/definitions/handler.ReadinessResponse'
         "503":
           description: 트래픽 수신 불가 (DB 연결 실패)
           schema:
-            $ref: '#/definitions/internal_handler.ReadinessResponse'
+            $ref: '#/definitions/handler.ReadinessResponse'
       summary: Readiness 체크 (Kubernetes readiness probe용)
       tags:
       - Health
+  /images/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Cloudflare Images에서 이미지를 삭제합니다
+      parameters:
+      - description: 이미지 ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 삭제 성공
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: 잘못된 요청
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: 서버 오류
+          schema:
+            additionalProperties: true
+            type: object
+      summary: 이미지 삭제
+      tags:
+      - Image
+  /images/upload:
+    post:
+      consumes:
+      - multipart/form-data
+      description: 이미지를 Cloudflare Images에 업로드합니다
+      parameters:
+      - description: 이미지 파일 (jpg, jpeg, png, gif, webp)
+        in: formData
+        name: file
+        required: true
+        type: file
+      - description: 이미지 타입 (sketch, menu)
+        in: formData
+        name: type
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 업로드 성공
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: 잘못된 요청
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: 서버 오류
+          schema:
+            additionalProperties: true
+            type: object
+      summary: 이미지 업로드
+      tags:
+      - Image
+  /images/upload-url:
+    post:
+      consumes:
+      - application/json
+      description: URL에서 이미지를 가져와 Cloudflare Images에 업로드합니다
+      parameters:
+      - description: 업로드 요청
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handler.UploadFromURLRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 업로드 성공
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: 잘못된 요청
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: 서버 오류
+          schema:
+            additionalProperties: true
+            type: object
+      summary: URL에서 이미지 업로드
+      tags:
+      - Image
   /menus:
     get:
       consumes:

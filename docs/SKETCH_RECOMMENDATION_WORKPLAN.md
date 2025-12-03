@@ -10,7 +10,7 @@
 | Phase | 설명 | 진행률 |
 |-------|------|--------|
 | Phase 0 | 앱 버전 관리 시스템 | **8/8 ✅** |
-| Phase 1 | 이미지 업로드 인프라 | 0/10 |
+| Phase 1 | 이미지 업로드 인프라 | **4/5 (80%)** |
 | Phase 2 | 메뉴 데이터 기반 구축 | 0/8 |
 | Phase 3 | 스케치 분석 API | 0/12 |
 | Phase 4 | Mobile UI 구현 | 0/10 |
@@ -42,30 +42,22 @@
 
 ---
 
-## Phase 1: 이미지 업로드 인프라 (Cloudflare R2)
+## Phase 1: 이미지 업로드 인프라 (Cloudflare Images)
 
 > 난이도: 중간 | 의존성: Cloudflare 계정 | 우선순위: 높음
 
-스케치 이미지, 메뉴 이미지 저장을 위한 인프라.
-
-### Cloudflare 설정
-
-- [ ] R2 버킷 생성 (ojeomneo-images)
-- [ ] API 토큰 발급 (R2 읽기/쓰기 권한)
-- [ ] CORS 설정 (Mobile 직접 업로드 허용)
-- [ ] 커스텀 도메인 연결 (선택)
+메뉴 이미지 저장을 위한 인프라. 관리자만 업로드 (Mobile 사용자는 업로드 불필요).
 
 ### Server (Go)
 
-- [ ] R2 클라이언트 설정 (AWS SDK v2 호환)
-- [ ] POST /ojeomneo/v1/upload/presign API 구현
-- [ ] 파일 타입/크기 검증 로직
-- [ ] 환경변수 추가 (R2_ACCOUNT_ID, R2_ACCESS_KEY, R2_SECRET_KEY, R2_BUCKET)
+- [x] Cloudflare Images 클라이언트 구현
+- [x] POST /ojeomneo/v1/images/upload API 구현 (파일 업로드)
+- [x] POST /ojeomneo/v1/images/upload-url API 구현 (URL에서 업로드)
+- [x] DELETE /ojeomneo/v1/images/:id API 구현
 
-### Mobile (Flutter)
+### Admin (Django)
 
-- [ ] Pre-signed URL 요청 서비스
-- [ ] HTTP PUT으로 R2 직접 업로드
+- [ ] 메뉴 이미지 업로드 UI (Phase 2에서 구현)
 
 ---
 
@@ -84,7 +76,7 @@
 
 - [ ] Menu 모델 동기화 (managed=False)
 - [ ] Menu Admin 등록 (이미지 업로드 + 태그 관리)
-- [ ] 메뉴 이미지 업로드 UI (R2 Pre-signed URL 활용)
+- [ ] 메뉴 이미지 업로드 UI (Cloudflare Images API 활용)
 
 ### 데이터
 
@@ -155,14 +147,12 @@
 
 ### Server
 
-| 변수명 | 설명 | Phase |
-|--------|------|-------|
-| R2_ACCOUNT_ID | Cloudflare 계정 ID | 1 |
-| R2_ACCESS_KEY | R2 액세스 키 | 1 |
-| R2_SECRET_KEY | R2 시크릿 키 | 1 |
-| R2_BUCKET | R2 버킷명 | 1 |
-| R2_PUBLIC_URL | R2 퍼블릭 URL | 1 |
-| GEMINI_API_KEY | Gemini API 키 | 3 |
+| 변수명 | 설명 | Phase | 상태 |
+|--------|------|-------|------|
+| CLOUDFLARE_ACCOUNT_ID | Cloudflare 계정 ID | 1 | ✅ |
+| CLOUDFLARE_ACCOUNT_HASH | Cloudflare Account Hash | 1 | ✅ |
+| CLOUDFLARE_API_KEY | Cloudflare Images API 토큰 | 1 | ✅ |
+| GEMINI_API_KEY | Gemini API 키 | 3 | ✅ |
 
 ---
 
@@ -187,3 +177,4 @@ Phase 1 (이미지 인프라) ──→ Phase 2 (메뉴 데이터) ──→ Pha
 |------|----------|
 | 2025-12-04 | 초안 작성 |
 | 2025-12-04 | Phase 0 완료 (앱 버전 관리 시스템) |
+| 2025-12-04 | Phase 1 Server 완료 (Cloudflare Images API), R2 → Images로 변경 |
