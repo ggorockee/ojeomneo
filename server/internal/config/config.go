@@ -25,6 +25,11 @@ type Config struct {
 
 	// OpenTelemetry 설정
 	OTLPEndpoint string
+
+	// Cloudflare Images 설정
+	CloudflareAccountID   string
+	CloudflareAccountHash string
+	CloudflareAPIKey      string
 }
 
 // Load 환경변수에서 설정 로드
@@ -48,6 +53,10 @@ func Load() *Config {
 		GeminiModel:  getEnv("GEMINI_MODEL", "gemini-1.5-flash"),
 
 		OTLPEndpoint: getEnv("OTEL_EXPORTER_OTLP_ENDPOINT", ""),
+
+		CloudflareAccountID:   getEnv("CLOUDFLARE_ACCOUNT_ID", ""),
+		CloudflareAccountHash: getEnv("CLOUDFLARE_ACCOUNT_HASH", ""),
+		CloudflareAPIKey:      getEnv("CLOUDFLARE_API_KEY", ""),
 	}
 }
 

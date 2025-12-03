@@ -23,6 +23,60 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
+        "/app/version": {
+            "get": {
+                "description": "앱 버전을 확인하고 강제 업데이트 여부를 반환합니다",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "App"
+                ],
+                "summary": "앱 버전 확인",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "플랫폼 (ios/android)",
+                        "name": "platform",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "현재 앱 버전 (예: 1.0.0)",
+                        "name": "current_version",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "버전 정보",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "400": {
+                        "description": "잘못된 요청",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "404": {
+                        "description": "버전 정보 없음",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
         "/healthcheck": {
             "get": {
                 "description": "서버 및 데이터베이스 상태 상세 확인 (모니터링/디버깅용)",
@@ -40,7 +94,7 @@ const docTemplate = `{
                     "200": {
                         "description": "상태 정보 반환 (DB 연결 실패해도 200)",
                         "schema": {
-                            "$ref": "#/definitions/internal_handler.HealthResponse"
+                            "$ref": "#/definitions/handler.HealthResponse"
                         }
                     }
                 }
@@ -63,7 +117,7 @@ const docTemplate = `{
                     "200": {
                         "description": "서버 정상 가동 중",
                         "schema": {
-                            "$ref": "#/definitions/internal_handler.LivenessResponse"
+                            "$ref": "#/definitions/handler.LivenessResponse"
                         }
                     }
                 }
@@ -86,13 +140,162 @@ const docTemplate = `{
                     "200": {
                         "description": "트래픽 수신 준비 완료",
                         "schema": {
-                            "$ref": "#/definitions/internal_handler.ReadinessResponse"
+                            "$ref": "#/definitions/handler.ReadinessResponse"
                         }
                     },
                     "503": {
                         "description": "트래픽 수신 불가 (DB 연결 실패)",
                         "schema": {
-                            "$ref": "#/definitions/internal_handler.ReadinessResponse"
+                            "$ref": "#/definitions/handler.ReadinessResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/images/upload": {
+            "post": {
+                "description": "이미지를 Cloudflare Images에 업로드합니다",
+                "consumes": [
+                    "multipart/form-data"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Image"
+                ],
+                "summary": "이미지 업로드",
+                "parameters": [
+                    {
+                        "type": "file",
+                        "description": "이미지 파일 (jpg, jpeg, png, gif, webp)",
+                        "name": "file",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "이미지 타입 (sketch, menu)",
+                        "name": "type",
+                        "in": "formData"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "업로드 성공",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "400": {
+                        "description": "잘못된 요청",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "500": {
+                        "description": "서버 오류",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/images/upload-url": {
+            "post": {
+                "description": "URL에서 이미지를 가져와 Cloudflare Images에 업로드합니다",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Image"
+                ],
+                "summary": "URL에서 이미지 업로드",
+                "parameters": [
+                    {
+                        "description": "업로드 요청",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handler.UploadFromURLRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "업로드 성공",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "400": {
+                        "description": "잘못된 요청",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "500": {
+                        "description": "서버 오류",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/images/{id}": {
+            "delete": {
+                "description": "Cloudflare Images에서 이미지를 삭제합니다",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Image"
+                ],
+                "summary": "이미지 삭제",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "이미지 ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "삭제 성공",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "400": {
+                        "description": "잘못된 요청",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "500": {
+                        "description": "서버 오류",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
                         }
                     }
                 }
@@ -377,7 +580,7 @@ const docTemplate = `{
         }
     },
     "definitions": {
-        "internal_handler.DatabaseStatus": {
+        "handler.DatabaseStatus": {
             "description": "데이터베이스 연결 상태",
             "type": "object",
             "properties": {
@@ -395,12 +598,12 @@ const docTemplate = `{
                 }
             }
         },
-        "internal_handler.HealthResponse": {
+        "handler.HealthResponse": {
             "description": "서버 헬스체크 응답",
             "type": "object",
             "properties": {
                 "database": {
-                    "$ref": "#/definitions/internal_handler.DatabaseStatus"
+                    "$ref": "#/definitions/handler.DatabaseStatus"
                 },
                 "service": {
                     "type": "string",
@@ -416,7 +619,7 @@ const docTemplate = `{
                 }
             }
         },
-        "internal_handler.LivenessResponse": {
+        "handler.LivenessResponse": {
             "description": "Kubernetes liveness/startup probe용 간단한 응답",
             "type": "object",
             "properties": {
@@ -430,7 +633,7 @@ const docTemplate = `{
                 }
             }
         },
-        "internal_handler.ReadinessResponse": {
+        "handler.ReadinessResponse": {
             "description": "Kubernetes readiness probe용 응답",
             "type": "object",
             "properties": {
@@ -445,6 +648,17 @@ const docTemplate = `{
                 "status": {
                     "type": "string",
                     "example": "ok"
+                }
+            }
+        },
+        "handler.UploadFromURLRequest": {
+            "type": "object",
+            "properties": {
+                "type": {
+                    "type": "string"
+                },
+                "url": {
+                    "type": "string"
                 }
             }
         }
