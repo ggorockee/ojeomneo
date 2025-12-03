@@ -1,23 +1,51 @@
 name: ojeomneo
-description: "오점너 - 오늘 점심 뭐 먹지? 스케치 기반 메뉴 추천 앱"
+description: "오점너 - 스케치 기반 메뉴 추천 앱"
 publish_to: 'none'
+
 version: 1.0.0+1
 
 environment:
-  sdk: ^3.5.0
+  sdk: ^3.9.2
 
 dependencies:
   flutter:
     sdk: flutter
+
   cupertino_icons: ^1.0.8
+
+  # HTTP & API
   http: ^1.2.2
-  package_info_plus: ^8.1.1
-  url_launcher: ^6.3.1
+
+  # State Management
+  provider: ^6.1.2
+
+  # Drawing
+  flutter_colorpicker: ^1.1.0
+
+  # Image handling
+  image_picker: ^1.1.2
+  path_provider: ^2.1.4
+
+  # Device info
+  device_info_plus: ^10.1.2
+
+  # Share functionality
+  share_plus: ^10.0.3
+
+  # Cached images
+  cached_network_image: ^3.4.1
+
+  # UUID generation
+  uuid: ^4.5.1
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
+
   flutter_lints: ^5.0.0
 
 flutter:
   uses-material-design: true
+
+  assets:
+    - assets/images/

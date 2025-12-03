@@ -181,8 +181,8 @@ func (s *SketchService) toAlternatives(menus []model.Menu, recommendations []mod
 		return nil
 	}
 
-	// 최대 2개의 대안만 반환
-	limit := 2
+	// 최대 1개의 대안만 반환 (Primary 1개 + Alternative 1개 = 총 2개)
+	limit := 1
 	if len(menus) < limit {
 		limit = len(menus)
 	}

@@ -70,6 +70,7 @@ type Menu struct {
 
 	// 관계
 	Recommendations []Recommendation `gorm:"foreignKey:MenuID" json:"recommendations,omitempty"`
+	Images          []MenuImage      `gorm:"foreignKey:MenuID" json:"images,omitempty"`
 }
 
 // TableName GORM 테이블명 지정
