@@ -21,7 +21,7 @@ from django.conf import settings
 from django.contrib import admin
 from django.db import connection
 from django.http import JsonResponse
-from django.urls import path
+from django.urls import include, path
 
 
 def liveness_check(request):
@@ -103,6 +103,8 @@ urlpatterns = [
     path("ojeomneo/v1/healthcheck/", health_check, name="healthcheck"),
     path("ojeomneo/v1/healthcheck/live/", liveness_check, name="liveness"),
     path("ojeomneo/v1/healthcheck/ready/", readiness_check, name="readiness"),
+    # 메뉴 이미지 업로드 (Admin 내부에서 호출)
+    path("ojeomneo/v1/admin/menus/", include("menus.urls")),
     # Admin
     path("ojeomneo/v1/admin/", admin.site.urls),
 ]
