@@ -27,7 +27,7 @@ import (
 )
 
 // @title Ojeomneo API
-// @version 1.0.0
+// @version 1.0.1
 // @description Go Fiber v2 기반 REST API 서버 - 스케치 기반 메뉴 추천
 // @termsOfService http://swagger.io/terms/
 
