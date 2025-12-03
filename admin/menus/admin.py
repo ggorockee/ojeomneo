@@ -5,26 +5,48 @@ Django Unfold를 사용하여 모던한 UI 제공.
 """
 
 from django.contrib import admin
-from unfold.admin import ModelAdmin
+from django.utils.html import format_html
+from unfold.admin import ModelAdmin, TabularInline
 
-from .models import Menu, Recommendation, Sketch
+from .models import Menu, MenuImage, Recommendation, Sketch
+
+
+class MenuImageInline(TabularInline):
+    """메뉴 이미지 인라인"""
+
+    model = MenuImage
+    extra = 0
+    fields = ["image_preview", "image_id", "image_url", "is_primary", "sort_order"]
+    readonly_fields = ["image_preview", "image_id", "image_url"]
+
+    def image_preview(self, obj):
+        """이미지 미리보기"""
+        if obj.image_url:
+            return format_html(
+                '<img src="{}" style="max-width: 100px; max-height: 100px; object-fit: cover;" />',
+                obj.thumbnail_url or obj.image_url,
+            )
+        return "-"
+
+    image_preview.short_description = "미리보기"
 
 
 @admin.register(Menu)
 class MenuAdmin(ModelAdmin):
     """메뉴 Admin"""
 
-    list_display = ["name", "category", "is_active", "tag_count", "created_at"]
+    list_display = ["name", "category", "is_active", "image_count", "tag_count", "created_at"]
     list_filter = ["category", "is_active"]
     search_fields = ["name", "emotion_tags", "situation_tags", "attribute_tags"]
-    readonly_fields = ["created_at", "updated_at", "deleted_at"]
+    readonly_fields = ["created_at", "updated_at", "deleted_at", "primary_image_preview"]
     ordering = ["name"]
+    inlines = [MenuImageInline]
 
     fieldsets = [
         (
             "기본 정보",
             {
-                "fields": ["name", "category", "image_url", "is_active"],
+                "fields": ["name", "category", "is_active", "primary_image_preview"],
             },
         ),
         (
@@ -47,6 +69,86 @@ class MenuAdmin(ModelAdmin):
         return len(obj.all_tags)
 
     tag_count.short_description = "태그 수"
+
+    def image_count(self, obj):
+        """이미지 개수"""
+        return obj.images.count()
+
+    image_count.short_description = "이미지 수"
+
+    def primary_image_preview(self, obj):
+        """대표 이미지 미리보기"""
+        primary = obj.images.filter(is_primary=True).first()
+        if primary and primary.image_url:
+            return format_html(
+                '<img src="{}" style="max-width: 200px; max-height: 200px; object-fit: cover;" />',
+                primary.thumbnail_url or primary.image_url,
+            )
+        return "대표 이미지 없음"
+
+    primary_image_preview.short_description = "대표 이미지"
+
+
+@admin.register(MenuImage)
+class MenuImageAdmin(ModelAdmin):
+    """메뉴 이미지 Admin"""
+
+    list_display = ["id", "menu", "image_preview_small", "is_primary", "sort_order", "created_at"]
+    list_filter = ["is_primary", "menu__category"]
+    search_fields = ["menu__name", "image_id"]
+    readonly_fields = ["image_id", "image_url", "image_preview", "created_at", "updated_at"]
+    ordering = ["-created_at"]
+    autocomplete_fields = ["menu"]
+
+    fieldsets = [
+        (
+            "메뉴 연결",
+            {
+                "fields": ["menu"],
+            },
+        ),
+        (
+            "이미지 정보",
+            {
+                "fields": ["image_preview", "image_id", "image_url"],
+            },
+        ),
+        (
+            "설정",
+            {
+                "fields": ["is_primary", "sort_order"],
+            },
+        ),
+        (
+            "시스템 정보",
+            {
+                "fields": ["created_at", "updated_at"],
+                "classes": ["collapse"],
+            },
+        ),
+    ]
+
+    def image_preview(self, obj):
+        """이미지 미리보기 (상세)"""
+        if obj.image_url:
+            return format_html(
+                '<img src="{}" style="max-width: 300px; max-height: 300px; object-fit: cover;" />',
+                obj.image_url,
+            )
+        return "-"
+
+    image_preview.short_description = "이미지 미리보기"
+
+    def image_preview_small(self, obj):
+        """이미지 미리보기 (목록)"""
+        if obj.image_url:
+            return format_html(
+                '<img src="{}" style="max-width: 50px; max-height: 50px; object-fit: cover;" />',
+                obj.thumbnail_url or obj.image_url,
+            )
+        return "-"
+
+    image_preview_small.short_description = "이미지"
 
 
 @admin.register(Sketch)

@@ -76,6 +76,50 @@ class Menu(models.Model):
         return (self.emotion_tags or []) + (self.situation_tags or []) + (self.attribute_tags or [])
 
 
+class MenuImage(models.Model):
+    """
+    메뉴 이미지 모델.
+
+    Go GORM MenuImage 테이블과 호환.
+    managed=False: Django가 테이블을 생성/수정하지 않음 (Go GORM이 관리)
+    """
+
+    id = models.BigAutoField(primary_key=True)
+    menu = models.ForeignKey(
+        Menu,
+        on_delete=models.CASCADE,
+        verbose_name="메뉴",
+        related_name="images",
+    )
+    image_id = models.CharField("Cloudflare 이미지 ID", max_length=255)
+    image_url = models.TextField("이미지 URL")
+    is_primary = models.BooleanField("대표 이미지", default=False)
+    sort_order = models.IntegerField("정렬 순서", default=0)
+
+    # GORM 타임스탬프 필드
+    created_at = models.DateTimeField("생성일", auto_now_add=True)
+    updated_at = models.DateTimeField("수정일", auto_now=True)
+    deleted_at = models.DateTimeField("삭제일", blank=True, null=True)
+
+    class Meta:
+        db_table = "menu_images"
+        managed = False
+        verbose_name = "메뉴 이미지"
+        verbose_name_plural = "메뉴 이미지"
+        ordering = ["sort_order", "-is_primary"]
+
+    def __str__(self):
+        return f"{self.menu.name} 이미지 ({self.id})"
+
+    @property
+    def thumbnail_url(self):
+        """썸네일 URL 생성"""
+        if self.image_id:
+            # Cloudflare account hash는 설정에서 가져오거나 환경변수로
+            return self.image_url.replace("/public", "/thumbnail")
+        return ""
+
+
 class Sketch(models.Model):
     """
     스케치 모델.

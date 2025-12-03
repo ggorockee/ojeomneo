@@ -78,6 +78,7 @@ func main() {
 		if err := db.AutoMigrate(
 			&model.User{},
 			&model.Menu{},
+			&model.MenuImage{},
 			&model.Sketch{},
 			&model.Recommendation{},
 			&model.AppVersion{},
