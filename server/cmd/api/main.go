@@ -79,6 +79,7 @@ func main() {
 			&model.Menu{},
 			&model.Sketch{},
 			&model.Recommendation{},
+			&model.AppVersion{},
 		); err != nil {
 			log.Printf("Warning: Failed to run migrations: %v", err)
 		} else {
@@ -186,6 +187,7 @@ func main() {
 	healthHandler := handler.NewHealthHandler(db)
 	menuHandler := handler.NewMenuHandler(menuService)
 	sketchHandler := handler.NewSketchHandler(sketchService)
+	appVersionHandler := handler.NewAppVersionHandler(db)
 
 	// Health Check 엔드포인트
 	// /ojeomneo/v1/healthcheck - 상세 상태 (모니터링용, 항상 200)
@@ -204,6 +206,9 @@ func main() {
 	v1.Post("/sketch/analyze", sketchHandler.Analyze)
 	v1.Get("/sketch/history", sketchHandler.GetHistory)
 	v1.Get("/sketch/:id", sketchHandler.GetByID)
+
+	// App 엔드포인트
+	v1.Get("/app/version", appVersionHandler.CheckVersion)
 
 	// 서버 시작
 	port := os.Getenv("APP_PORT")
