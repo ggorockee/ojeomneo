@@ -43,6 +43,29 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 | **feature 브랜치** | 머지 후 삭제 |
 | **push 시점** | 개발자가 요청하기 전까지 push 금지 |
 
+### 🔴 코드 수정 시 필수 워크플로우 (자동 실행)
+
+**코드 수정이 완료되면 반드시 아래 단계를 모두 수행해야 합니다:**
+
+```
+1. feature 브랜치 생성: git checkout -b {type}/{description}
+2. 변경 파일 스테이징: git add {files}
+3. 커밋: git commit -m "{type}({scope}): {message}"
+4. 푸시: git push -u origin {branch}
+5. PR 생성: gh pr create --title "{title}" --body "{body}"
+6. PR 머지: gh pr merge {pr_number} --squash --delete-branch
+7. main 최신화: git checkout main && git pull
+```
+
+**이 워크플로우는 다음 상황에서 자동 적용됩니다:**
+- 버그 수정 (fix)
+- 기능 추가 (feat)
+- 리팩토링 (refactor)
+- 문서 수정 (docs)
+- 기타 모든 코드 변경
+
+> ⚠️ **예외 없음**: 사용자가 "push해줘", "커밋해줘", "PR 만들어줘" 등을 요청하면 위 전체 워크플로우를 완료해야 합니다.
+
 ### 크로스 컴포넌트 작업 예시
 
 Mobile 작업 중 Server API 수정이 필요한 경우:
