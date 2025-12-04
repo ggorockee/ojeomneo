@@ -1,25 +1,25 @@
 import 'package:flutter/material.dart';
 
 class AppTheme {
-  // Google Material 3 Color Scheme
-  static const Color primaryColor = Color(0xFF6750A4);
-  static const Color secondaryColor = Color(0xFF625B71);
-  static const Color tertiaryColor = Color(0xFF7D5260);
-  static const Color errorColor = Color(0xFFB3261E);
+  // 오점너 브랜드 컬러 (로고 기반 - 부드러운 톤)
+  static const Color primaryColor = Color(0xFFEF8A5A); // 소프트 오렌지
+  static const Color secondaryColor = Color(0xFFF7C56B); // 소프트 옐로우
+  static const Color tertiaryColor = Color(0xFFFFAB7A); // 피치
+  static const Color errorColor = Color(0xFFE57373); // 소프트 레드
 
   // Surface Colors
-  static const Color surfaceColor = Color(0xFFFFFBFE);
-  static const Color surfaceVariant = Color(0xFFE7E0EC);
-  static const Color outlineColor = Color(0xFF79747E);
+  static const Color surfaceColor = Color(0xFFFFFCFA); // 웜 화이트
+  static const Color surfaceVariant = Color(0xFFFFF8F2); // 라이트 크림
+  static const Color outlineColor = Color(0xFFDDC4AA); // 소프트 베이지
 
   // Custom App Colors
-  static const Color canvasBackground = Color(0xFFFAF9FC);
-  static const Color sketchStroke = Color(0xFF1D1B20);
+  static const Color canvasBackground = Color(0xFFFFFAF6); // 크림 배경
+  static const Color sketchStroke = Color(0xFF8D6E63); // 소프트 브라운
 
   // Text Colors
   static const Color onPrimary = Colors.white;
-  static const Color onSurface = Color(0xFF1D1B20);
-  static const Color onSurfaceVariant = Color(0xFF49454F);
+  static const Color onSurface = Color(0xFF5D4037); // 웜 브라운
+  static const Color onSurfaceVariant = Color(0xFF8D7B6E); // 라이트 브라운
 
   static ThemeData get lightTheme {
     return ThemeData(
