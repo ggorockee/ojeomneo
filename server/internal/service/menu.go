@@ -52,11 +52,15 @@ func (s *MenuService) List(ctx context.Context, category string, tag string, pag
 		return nil, 0, err
 	}
 
-	// 페이지네이션
+	// 페이지네이션 (Images 관계 Preload)
 	offset := (page - 1) * limit
-	if err := query.Offset(offset).Limit(limit).Order("name ASC").Find(&menus).Error; err != nil {
+	if err := query.Preload("Images", "is_primary = ?", true).
+		Offset(offset).Limit(limit).Order("name ASC").Find(&menus).Error; err != nil {
 		return nil, 0, err
 	}
+
+	// 대표 이미지 URL 채우기
+	s.fillPrimaryImageURLs(menus)
 
 	return menus, total, nil
 }
@@ -68,12 +72,14 @@ func (s *MenuService) FindByKeywords(ctx context.Context, keywords []string, lim
 	if len(keywords) == 0 {
 		// 키워드가 없으면 랜덤 메뉴 반환
 		if err := s.db.WithContext(ctx).
+			Preload("Images", "is_primary = ?", true).
 			Where("is_active = ?", true).
 			Order("RANDOM()").
 			Limit(limit).
 			Find(&menus).Error; err != nil {
 			return nil, err
 		}
+		s.fillPrimaryImageURLs(menus)
 		return menus, nil
 	}
 
@@ -82,7 +88,9 @@ func (s *MenuService) FindByKeywords(ctx context.Context, keywords []string, lim
 	mappedTags := s.mapKeywordsToTags(keywords)
 
 	// 태그 매칭 쿼리 (OR 조건)
-	query := s.db.WithContext(ctx).Model(&model.Menu{}).Where("is_active = ?", true)
+	query := s.db.WithContext(ctx).Model(&model.Menu{}).
+		Preload("Images", "is_primary = ?", true).
+		Where("is_active = ?", true)
 
 	var conditions []string
 	var args []interface{}
@@ -104,6 +112,7 @@ func (s *MenuService) FindByKeywords(ctx context.Context, keywords []string, lim
 	// 매칭된 메뉴가 없으면 랜덤 반환
 	if len(menus) == 0 {
 		if err := s.db.WithContext(ctx).
+			Preload("Images", "is_primary = ?", true).
 			Where("is_active = ?", true).
 			Order("RANDOM()").
 			Limit(limit).
@@ -112,6 +121,7 @@ func (s *MenuService) FindByKeywords(ctx context.Context, keywords []string, lim
 		}
 	}
 
+	s.fillPrimaryImageURLs(menus)
 	return menus, nil
 }
 
@@ -172,6 +182,16 @@ func (s *MenuService) Update(ctx context.Context, menu *model.Menu) error {
 // Delete 메뉴 삭제 (soft delete)
 func (s *MenuService) Delete(ctx context.Context, id uint) error {
 	return s.db.WithContext(ctx).Delete(&model.Menu{}, id).Error
+}
+
+// fillPrimaryImageURLs 메뉴 목록에 대표 이미지 URL 채우기
+func (s *MenuService) fillPrimaryImageURLs(menus []model.Menu) {
+	for i := range menus {
+		// Images 관계에서 대표 이미지 URL 가져오기
+		if len(menus[i].Images) > 0 {
+			menus[i].ImageURL = menus[i].Images[0].ImageURL
+		}
+	}
 }
 
 // GetCategories 모든 카테고리 목록 반환
