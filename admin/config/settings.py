@@ -154,6 +154,51 @@ APP_VERSION = "1.0.1"
 # Server API URL (Cloudflare Images 업로드용)
 SERVER_API_URL = os.getenv("SERVER_API_URL", "http://localhost:3000/ojeomneo/v1")
 
+# ============================================
+# 로깅 설정
+# ============================================
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "formatters": {
+        "verbose": {
+            "format": "[{asctime}] {levelname} {name} {module}:{lineno} - {message}",
+            "style": "{",
+        },
+        "simple": {
+            "format": "[{levelname}] {message}",
+            "style": "{",
+        },
+    },
+    "handlers": {
+        "console": {
+            "class": "logging.StreamHandler",
+            "formatter": "verbose",
+        },
+    },
+    "root": {
+        "handlers": ["console"],
+        "level": "INFO",
+    },
+    "loggers": {
+        "django": {
+            "handlers": ["console"],
+            "level": "INFO",
+            "propagate": False,
+        },
+        "django.request": {
+            "handlers": ["console"],
+            "level": "DEBUG",
+            "propagate": False,
+        },
+        "menus": {
+            "handlers": ["console"],
+            "level": "DEBUG",
+            "propagate": False,
+        },
+    },
+}
+
 # Django Unfold 설정
 UNFOLD = {
     "SITE_TITLE": "Ojeomneo Admin",
