@@ -10,10 +10,10 @@
 | Phase | 설명 | 진행률 |
 |-------|------|--------|
 | Phase 0 | 앱 버전 관리 시스템 | **8/8 ✅** |
-| Phase 1 | 이미지 업로드 인프라 | **4/5 (80%)** |
-| Phase 2 | 메뉴 데이터 기반 구축 | 0/8 |
-| Phase 3 | 스케치 분석 API | 0/12 |
-| Phase 4 | Mobile UI 구현 | 0/10 |
+| Phase 1 | 이미지 업로드 인프라 | **5/5 ✅** |
+| Phase 2 | 메뉴 데이터 기반 구축 | **5/8 (63%)** |
+| Phase 3 | 스케치 분석 API | **11/13 (85%)** |
+| Phase 4 | Mobile UI 구현 | **9/10 (90%)** |
 
 ---
 
@@ -57,7 +57,7 @@
 
 ### Admin (Django)
 
-- [ ] 메뉴 이미지 업로드 UI (Phase 2에서 구현)
+- [x] 메뉴 이미지 업로드 UI (Cloudflare Images API 활용)
 
 ---
 
@@ -69,14 +69,14 @@
 
 ### Server (Go)
 
-- [ ] Menu 모델 생성/수정 (image_url 필드 추가)
-- [ ] 메뉴 태그 구조 설계 (emotion_tags, situation_tags, attribute_tags)
+- [x] Menu 모델 생성/수정 (image_url 필드 추가)
+- [x] 메뉴 태그 구조 설계 (emotion_tags, situation_tags, attribute_tags)
 
 ### Admin (Django)
 
-- [ ] Menu 모델 동기화 (managed=False)
-- [ ] Menu Admin 등록 (이미지 업로드 + 태그 관리)
-- [ ] 메뉴 이미지 업로드 UI (Cloudflare Images API 활용)
+- [x] Menu 모델 동기화 (managed=False)
+- [x] Menu Admin 등록 (이미지 업로드 + 태그 관리)
+- [x] 메뉴 이미지 업로드 UI (Cloudflare Images API 활용)
 
 ### 데이터
 
@@ -94,20 +94,20 @@
 
 ### Server (Go)
 
-- [ ] Sketch 모델 생성
-- [ ] Recommendation 모델 생성
-- [ ] POST /ojeomneo/v1/sketch/analyze API 구현
-- [ ] LLM 클라이언트 설정 (Gemini Vision API)
-- [ ] 분석 프롬프트 구현 (감정/키워드/분위기 추출)
-- [ ] 메뉴 매칭 로직 구현 (태그 유사도 기반)
-- [ ] 추천 이유 생성 프롬프트 구현
-- [ ] 응답 캐싱 (Redis)
+- [x] Sketch 모델 생성
+- [x] Recommendation 모델 생성
+- [x] POST /ojeomneo/v1/sketch/analyze API 구현
+- [x] LLM 클라이언트 설정 (Gemini Vision API)
+- [x] 분석 프롬프트 구현 (감정/키워드/분위기 추출)
+- [x] 메뉴 매칭 로직 구현 (태그 유사도 기반)
+- [x] 추천 이유 생성 프롬프트 구현
+- [x] 응답 캐싱 (Redis)
 
 ### Admin (Django)
 
-- [ ] Sketch 모델 동기화
-- [ ] Recommendation 모델 동기화
-- [ ] 스케치/추천 조회 Admin (읽기 전용)
+- [x] Sketch 모델 동기화
+- [x] Recommendation 모델 동기화
+- [x] 스케치/추천 조회 Admin (읽기 전용)
 
 ### 테스트
 
@@ -124,22 +124,22 @@
 
 ### 스케치 화면
 
-- [ ] 캔버스 위젯 구현 (자유 드로잉)
-- [ ] 텍스트 입력 모드
-- [ ] 혼합 모드 (드로잉 + 텍스트)
-- [ ] "추천받기" 버튼 및 이미지 캡처
+- [x] 캔버스 위젯 구현 (자유 드로잉)
+- [x] 텍스트 입력 모드
+- [x] 혼합 모드 (드로잉 + 텍스트)
+- [x] "추천받기" 버튼 및 이미지 캡처
 
 ### 결과 화면
 
 - [ ] 로딩 애니메이션 (재미있는 문구)
-- [ ] 메뉴 추천 카드 UI
-- [ ] 추천 이유 표시
-- [ ] 다시하기 버튼
+- [x] 메뉴 추천 카드 UI
+- [x] 추천 이유 표시
+- [x] 다시하기 버튼
 
 ### 추가 기능
 
-- [ ] 히스토리 화면 (선택)
-- [ ] SNS 공유 기능 (선택)
+- [x] 히스토리 화면 (선택)
+- [x] SNS 공유 기능 (선택)
 
 ---
 
@@ -178,3 +178,4 @@ Phase 1 (이미지 인프라) ──→ Phase 2 (메뉴 데이터) ──→ Pha
 | 2025-12-04 | 초안 작성 |
 | 2025-12-04 | Phase 0 완료 (앱 버전 관리 시스템) |
 | 2025-12-04 | Phase 1 Server 완료 (Cloudflare Images API), R2 → Images로 변경 |
+| 2025-12-04 | 전체 프로젝트 검토 후 진행 현황 업데이트 - Phase 1 완료, Phase 2-4 대부분 구현 완료 |
