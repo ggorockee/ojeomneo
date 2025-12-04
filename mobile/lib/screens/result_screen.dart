@@ -44,9 +44,10 @@ ${primary.name}
           style: TextStyle(
             fontSize: 18.sp,
             fontWeight: FontWeight.w600,
-            color: AppTheme.onSurface,
+            color: Colors.black87,
           ),
         ),
+        iconTheme: const IconThemeData(color: Colors.black87),
         actions: [
           IconButton(
             icon: const Icon(Icons.share_rounded),
@@ -76,7 +77,7 @@ ${primary.name}
                   style: TextStyle(
                     fontSize: 16.sp,
                     fontWeight: FontWeight.w600,
-                    color: AppTheme.onSurface,
+                    color: Colors.black87,
                   ),
                 ),
                 SizedBox(height: 12.h),
@@ -102,6 +103,7 @@ ${primary.name}
                       },
                       style: OutlinedButton.styleFrom(
                         padding: EdgeInsets.symmetric(vertical: 14.h),
+                        foregroundColor: Colors.black87,
                         side: BorderSide(
                           color: AppTheme.primaryColor.withAlpha(128),
                         ),
@@ -123,6 +125,7 @@ ${primary.name}
                       style: FilledButton.styleFrom(
                         padding: EdgeInsets.symmetric(vertical: 14.h),
                         backgroundColor: AppTheme.primaryColor,
+                        foregroundColor: Colors.white,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12.r),
                         ),
@@ -155,19 +158,19 @@ class _AnalysisCard extends StatelessWidget {
     return Container(
       padding: EdgeInsets.all(16.w),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            AppTheme.secondaryColor.withAlpha(40),
-            AppTheme.tertiaryColor.withAlpha(30),
-          ],
-        ),
+        color: Colors.white,
         borderRadius: BorderRadius.circular(16.r),
         border: Border.all(
-          color: AppTheme.secondaryColor.withAlpha(60),
+          color: Colors.grey.shade200,
           width: 1,
         ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withAlpha(8),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -175,14 +178,15 @@ class _AnalysisCard extends StatelessWidget {
           Row(
             children: [
               Container(
-                padding: EdgeInsets.all(8.w),
+                padding: EdgeInsets.all(10.w),
                 decoration: BoxDecoration(
-                  color: Colors.white.withAlpha(180),
-                  borderRadius: BorderRadius.circular(10.r),
+                  color: AppTheme.primaryColor.withAlpha(25),
+                  borderRadius: BorderRadius.circular(12.r),
                 ),
-                child: Text(
-                  analysis.moodEmoji,
-                  style: TextStyle(fontSize: 22.sp),
+                child: Icon(
+                  Icons.auto_awesome_rounded,
+                  size: 20.sp,
+                  color: AppTheme.primaryColor,
                 ),
               ),
               SizedBox(width: 12.w),
@@ -194,7 +198,7 @@ class _AnalysisCard extends StatelessWidget {
                       '그림에서 느껴지는 감정',
                       style: TextStyle(
                         fontSize: 12.sp,
-                        color: AppTheme.onSurfaceVariant,
+                        color: Colors.grey.shade600,
                         fontWeight: FontWeight.w500,
                       ),
                     ),
@@ -203,7 +207,7 @@ class _AnalysisCard extends StatelessWidget {
                       analysis.emotion,
                       style: TextStyle(
                         fontSize: 15.sp,
-                        color: AppTheme.onSurface,
+                        color: Colors.black87,
                         fontWeight: FontWeight.w600,
                       ),
                     ),
@@ -220,22 +224,15 @@ class _AnalysisCard extends StatelessWidget {
               return Container(
                 padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 6.h),
                 decoration: BoxDecoration(
-                  color: Colors.white.withAlpha(200),
+                  color: Colors.grey.shade100,
                   borderRadius: BorderRadius.circular(20.r),
-                  boxShadow: [
-                    BoxShadow(
-                      color: AppTheme.primaryColor.withAlpha(20),
-                      blurRadius: 4,
-                      offset: const Offset(0, 2),
-                    ),
-                  ],
                 ),
                 child: Text(
                   keyword,
                   style: TextStyle(
                     fontSize: 12.sp,
-                    color: AppTheme.primaryColor,
-                    fontWeight: FontWeight.w600,
+                    color: Colors.black87,
+                    fontWeight: FontWeight.w500,
                   ),
                 ),
               );
@@ -252,6 +249,9 @@ class _PrimaryMenuCard extends StatelessWidget {
 
   const _PrimaryMenuCard({required this.menu});
 
+  bool get _hasValidImage =>
+      menu.imageUrl != null && menu.imageUrl!.isNotEmpty;
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -260,7 +260,7 @@ class _PrimaryMenuCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(20.r),
         boxShadow: [
           BoxShadow(
-            color: AppTheme.primaryColor.withAlpha(25),
+            color: Colors.black.withAlpha(15),
             blurRadius: 20,
             offset: const Offset(0, 8),
           ),
@@ -270,12 +270,12 @@ class _PrimaryMenuCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Menu image with gradient overlay
+          // Menu image
           Stack(
             children: [
               AspectRatio(
                 aspectRatio: 16 / 10,
-                child: menu.imageUrl != null
+                child: _hasValidImage
                     ? CachedNetworkImage(
                         imageUrl: menu.imageUrl!,
                         fit: BoxFit.cover,
@@ -284,25 +284,6 @@ class _PrimaryMenuCard extends StatelessWidget {
                             _buildLogoPlaceholder(),
                       )
                     : _buildLogoPlaceholder(),
-              ),
-              // Gradient overlay for text readability
-              Positioned(
-                bottom: 0,
-                left: 0,
-                right: 0,
-                child: Container(
-                  height: 80.h,
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.topCenter,
-                      end: Alignment.bottomCenter,
-                      colors: [
-                        Colors.transparent,
-                        Colors.black.withAlpha(100),
-                      ],
-                    ),
-                  ),
-                ),
               ),
               // Category badge
               Positioned(
@@ -314,21 +295,14 @@ class _PrimaryMenuCard extends StatelessWidget {
                     vertical: 6.h,
                   ),
                   decoration: BoxDecoration(
-                    color: AppTheme.primaryColor,
+                    color: Colors.black.withAlpha(180),
                     borderRadius: BorderRadius.circular(20.r),
-                    boxShadow: [
-                      BoxShadow(
-                        color: AppTheme.primaryColor.withAlpha(80),
-                        blurRadius: 8,
-                        offset: const Offset(0, 2),
-                      ),
-                    ],
                   ),
                   child: Text(
                     _getCategoryLabel(menu.category),
                     style: TextStyle(
                       fontSize: 11.sp,
-                      fontWeight: FontWeight.w700,
+                      fontWeight: FontWeight.w600,
                       color: Colors.white,
                     ),
                   ),
@@ -347,7 +321,7 @@ class _PrimaryMenuCard extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 24.sp,
                     fontWeight: FontWeight.w700,
-                    color: AppTheme.onSurface,
+                    color: Colors.black,
                     letterSpacing: -0.5,
                   ),
                 ),
@@ -357,35 +331,19 @@ class _PrimaryMenuCard extends StatelessWidget {
                 Container(
                   padding: EdgeInsets.all(14.w),
                   decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                      colors: [
-                        AppTheme.surfaceVariant,
-                        AppTheme.surfaceVariant.withAlpha(150),
-                      ],
-                    ),
+                    color: Colors.grey.shade50,
                     borderRadius: BorderRadius.circular(14.r),
+                    border: Border.all(
+                      color: Colors.grey.shade200,
+                    ),
                   ),
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        '💬',
-                        style: TextStyle(fontSize: 18.sp),
-                      ),
-                      SizedBox(width: 10.w),
-                      Expanded(
-                        child: Text(
-                          menu.reason,
-                          style: TextStyle(
-                            fontSize: 14.sp,
-                            color: AppTheme.onSurface,
-                            height: 1.6,
-                          ),
-                        ),
-                      ),
-                    ],
+                  child: Text(
+                    menu.reason,
+                    style: TextStyle(
+                      fontSize: 14.sp,
+                      color: Colors.black87,
+                      height: 1.6,
+                    ),
                   ),
                 ),
                 SizedBox(height: 14.h),
@@ -402,17 +360,14 @@ class _PrimaryMenuCard extends StatelessWidget {
                           vertical: 6.h,
                         ),
                         decoration: BoxDecoration(
-                          color: AppTheme.tertiaryColor.withAlpha(30),
+                          color: Colors.grey.shade100,
                           borderRadius: BorderRadius.circular(8.r),
-                          border: Border.all(
-                            color: AppTheme.tertiaryColor.withAlpha(60),
-                          ),
                         ),
                         child: Text(
                           '#$tag',
                           style: TextStyle(
                             fontSize: 12.sp,
-                            color: AppTheme.primaryColor,
+                            color: Colors.black54,
                             fontWeight: FontWeight.w500,
                           ),
                         ),
@@ -429,7 +384,7 @@ class _PrimaryMenuCard extends StatelessWidget {
 
   Widget _buildPlaceholder() {
     return Container(
-      color: AppTheme.surfaceVariant,
+      color: Colors.grey.shade100,
       child: Center(
         child: SizedBox(
           width: 32.w,
@@ -445,16 +400,7 @@ class _PrimaryMenuCard extends StatelessWidget {
 
   Widget _buildLogoPlaceholder() {
     return Container(
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            AppTheme.surfaceVariant,
-            AppTheme.tertiaryColor.withAlpha(40),
-          ],
-        ),
-      ),
+      color: Colors.grey.shade100,
       child: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -463,14 +409,14 @@ class _PrimaryMenuCard extends StatelessWidget {
               'assets/images/logo.png',
               width: 80.w,
               height: 80.w,
-              opacity: const AlwaysStoppedAnimation(0.7),
+              opacity: const AlwaysStoppedAnimation(0.6),
             ),
             SizedBox(height: 8.h),
             Text(
               '이미지 준비 중',
               style: TextStyle(
                 fontSize: 12.sp,
-                color: AppTheme.onSurfaceVariant,
+                color: Colors.grey.shade500,
               ),
             ),
           ],
@@ -506,6 +452,9 @@ class _AlternativeMenuCard extends StatelessWidget {
 
   const _AlternativeMenuCard({required this.menu});
 
+  bool get _hasValidImage =>
+      menu.imageUrl != null && menu.imageUrl!.isNotEmpty;
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -514,7 +463,7 @@ class _AlternativeMenuCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(14.r),
         boxShadow: [
           BoxShadow(
-            color: AppTheme.primaryColor.withAlpha(15),
+            color: Colors.black.withAlpha(10),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -527,12 +476,12 @@ class _AlternativeMenuCard extends StatelessWidget {
           child: SizedBox(
             width: 60.w,
             height: 60.w,
-            child: menu.imageUrl != null
+            child: _hasValidImage
                 ? CachedNetworkImage(
                     imageUrl: menu.imageUrl!,
                     fit: BoxFit.cover,
                     placeholder: (context, url) => Container(
-                      color: AppTheme.surfaceVariant,
+                      color: Colors.grey.shade100,
                     ),
                     errorWidget: (context, url, error) =>
                         _buildSmallLogoPlaceholder(),
@@ -545,7 +494,7 @@ class _AlternativeMenuCard extends StatelessWidget {
           style: TextStyle(
             fontSize: 15.sp,
             fontWeight: FontWeight.w600,
-            color: AppTheme.onSurface,
+            color: Colors.black87,
           ),
         ),
         subtitle: Padding(
@@ -554,7 +503,7 @@ class _AlternativeMenuCard extends StatelessWidget {
             menu.reason,
             style: TextStyle(
               fontSize: 12.sp,
-              color: AppTheme.onSurfaceVariant,
+              color: Colors.grey.shade600,
               height: 1.4,
             ),
             maxLines: 2,
@@ -567,22 +516,13 @@ class _AlternativeMenuCard extends StatelessWidget {
 
   Widget _buildSmallLogoPlaceholder() {
     return Container(
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            AppTheme.surfaceVariant,
-            AppTheme.tertiaryColor.withAlpha(30),
-          ],
-        ),
-      ),
+      color: Colors.grey.shade100,
       child: Center(
         child: Image.asset(
           'assets/images/logo.png',
           width: 32.w,
           height: 32.w,
-          opacity: const AlwaysStoppedAnimation(0.6),
+          opacity: const AlwaysStoppedAnimation(0.5),
         ),
       ),
     );
