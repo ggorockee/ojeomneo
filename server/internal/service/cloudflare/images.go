@@ -35,6 +35,18 @@ func (c *ImagesClient) IsAvailable() bool {
 	return c.accountID != "" && c.apiKey != ""
 }
 
+// CloudflareError Cloudflare API 에러 응답 형식
+type CloudflareError struct {
+	Code    int    `json:"code"`
+	Message string `json:"message"`
+}
+
+// CloudflareMessage Cloudflare API 메시지 응답 형식
+type CloudflareMessage struct {
+	Code    int    `json:"code"`
+	Message string `json:"message"`
+}
+
 // UploadResponse Cloudflare Images 업로드 응답
 type UploadResponse struct {
 	Result struct {
@@ -44,9 +56,9 @@ type UploadResponse struct {
 		RequireSignedURLs bool     `json:"requireSignedURLs"`
 		Variants          []string `json:"variants"`
 	} `json:"result"`
-	Success  bool     `json:"success"`
-	Errors   []string `json:"errors"`
-	Messages []string `json:"messages"`
+	Success  bool                `json:"success"`
+	Errors   []CloudflareError   `json:"errors"`
+	Messages []CloudflareMessage `json:"messages"`
 }
 
 // ImageInfo 업로드된 이미지 정보
@@ -126,7 +138,11 @@ func (c *ImagesClient) UploadFromFile(filename string, fileData []byte, metadata
 	}
 
 	if !uploadResp.Success {
-		return nil, fmt.Errorf("upload failed: %v", uploadResp.Errors)
+		errMsgs := make([]string, len(uploadResp.Errors))
+		for i, e := range uploadResp.Errors {
+			errMsgs[i] = fmt.Sprintf("[%d] %s", e.Code, e.Message)
+		}
+		return nil, fmt.Errorf("upload failed: %v", errMsgs)
 	}
 
 	// public URL 찾기
@@ -216,7 +232,11 @@ func (c *ImagesClient) UploadFromURL(imageURL string, metadata map[string]string
 	}
 
 	if !uploadResp.Success {
-		return nil, fmt.Errorf("upload failed: %v", uploadResp.Errors)
+		errMsgs := make([]string, len(uploadResp.Errors))
+		for i, e := range uploadResp.Errors {
+			errMsgs[i] = fmt.Sprintf("[%d] %s", e.Code, e.Message)
+		}
+		return nil, fmt.Errorf("upload failed: %v", errMsgs)
 	}
 
 	// public URL 찾기
