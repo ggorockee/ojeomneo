@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"sync"
 	"time"
 
 	"github.com/google/uuid"
@@ -13,15 +14,17 @@ import (
 	"gorm.io/gorm"
 
 	"github.com/ggorockee/ojeomneo/server/internal/model"
+	"github.com/ggorockee/ojeomneo/server/internal/service/cache"
 	"github.com/ggorockee/ojeomneo/server/internal/service/llm"
 )
 
 // SketchService 스케치 서비스
 type SketchService struct {
-	db          *gorm.DB
-	llmClient   *llm.Client
-	menuService *MenuService
-	uploadPath  string
+	db              *gorm.DB
+	llmClient       *llm.Client
+	menuService     *MenuService
+	uploadPath      string
+	reasonCache     *cache.RecommendationCache
 }
 
 // NewSketchService 새 스케치 서비스 생성
@@ -34,11 +37,15 @@ func NewSketchService(db *gorm.DB, llmClient *llm.Client, menuService *MenuServi
 	// 업로드 디렉토리 생성
 	os.MkdirAll(filepath.Join(uploadPath, "sketches"), 0755)
 
+	// 추천 이유 캐시 생성 (TTL: 1시간, 최대 1000개 항목)
+	reasonCache := cache.NewRecommendationCache(1*time.Hour, 1000)
+
 	return &SketchService{
 		db:          db,
 		llmClient:   llmClient,
 		menuService: menuService,
 		uploadPath:  uploadPath,
+		reasonCache: reasonCache,
 	}
 }
 
@@ -91,8 +98,8 @@ func (s *SketchService) Analyze(ctx context.Context, req *AnalyzeRequest) (*Anal
 		return nil, fmt.Errorf("failed to save sketch: %w", err)
 	}
 
-	// 5. 키워드 기반 메뉴 검색
-	menus, err := s.menuService.FindByKeywords(ctx, analysis.Keywords, 5)
+	// 5. 키워드 기반 메뉴 검색 (Primary 1개 + Alternative 1개 = 2개만 필요)
+	menus, err := s.menuService.FindByKeywords(ctx, analysis.Keywords, 2)
 	if err != nil {
 		return nil, fmt.Errorf("failed to find menus: %w", err)
 	}
@@ -121,22 +128,68 @@ func (s *SketchService) Analyze(ctx context.Context, req *AnalyzeRequest) (*Anal
 	return response, nil
 }
 
-// createRecommendations 추천 생성 및 저장
+// recommendationResult goroutine 결과를 담는 구조체
+type recommendationResult struct {
+	index  int
+	reason string
+	err    error
+}
+
+// createRecommendations 추천 생성 및 저장 (goroutine 병렬 처리 + 캐싱)
 func (s *SketchService) createRecommendations(ctx context.Context, sketchID uuid.UUID, analysis *llm.AnalysisResult, menus []model.Menu) ([]model.Recommendation, error) {
-	recommendations := make([]model.Recommendation, 0, len(menus))
+	recommendations := make([]model.Recommendation, len(menus))
+	reasons := make([]string, len(menus))
+
+	// 캐시 히트 여부 확인 및 goroutine 작업 분류
+	var wg sync.WaitGroup
+	resultChan := make(chan recommendationResult, len(menus))
 
 	for i, menu := range menus {
-		// LLM으로 추천 이유 생성
-		reason, err := s.llmClient.GenerateRecommendationReason(ctx, analysis.Emotion, analysis.Keywords, menu.Name)
-		if err != nil {
-			// 에러 시 기본 이유 사용
-			reason = fmt.Sprintf("%s이(가) 지금 당신에게 딱 맞는 선택이에요!", menu.Name)
+		// 캐시에서 먼저 확인
+		if cachedReason, found := s.reasonCache.Get(analysis.Emotion, analysis.Keywords, menu.Name); found {
+			reasons[i] = cachedReason
+			continue
 		}
 
+		// 캐시 미스: goroutine으로 LLM 호출
+		wg.Add(1)
+		go func(idx int, menuName string) {
+			defer wg.Done()
+
+			reason, err := s.llmClient.GenerateRecommendationReason(ctx, analysis.Emotion, analysis.Keywords, menuName)
+			if err != nil {
+				// 에러 시 기본 이유 사용
+				reason = fmt.Sprintf("%s이(가) 지금 당신에게 딱 맞는 선택이에요!", menuName)
+			} else {
+				// 성공 시 캐시에 저장
+				s.reasonCache.Set(analysis.Emotion, analysis.Keywords, menuName, reason)
+			}
+
+			resultChan <- recommendationResult{
+				index:  idx,
+				reason: reason,
+				err:    nil,
+			}
+		}(i, menu.Name)
+	}
+
+	// 모든 goroutine 완료 대기 후 채널 닫기
+	go func() {
+		wg.Wait()
+		close(resultChan)
+	}()
+
+	// 결과 수집
+	for result := range resultChan {
+		reasons[result.index] = result.reason
+	}
+
+	// DB 저장은 순차적으로 (데이터 무결성 보장)
+	for i, menu := range menus {
 		rec := model.Recommendation{
 			SketchID: sketchID,
 			MenuID:   menu.ID,
-			Reason:   reason,
+			Reason:   reasons[i],
 			Rank:     i + 1,
 		}
 
@@ -144,7 +197,7 @@ func (s *SketchService) createRecommendations(ctx context.Context, sketchID uuid
 			return nil, err
 		}
 
-		recommendations = append(recommendations, rec)
+		recommendations[i] = rec
 	}
 
 	return recommendations, nil
