@@ -3,9 +3,9 @@ package telemetry
 import (
 	"context"
 	"log"
-	goruntime "runtime"
 	"time"
 
+	"go.opentelemetry.io/contrib/instrumentation/runtime"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/exporters/otlp/otlpmetric/otlpmetricgrpc"
@@ -112,134 +112,19 @@ func InitTelemetry(cfg Config) (*Providers, error) {
 	providers.MeterProvider = mp
 	otel.SetMeterProvider(mp)
 
-	// Go Runtime Metrics 등록
-	if err := registerRuntimeMetrics(mp); err != nil {
-		log.Printf("Warning: Failed to register runtime metrics: %v", err)
+	// 공식 Go Runtime Metrics 시작 (OpenTelemetry 표준 메트릭 이름 사용)
+	// 메트릭: go.memory.used, go.memory.allocated, go.goroutine.count, go.gc.* 등
+	if err := runtime.Start(
+		runtime.WithMinimumReadMemStatsInterval(time.Second),
+	); err != nil {
+		log.Printf("Warning: Failed to start runtime metrics: %v", err)
+	} else {
+		log.Println("Go runtime metrics started (OpenTelemetry standard)")
 	}
 
 	log.Printf("OpenTelemetry initialized (endpoint: %s, service: %s) - Traces and Metrics enabled", cfg.OTLPEndpoint, cfg.ServiceName)
 
 	return providers, nil
-}
-
-// registerRuntimeMetrics Go 런타임 메트릭 등록
-func registerRuntimeMetrics(mp *sdkmetric.MeterProvider) error {
-	meter := mp.Meter("go.runtime",
-		metric.WithInstrumentationVersion("1.0.0"),
-	)
-
-	// Goroutine 수
-	goroutineGauge, err := meter.Int64ObservableGauge(
-		"runtime.go.goroutines",
-		metric.WithDescription("Number of goroutines"),
-		metric.WithUnit("{goroutine}"),
-	)
-	if err != nil {
-		return err
-	}
-
-	// Heap 메모리 사용량
-	heapAllocGauge, err := meter.Int64ObservableGauge(
-		"runtime.go.mem.heap_alloc",
-		metric.WithDescription("Heap memory allocated"),
-		metric.WithUnit("By"),
-	)
-	if err != nil {
-		return err
-	}
-
-	// Heap 사용 중인 메모리
-	heapInuseGauge, err := meter.Int64ObservableGauge(
-		"runtime.go.mem.heap_inuse",
-		metric.WithDescription("Heap memory in use"),
-		metric.WithUnit("By"),
-	)
-	if err != nil {
-		return err
-	}
-
-	// 시스템 메모리
-	sysMemGauge, err := meter.Int64ObservableGauge(
-		"runtime.go.mem.sys",
-		metric.WithDescription("Total memory obtained from the OS"),
-		metric.WithUnit("By"),
-	)
-	if err != nil {
-		return err
-	}
-
-	// GC 횟수
-	gcCountGauge, err := meter.Int64ObservableGauge(
-		"runtime.go.gc.count",
-		metric.WithDescription("Number of completed GC cycles"),
-		metric.WithUnit("{gc}"),
-	)
-	if err != nil {
-		return err
-	}
-
-	// GC 일시정지 시간 (누적)
-	gcPauseGauge, err := meter.Int64ObservableGauge(
-		"runtime.go.gc.pause_total",
-		metric.WithDescription("Total GC pause time"),
-		metric.WithUnit("ns"),
-	)
-	if err != nil {
-		return err
-	}
-
-	// Stack 메모리
-	stackInuseGauge, err := meter.Int64ObservableGauge(
-		"runtime.go.mem.stack_inuse",
-		metric.WithDescription("Stack memory in use"),
-		metric.WithUnit("By"),
-	)
-	if err != nil {
-		return err
-	}
-
-	// Heap 객체 수
-	heapObjectsGauge, err := meter.Int64ObservableGauge(
-		"runtime.go.mem.heap_objects",
-		metric.WithDescription("Number of allocated heap objects"),
-		metric.WithUnit("{object}"),
-	)
-	if err != nil {
-		return err
-	}
-
-	// 콜백 등록
-	_, err = meter.RegisterCallback(
-		func(ctx context.Context, observer metric.Observer) error {
-			var m goruntime.MemStats
-			goruntime.ReadMemStats(&m)
-
-			observer.ObserveInt64(goroutineGauge, int64(goruntime.NumGoroutine()))
-			observer.ObserveInt64(heapAllocGauge, int64(m.HeapAlloc))
-			observer.ObserveInt64(heapInuseGauge, int64(m.HeapInuse))
-			observer.ObserveInt64(sysMemGauge, int64(m.Sys))
-			observer.ObserveInt64(gcCountGauge, int64(m.NumGC))
-			observer.ObserveInt64(gcPauseGauge, int64(m.PauseTotalNs))
-			observer.ObserveInt64(stackInuseGauge, int64(m.StackInuse))
-			observer.ObserveInt64(heapObjectsGauge, int64(m.HeapObjects))
-
-			return nil
-		},
-		goroutineGauge,
-		heapAllocGauge,
-		heapInuseGauge,
-		sysMemGauge,
-		gcCountGauge,
-		gcPauseGauge,
-		stackInuseGauge,
-		heapObjectsGauge,
-	)
-	if err != nil {
-		return err
-	}
-
-	log.Println("Go runtime metrics registered")
-	return nil
 }
 
 // InitTracer OpenTelemetry tracer 초기화 (하위 호환성 유지)
