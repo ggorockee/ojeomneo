@@ -1,6 +1,6 @@
 import 'dart:convert';
-import 'dart:typed_data';
 
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 
 import '../config/app_config.dart';
@@ -8,6 +8,13 @@ import '../models/menu.dart';
 import '../models/sketch_result.dart';
 import '../utils/app_messages.dart';
 import '../utils/device_id.dart';
+
+// 디버그 로그 헬퍼
+void _log(String message) {
+  if (kDebugMode) {
+    debugPrint('[API] $message');
+  }
+}
 
 class ApiException implements Exception {
   final String message;
@@ -36,10 +43,17 @@ class ApiService {
     String? text,
   }) async {
     final deviceId = await DeviceIdUtil.getDeviceId();
+    final url = AppConfig.sketchAnalyzeUrl;
+
+    _log('=== analyzeSketch 시작 ===');
+    _log('URL: $url');
+    _log('Device ID: $deviceId');
+    _log('Image size: ${imageBytes.length} bytes');
+    _log('Text: $text');
 
     final request = http.MultipartRequest(
       'POST',
-      Uri.parse(AppConfig.sketchAnalyzeUrl),
+      Uri.parse(url),
     );
 
     request.fields['device_id'] = deviceId;
@@ -54,26 +68,38 @@ class ApiService {
     ));
 
     try {
+      _log('요청 전송 중...');
       final streamedResponse = await request.send();
       final response = await http.Response.fromStream(streamedResponse);
+
+      _log('응답 수신: ${response.statusCode}');
+      _log('응답 Body: ${response.body.length > 500 ? response.body.substring(0, 500) : response.body}');
 
       if (response.statusCode == 200) {
         final json = jsonDecode(response.body);
         if (json['success'] == true) {
-          return SketchResult.fromJson(json['data']);
+          _log('성공! 파싱 중...');
+          final result = SketchResult.fromJson(json['data']);
+          _log('파싱 완료: ${result.sketchId}');
+          return result;
         }
+        _log('API 실패: ${json['message']}');
         throw ApiException(AppMessages.apiErrorWithMessage(json['message'] ?? ''));
       }
 
       if (response.statusCode == 429) {
+        _log('Rate Limit 초과');
         throw ApiException(AppMessages.rateLimitExceeded, statusCode: 429);
       }
 
+      _log('HTTP 에러: ${response.statusCode}');
       throw ApiException(
         AppMessages.networkErrorWithCode(response.statusCode),
         statusCode: response.statusCode,
       );
-    } catch (e) {
+    } catch (e, stackTrace) {
+      _log('예외 발생: $e');
+      _log('Stack trace: $stackTrace');
       if (e is ApiException) rethrow;
       throw ApiException(AppMessages.networkError);
     }
