@@ -16,8 +16,8 @@ func setupTestDB(t *testing.T) *gorm.DB {
 	db, err := gorm.Open(sqlite.Open(":memory:"), &gorm.Config{})
 	require.NoError(t, err)
 
-	// 테이블 마이그레이션
-	err = db.AutoMigrate(&model.Menu{})
+	// 테이블 마이그레이션 (Menu와 MenuImage 모두 필요)
+	err = db.AutoMigrate(&model.Menu{}, &model.MenuImage{})
 	require.NoError(t, err)
 
 	return db
