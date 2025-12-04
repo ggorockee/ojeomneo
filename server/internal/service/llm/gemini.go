@@ -8,6 +8,8 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"regexp"
+	"strings"
 	"time"
 )
 
@@ -101,9 +103,12 @@ func (c *Client) AnalyzeSketch(ctx context.Context, imageData []byte, inputText 
 		return nil, err
 	}
 
+	// Gemini 응답에서 JSON 추출 (마크다운 코드 블록 처리)
+	jsonContent := extractJSON(content)
+
 	var result AnalysisResult
-	if err := json.Unmarshal([]byte(content), &result); err != nil {
-		return nil, fmt.Errorf("failed to parse analysis result: %w", err)
+	if err := json.Unmarshal([]byte(jsonContent), &result); err != nil {
+		return nil, fmt.Errorf("failed to parse analysis result: %w (raw: %s)", err, content)
 	}
 
 	return &result, nil
@@ -251,4 +256,24 @@ func (c *Client) mockReason(emotion, menuName string) string {
 // IsAvailable API 키가 설정되어 있는지 확인
 func (c *Client) IsAvailable() bool {
 	return c.apiKey != ""
+}
+
+// extractJSON Gemini 응답에서 JSON 부분만 추출
+// 마크다운 코드 블록(```json ... ```) 또는 일반 JSON 모두 처리
+func extractJSON(content string) string {
+	content = strings.TrimSpace(content)
+
+	// 마크다운 코드 블록에서 JSON 추출 (```json ... ``` 또는 ``` ... ```)
+	codeBlockPattern := regexp.MustCompile("(?s)```(?:json)?\\s*(.+?)```")
+	if matches := codeBlockPattern.FindStringSubmatch(content); len(matches) > 1 {
+		return strings.TrimSpace(matches[1])
+	}
+
+	// { ... } 형태의 JSON 객체 추출
+	jsonPattern := regexp.MustCompile(`(?s)\{.+\}`)
+	if match := jsonPattern.FindString(content); match != "" {
+		return match
+	}
+
+	return content
 }

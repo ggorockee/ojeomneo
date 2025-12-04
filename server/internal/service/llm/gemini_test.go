@@ -94,3 +94,41 @@ func TestAnalysisResult_Structure(t *testing.T) {
 	assert.Len(t, result.Keywords, 3)
 	assert.Equal(t, "calm", result.Mood)
 }
+
+func TestExtractJSON(t *testing.T) {
+	t.Run("순수 JSON 응답", func(t *testing.T) {
+		input := `{"emotion": "피곤한", "keywords": ["따뜻함", "포근함"], "mood": "calm"}`
+		result := extractJSON(input)
+		assert.Equal(t, input, result)
+	})
+
+	t.Run("마크다운 코드 블록 (json 명시)", func(t *testing.T) {
+		input := "```json\n{\"emotion\": \"피곤한\", \"keywords\": [\"따뜻함\"], \"mood\": \"calm\"}\n```"
+		expected := `{"emotion": "피곤한", "keywords": ["따뜻함"], "mood": "calm"}`
+		result := extractJSON(input)
+		assert.Equal(t, expected, result)
+	})
+
+	t.Run("마크다운 코드 블록 (json 미명시)", func(t *testing.T) {
+		input := "```\n{\"emotion\": \"행복한\", \"keywords\": [\"기쁨\"], \"mood\": \"bright\"}\n```"
+		expected := `{"emotion": "행복한", "keywords": ["기쁨"], "mood": "bright"}`
+		result := extractJSON(input)
+		assert.Equal(t, expected, result)
+	})
+
+	t.Run("텍스트 앞뒤에 설명이 있는 경우", func(t *testing.T) {
+		input := `분석 결과입니다:
+{"emotion": "슬픈", "keywords": ["위로"], "mood": "dark"}
+이상입니다.`
+		expected := `{"emotion": "슬픈", "keywords": ["위로"], "mood": "dark"}`
+		result := extractJSON(input)
+		assert.Equal(t, expected, result)
+	})
+
+	t.Run("공백이 포함된 JSON", func(t *testing.T) {
+		input := `  {"emotion": "평온한", "keywords": ["휴식"], "mood": "calm"}  `
+		expected := `{"emotion": "평온한", "keywords": ["휴식"], "mood": "calm"}`
+		result := extractJSON(input)
+		assert.Equal(t, expected, result)
+	})
+}
