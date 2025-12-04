@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:share_plus/share_plus.dart';
 
@@ -34,8 +35,18 @@ ${primary.name}
     final analysis = result.analysis;
 
     return Scaffold(
+      backgroundColor: AppTheme.canvasBackground,
       appBar: AppBar(
-        title: const Text('추천 결과'),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        title: Text(
+          '추천 결과',
+          style: TextStyle(
+            fontSize: 18.sp,
+            fontWeight: FontWeight.w600,
+            color: AppTheme.onSurface,
+          ),
+        ),
         actions: [
           IconButton(
             icon: const Icon(Icons.share_rounded),
@@ -46,43 +57,38 @@ ${primary.name}
       ),
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.all(16),
+          padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Analysis section
-              _AnalysisCard(analysis: analysis),
-              const SizedBox(height: 24),
-
-              // Primary recommendation
-              Text(
-                '오늘의 추천 메뉴',
-                style: AppTheme.titleLarge.copyWith(
-                  color: AppTheme.onSurface,
-                ),
-              ),
-              const SizedBox(height: 12),
+              // Primary recommendation - 메인 카드
               _PrimaryMenuCard(menu: primary),
-              const SizedBox(height: 24),
+              SizedBox(height: 20.h),
+
+              // Analysis section - 감정 분석
+              _AnalysisCard(analysis: analysis),
+              SizedBox(height: 24.h),
 
               // Alternative recommendations
               if (alternatives.isNotEmpty) ...[
                 Text(
                   '이런 메뉴도 어때요?',
-                  style: AppTheme.titleMedium.copyWith(
+                  style: TextStyle(
+                    fontSize: 16.sp,
+                    fontWeight: FontWeight.w600,
                     color: AppTheme.onSurface,
                   ),
                 ),
-                const SizedBox(height: 12),
+                SizedBox(height: 12.h),
                 ...alternatives.map(
                   (menu) => Padding(
-                    padding: const EdgeInsets.only(bottom: 12),
+                    padding: EdgeInsets.only(bottom: 12.h),
                     child: _AlternativeMenuCard(menu: menu),
                   ),
                 ),
               ],
 
-              const SizedBox(height: 24),
+              SizedBox(height: 24.h),
 
               // Action buttons
               Row(
@@ -94,20 +100,43 @@ ${primary.name}
                           (route) => route.isFirst,
                         );
                       },
-                      icon: const Icon(Icons.refresh_rounded),
-                      label: const Text('다시 그리기'),
+                      style: OutlinedButton.styleFrom(
+                        padding: EdgeInsets.symmetric(vertical: 14.h),
+                        side: BorderSide(
+                          color: AppTheme.primaryColor.withAlpha(128),
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12.r),
+                        ),
+                      ),
+                      icon: Icon(Icons.refresh_rounded, size: 20.sp),
+                      label: Text(
+                        '다시 그리기',
+                        style: TextStyle(fontSize: 14.sp),
+                      ),
                     ),
                   ),
-                  const SizedBox(width: 12),
+                  SizedBox(width: 12.w),
                   Expanded(
                     child: FilledButton.icon(
                       onPressed: () => _shareResult(context),
-                      icon: const Icon(Icons.share_rounded),
-                      label: const Text('공유하기'),
+                      style: FilledButton.styleFrom(
+                        padding: EdgeInsets.symmetric(vertical: 14.h),
+                        backgroundColor: AppTheme.primaryColor,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12.r),
+                        ),
+                      ),
+                      icon: Icon(Icons.share_rounded, size: 20.sp),
+                      label: Text(
+                        '공유하기',
+                        style: TextStyle(fontSize: 14.sp),
+                      ),
                     ),
                   ),
                 ],
               ),
+              SizedBox(height: 16.h),
             ],
           ),
         ),
@@ -123,57 +152,96 @@ class _AnalysisCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      color: AppTheme.primaryColor.withAlpha(26),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Text(
-                  analysis.moodEmoji,
-                  style: const TextStyle(fontSize: 24),
-                ),
-                const SizedBox(width: 8),
-                Text(
-                  '그림에서 느껴지는 감정',
-                  style: AppTheme.titleSmall.copyWith(
-                    color: AppTheme.primaryColor,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            Text(
-              analysis.emotion,
-              style: AppTheme.bodyLarge.copyWith(
-                color: AppTheme.onSurface,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-            const SizedBox(height: 12),
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: analysis.keywords.map((keyword) {
-                return Chip(
-                  label: Text(
-                    keyword,
-                    style: AppTheme.labelMedium.copyWith(
-                      color: AppTheme.primaryColor,
-                    ),
-                  ),
-                  backgroundColor: AppTheme.primaryColor.withAlpha(26),
-                  side: BorderSide.none,
-                  padding: EdgeInsets.zero,
-                  materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                );
-              }).toList(),
-            ),
+    return Container(
+      padding: EdgeInsets.all(16.w),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            AppTheme.secondaryColor.withAlpha(40),
+            AppTheme.tertiaryColor.withAlpha(30),
           ],
         ),
+        borderRadius: BorderRadius.circular(16.r),
+        border: Border.all(
+          color: AppTheme.secondaryColor.withAlpha(60),
+          width: 1,
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: EdgeInsets.all(8.w),
+                decoration: BoxDecoration(
+                  color: Colors.white.withAlpha(180),
+                  borderRadius: BorderRadius.circular(10.r),
+                ),
+                child: Text(
+                  analysis.moodEmoji,
+                  style: TextStyle(fontSize: 22.sp),
+                ),
+              ),
+              SizedBox(width: 12.w),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      '그림에서 느껴지는 감정',
+                      style: TextStyle(
+                        fontSize: 12.sp,
+                        color: AppTheme.onSurfaceVariant,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    SizedBox(height: 4.h),
+                    Text(
+                      analysis.emotion,
+                      style: TextStyle(
+                        fontSize: 15.sp,
+                        color: AppTheme.onSurface,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          SizedBox(height: 14.h),
+          Wrap(
+            spacing: 8.w,
+            runSpacing: 8.h,
+            children: analysis.keywords.map((keyword) {
+              return Container(
+                padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 6.h),
+                decoration: BoxDecoration(
+                  color: Colors.white.withAlpha(200),
+                  borderRadius: BorderRadius.circular(20.r),
+                  boxShadow: [
+                    BoxShadow(
+                      color: AppTheme.primaryColor.withAlpha(20),
+                      blurRadius: 4,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
+                ),
+                child: Text(
+                  keyword,
+                  style: TextStyle(
+                    fontSize: 12.sp,
+                    color: AppTheme.primaryColor,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              );
+            }).toList(),
+          ),
+        ],
       ),
     );
   }
@@ -186,125 +254,166 @@ class _PrimaryMenuCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Card(
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20.r),
+        boxShadow: [
+          BoxShadow(
+            color: AppTheme.primaryColor.withAlpha(25),
+            blurRadius: 20,
+            offset: const Offset(0, 8),
+          ),
+        ],
+      ),
       clipBehavior: Clip.antiAlias,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Menu image
-          AspectRatio(
-            aspectRatio: 16 / 9,
-            child: menu.imageUrl != null
-                ? CachedNetworkImage(
-                    imageUrl: menu.imageUrl!,
-                    fit: BoxFit.cover,
-                    placeholder: (context, url) => Container(
-                      color: AppTheme.surfaceVariant,
-                      child: const Center(
-                        child: CircularProgressIndicator(),
-                      ),
-                    ),
-                    errorWidget: (context, url, error) => Container(
-                      color: AppTheme.surfaceVariant,
-                      child: const Icon(
-                        Icons.restaurant_rounded,
-                        size: 48,
-                        color: AppTheme.onSurfaceVariant,
-                      ),
-                    ),
-                  )
-                : Container(
-                    color: AppTheme.surfaceVariant,
-                    child: const Icon(
-                      Icons.restaurant_rounded,
-                      size: 48,
-                      color: AppTheme.onSurfaceVariant,
+          // Menu image with gradient overlay
+          Stack(
+            children: [
+              AspectRatio(
+                aspectRatio: 16 / 10,
+                child: menu.imageUrl != null
+                    ? CachedNetworkImage(
+                        imageUrl: menu.imageUrl!,
+                        fit: BoxFit.cover,
+                        placeholder: (context, url) => _buildPlaceholder(),
+                        errorWidget: (context, url, error) =>
+                            _buildLogoPlaceholder(),
+                      )
+                    : _buildLogoPlaceholder(),
+              ),
+              // Gradient overlay for text readability
+              Positioned(
+                bottom: 0,
+                left: 0,
+                right: 0,
+                child: Container(
+                  height: 80.h,
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: [
+                        Colors.transparent,
+                        Colors.black.withAlpha(100),
+                      ],
                     ),
                   ),
-          ),
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Category badge
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 8,
-                    vertical: 4,
+                ),
+              ),
+              // Category badge
+              Positioned(
+                top: 12.h,
+                left: 12.w,
+                child: Container(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: 12.w,
+                    vertical: 6.h,
                   ),
                   decoration: BoxDecoration(
-                    color: AppTheme.secondaryColor.withAlpha(26),
-                    borderRadius: BorderRadius.circular(4),
+                    color: AppTheme.primaryColor,
+                    borderRadius: BorderRadius.circular(20.r),
+                    boxShadow: [
+                      BoxShadow(
+                        color: AppTheme.primaryColor.withAlpha(80),
+                        blurRadius: 8,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
                   ),
                   child: Text(
                     _getCategoryLabel(menu.category),
-                    style: AppTheme.labelSmall.copyWith(
-                      color: AppTheme.secondaryColor,
+                    style: TextStyle(
+                      fontSize: 11.sp,
+                      fontWeight: FontWeight.w700,
+                      color: Colors.white,
                     ),
                   ),
                 ),
-                const SizedBox(height: 8),
-
+              ),
+            ],
+          ),
+          Padding(
+            padding: EdgeInsets.all(16.w),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
                 // Menu name
                 Text(
                   menu.name,
-                  style: AppTheme.headlineSmall.copyWith(
+                  style: TextStyle(
+                    fontSize: 24.sp,
+                    fontWeight: FontWeight.w700,
                     color: AppTheme.onSurface,
+                    letterSpacing: -0.5,
                   ),
                 ),
-                const SizedBox(height: 12),
+                SizedBox(height: 12.h),
 
                 // Recommendation reason
                 Container(
-                  padding: const EdgeInsets.all(12),
+                  padding: EdgeInsets.all(14.w),
                   decoration: BoxDecoration(
-                    color: AppTheme.surfaceVariant.withAlpha(77),
-                    borderRadius: BorderRadius.circular(12),
+                    gradient: LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [
+                        AppTheme.surfaceVariant,
+                        AppTheme.surfaceVariant.withAlpha(150),
+                      ],
+                    ),
+                    borderRadius: BorderRadius.circular(14.r),
                   ),
                   child: Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text(
+                      Text(
                         '💬',
-                        style: TextStyle(fontSize: 20),
+                        style: TextStyle(fontSize: 18.sp),
                       ),
-                      const SizedBox(width: 8),
+                      SizedBox(width: 10.w),
                       Expanded(
                         child: Text(
                           menu.reason,
-                          style: AppTheme.bodyMedium.copyWith(
+                          style: TextStyle(
+                            fontSize: 14.sp,
                             color: AppTheme.onSurface,
-                            height: 1.5,
+                            height: 1.6,
                           ),
                         ),
                       ),
                     ],
                   ),
                 ),
-                const SizedBox(height: 12),
+                SizedBox(height: 14.h),
 
                 // Tags
                 if (menu.tags.isNotEmpty)
                   Wrap(
-                    spacing: 6,
-                    runSpacing: 6,
+                    spacing: 8.w,
+                    runSpacing: 8.h,
                     children: menu.tags.map((tag) {
                       return Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 4,
+                        padding: EdgeInsets.symmetric(
+                          horizontal: 10.w,
+                          vertical: 6.h,
                         ),
                         decoration: BoxDecoration(
+                          color: AppTheme.tertiaryColor.withAlpha(30),
+                          borderRadius: BorderRadius.circular(8.r),
                           border: Border.all(
-                            color: AppTheme.outlineColor.withAlpha(77),
+                            color: AppTheme.tertiaryColor.withAlpha(60),
                           ),
-                          borderRadius: BorderRadius.circular(16),
                         ),
                         child: Text(
                           '#$tag',
-                          style: AppTheme.labelSmall.copyWith(
-                            color: AppTheme.onSurfaceVariant,
+                          style: TextStyle(
+                            fontSize: 12.sp,
+                            color: AppTheme.primaryColor,
+                            fontWeight: FontWeight.w500,
                           ),
                         ),
                       );
@@ -314,6 +423,58 @@ class _PrimaryMenuCard extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildPlaceholder() {
+    return Container(
+      color: AppTheme.surfaceVariant,
+      child: Center(
+        child: SizedBox(
+          width: 32.w,
+          height: 32.w,
+          child: CircularProgressIndicator(
+            strokeWidth: 2,
+            color: AppTheme.primaryColor.withAlpha(128),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildLogoPlaceholder() {
+    return Container(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            AppTheme.surfaceVariant,
+            AppTheme.tertiaryColor.withAlpha(40),
+          ],
+        ),
+      ),
+      child: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Image.asset(
+              'assets/images/logo.png',
+              width: 80.w,
+              height: 80.w,
+              opacity: const AlwaysStoppedAnimation(0.7),
+            ),
+            SizedBox(height: 8.h),
+            Text(
+              '이미지 준비 중',
+              style: TextStyle(
+                fontSize: 12.sp,
+                color: AppTheme.onSurfaceVariant,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -347,14 +508,25 @@ class _AlternativeMenuCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Card(
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(14.r),
+        boxShadow: [
+          BoxShadow(
+            color: AppTheme.primaryColor.withAlpha(15),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
       child: ListTile(
-        contentPadding: const EdgeInsets.all(12),
+        contentPadding: EdgeInsets.all(12.w),
         leading: ClipRRect(
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: BorderRadius.circular(10.r),
           child: SizedBox(
-            width: 56,
-            height: 56,
+            width: 60.w,
+            height: 60.w,
             child: menu.imageUrl != null
                 ? CachedNetworkImage(
                     imageUrl: menu.imageUrl!,
@@ -362,34 +534,55 @@ class _AlternativeMenuCard extends StatelessWidget {
                     placeholder: (context, url) => Container(
                       color: AppTheme.surfaceVariant,
                     ),
-                    errorWidget: (context, url, error) => Container(
-                      color: AppTheme.surfaceVariant,
-                      child: const Icon(
-                        Icons.restaurant_rounded,
-                        color: AppTheme.onSurfaceVariant,
-                      ),
-                    ),
+                    errorWidget: (context, url, error) =>
+                        _buildSmallLogoPlaceholder(),
                   )
-                : Container(
-                    color: AppTheme.surfaceVariant,
-                    child: const Icon(
-                      Icons.restaurant_rounded,
-                      color: AppTheme.onSurfaceVariant,
-                    ),
-                  ),
+                : _buildSmallLogoPlaceholder(),
           ),
         ),
         title: Text(
           menu.name,
-          style: AppTheme.titleMedium,
-        ),
-        subtitle: Text(
-          menu.reason,
-          style: AppTheme.bodySmall.copyWith(
-            color: AppTheme.onSurfaceVariant,
+          style: TextStyle(
+            fontSize: 15.sp,
+            fontWeight: FontWeight.w600,
+            color: AppTheme.onSurface,
           ),
-          maxLines: 2,
-          overflow: TextOverflow.ellipsis,
+        ),
+        subtitle: Padding(
+          padding: EdgeInsets.only(top: 4.h),
+          child: Text(
+            menu.reason,
+            style: TextStyle(
+              fontSize: 12.sp,
+              color: AppTheme.onSurfaceVariant,
+              height: 1.4,
+            ),
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSmallLogoPlaceholder() {
+    return Container(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            AppTheme.surfaceVariant,
+            AppTheme.tertiaryColor.withAlpha(30),
+          ],
+        ),
+      ),
+      child: Center(
+        child: Image.asset(
+          'assets/images/logo.png',
+          width: 32.w,
+          height: 32.w,
+          opacity: const AlwaysStoppedAnimation(0.6),
         ),
       ),
     );
