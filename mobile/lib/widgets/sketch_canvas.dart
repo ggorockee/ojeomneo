@@ -99,10 +99,6 @@ class SketchPainter extends CustomPainter {
       _drawStroke(canvas, currentStrokePoints, currentPaint);
     }
 
-    // Draw placeholder text if canvas is empty
-    if (strokes.isEmpty && currentStrokePoints.isEmpty) {
-      _drawPlaceholder(canvas, size);
-    }
   }
 
   void _drawStroke(Canvas canvas, List<Offset> points, Paint paint) {
@@ -128,52 +124,6 @@ class SketchPainter extends CustomPainter {
     }
 
     canvas.drawPath(path, paint);
-  }
-
-  void _drawPlaceholder(Canvas canvas, Size size) {
-    final textPainter = TextPainter(
-      text: TextSpan(
-        text: '여기에 기분을 그려주세요',
-        style: TextStyle(
-          color: AppTheme.onSurfaceVariant.withAlpha(128),
-          fontSize: 16,
-          fontWeight: FontWeight.w500,
-        ),
-      ),
-      textDirection: TextDirection.ltr,
-    );
-
-    textPainter.layout();
-    textPainter.paint(
-      canvas,
-      Offset(
-        (size.width - textPainter.width) / 2,
-        (size.height - textPainter.height) / 2,
-      ),
-    );
-
-    // Draw hint icon
-    final iconPainter = TextPainter(
-      text: TextSpan(
-        text: String.fromCharCode(Icons.gesture_rounded.codePoint),
-        style: TextStyle(
-          fontFamily: Icons.gesture_rounded.fontFamily,
-          package: Icons.gesture_rounded.fontPackage,
-          fontSize: 48,
-          color: AppTheme.onSurfaceVariant.withAlpha(77),
-        ),
-      ),
-      textDirection: TextDirection.ltr,
-    );
-
-    iconPainter.layout();
-    iconPainter.paint(
-      canvas,
-      Offset(
-        (size.width - iconPainter.width) / 2,
-        (size.height - iconPainter.height) / 2 - 50,
-      ),
-    );
   }
 
   @override

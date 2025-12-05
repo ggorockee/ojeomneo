@@ -60,12 +60,15 @@ ${menu.name}
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Main card
-                    _PrimaryMenuCard(menu: _selectedMenu),
+                    // Main card - Key 추가하여 메뉴 변경 시 위젯 재생성
+                    _PrimaryMenuCard(
+                      key: ValueKey(_selectedMenu.menuId),
+                      menu: _selectedMenu,
+                    ),
                     const SizedBox(height: 32),
 
-                    // Alternative recommendations
-                    if (alternatives.isNotEmpty) ...[
+                    // Alternative recommendations - 선택되지 않은 메뉴가 있을 때만 표시
+                    if (_allMenus.where((m) => m.menuId != _selectedMenu.menuId).isNotEmpty) ...[
                       const Text(
                         '이런 메뉴도 어때요?',
                         style: TextStyle(
@@ -84,6 +87,7 @@ ${menu.name}
                             (entry) => Padding(
                               padding: const EdgeInsets.only(bottom: 10),
                               child: _AlternativeMenuCard(
+                                key: ValueKey(entry.value.menuId),
                                 menu: entry.value,
                                 onTap: () {
                                   setState(() {
@@ -191,7 +195,7 @@ ${menu.name}
 class _PrimaryMenuCard extends StatelessWidget {
   final MenuRecommendation menu;
 
-  const _PrimaryMenuCard({required this.menu});
+  const _PrimaryMenuCard({super.key, required this.menu});
 
   bool get _hasValidImage =>
       menu.imageUrl != null && menu.imageUrl!.isNotEmpty;
@@ -320,11 +324,33 @@ class _PrimaryMenuCard extends StatelessWidget {
 
   Widget _buildEmojiPlaceholder() {
     return Center(
-      child: Text(
-        _getCategoryEmoji(menu.category),
-        style: const TextStyle(fontSize: 80),
+      child: Icon(
+        _getCategoryIcon(menu.category),
+        size: 80,
+        color: _getCategoryColor(menu.category).withAlpha(200),
       ),
     );
+  }
+
+  IconData _getCategoryIcon(String category) {
+    switch (category.toLowerCase()) {
+      case 'korean':
+        return Icons.rice_bowl_rounded;
+      case 'japanese':
+        return Icons.ramen_dining_rounded;
+      case 'chinese':
+        return Icons.takeout_dining_rounded;
+      case 'western':
+        return Icons.dinner_dining_rounded;
+      case 'asian':
+        return Icons.soup_kitchen_rounded;
+      case 'snack':
+        return Icons.bakery_dining_rounded;
+      case 'cafe':
+        return Icons.coffee_rounded;
+      default:
+        return Icons.restaurant_rounded;
+    }
   }
 
   Color _getCategoryColor(String category) {
@@ -341,27 +367,6 @@ class _PrimaryMenuCard extends StatelessWidget {
         return const Color(0xFFF0FFF5);
       default:
         return AppTheme.surfaceVariant;
-    }
-  }
-
-  String _getCategoryEmoji(String category) {
-    switch (category.toLowerCase()) {
-      case 'korean':
-        return '🍚';
-      case 'japanese':
-        return '🍜';
-      case 'chinese':
-        return '🥟';
-      case 'western':
-        return '🍝';
-      case 'asian':
-        return '🍲';
-      case 'snack':
-        return '🍢';
-      case 'cafe':
-        return '☕';
-      default:
-        return '🍽️';
     }
   }
 
@@ -392,6 +397,7 @@ class _AlternativeMenuCard extends StatelessWidget {
   final VoidCallback onTap;
 
   const _AlternativeMenuCard({
+    super.key,
     required this.menu,
     required this.onTap,
   });
@@ -474,11 +480,33 @@ class _AlternativeMenuCard extends StatelessWidget {
 
   Widget _buildSmallPlaceholder() {
     return Center(
-      child: Text(
-        _getCategoryEmoji(menu.category),
-        style: const TextStyle(fontSize: 28),
+      child: Icon(
+        _getCategoryIcon(menu.category),
+        size: 28,
+        color: _getCategoryColor(menu.category).withAlpha(200),
       ),
     );
+  }
+
+  IconData _getCategoryIcon(String category) {
+    switch (category.toLowerCase()) {
+      case 'korean':
+        return Icons.rice_bowl_rounded;
+      case 'japanese':
+        return Icons.ramen_dining_rounded;
+      case 'chinese':
+        return Icons.takeout_dining_rounded;
+      case 'western':
+        return Icons.dinner_dining_rounded;
+      case 'asian':
+        return Icons.soup_kitchen_rounded;
+      case 'snack':
+        return Icons.bakery_dining_rounded;
+      case 'cafe':
+        return Icons.coffee_rounded;
+      default:
+        return Icons.restaurant_rounded;
+    }
   }
 
   Color _getCategoryColor(String category) {
@@ -495,23 +523,6 @@ class _AlternativeMenuCard extends StatelessWidget {
         return const Color(0xFFF0FFF5);
       default:
         return AppTheme.surfaceVariant;
-    }
-  }
-
-  String _getCategoryEmoji(String category) {
-    switch (category.toLowerCase()) {
-      case 'korean':
-        return '🍚';
-      case 'japanese':
-        return '🍜';
-      case 'chinese':
-        return '🥟';
-      case 'western':
-        return '🍝';
-      case 'asian':
-        return '🍲';
-      default:
-        return '🍽️';
     }
   }
 
