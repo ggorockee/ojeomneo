@@ -349,7 +349,7 @@ class _SketchScreenState extends State<SketchScreen> {
                         isEnabled: provider.hasDrawing && !isAnalyzing,
                         isLoading: isAnalyzing,
                         label: isAnalyzing ? '분석 중...' : '메뉴 추천받기',
-                        icon: isAnalyzing ? null : '✨',
+                        icon: isAnalyzing ? null : Icons.auto_awesome_rounded,
                       ),
                     ),
                   ],
@@ -381,24 +381,26 @@ class _EmptyCanvasPlaceholder extends StatelessWidget {
       children: [
         child,
         Positioned.fill(
-          child: Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(
-                  Icons.sentiment_satisfied_alt_rounded,
-                  size: 48,
-                  color: AppTheme.textDisabled,
-                ),
-                const SizedBox(height: 16),
-                Text(
-                  '여기에 기분을 그려주세요',
-                  style: TextStyle(
-                    fontSize: 15,
-                    color: AppTheme.textHint,
+          child: IgnorePointer(
+            child: Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    Icons.gesture_rounded,
+                    size: 48,
+                    color: AppTheme.textDisabled.withAlpha(128),
                   ),
-                ),
-              ],
+                  const SizedBox(height: 12),
+                  Text(
+                    '여기에 기분을 그려주세요',
+                    style: TextStyle(
+                      fontSize: 15,
+                      color: AppTheme.textHint.withAlpha(180),
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         ),
@@ -466,7 +468,7 @@ class _GradientButton extends StatelessWidget {
   final bool isEnabled;
   final bool isLoading;
   final String label;
-  final String? icon;
+  final IconData? icon;
 
   const _GradientButton({
     this.onPressed,
@@ -502,7 +504,11 @@ class _GradientButton extends StatelessWidget {
                 ),
               )
             else if (icon != null) ...[
-              Text(icon!, style: const TextStyle(fontSize: 18)),
+              Icon(
+                icon,
+                size: 20,
+                color: isEnabled ? Colors.white : AppTheme.textHint,
+              ),
               const SizedBox(width: 8),
             ],
             Text(

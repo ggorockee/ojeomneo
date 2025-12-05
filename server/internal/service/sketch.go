@@ -246,7 +246,9 @@ func (s *SketchService) toAlternatives(menus []model.Menu, recommendations []mod
 			MenuID:   menus[i].ID,
 			Name:     menus[i].Name,
 			Category: menus[i].Category,
+			ImageURL: menus[i].ImageURL,
 			Reason:   recommendations[i].Reason,
+			Tags:     menus[i].GetAllTags(),
 		}
 	}
 
