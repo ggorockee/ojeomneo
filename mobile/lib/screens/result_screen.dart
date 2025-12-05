@@ -5,6 +5,7 @@ import 'package:share_plus/share_plus.dart';
 import '../config/app_theme.dart';
 import '../models/sketch_result.dart';
 import '../models/recommendation.dart';
+import '../services/ads/banner_ad_widget.dart';
 
 class ResultScreen extends StatefulWidget {
   final SketchResult result;
@@ -43,8 +44,6 @@ ${menu.name}
 
   @override
   Widget build(BuildContext context) {
-    final alternatives = widget.result.recommendation.alternatives;
-
     return Scaffold(
       backgroundColor: AppTheme.surfaceColor,
       body: SafeArea(
@@ -102,6 +101,12 @@ ${menu.name}
                   ],
                 ),
               ),
+            ),
+
+            // 배너 광고
+            const Padding(
+              padding: EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+              child: BannerAdWidget(bannerType: 1),
             ),
           ],
         ),

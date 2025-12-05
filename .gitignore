@@ -51,3 +51,11 @@ app.*.map.json
 /android/app/release
 
 myrequest.txt
+my_request.txt
+
+# Firebase configuration (sensitive)
+**/google-services.json
+**/GoogleService-Info.plist
+
+# AdMob/Google credentials
+**/firebase_app_id_file.json

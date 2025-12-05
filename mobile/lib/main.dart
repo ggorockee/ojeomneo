@@ -7,14 +7,43 @@ import 'screens/splash_screen.dart';
 import 'screens/sketch_screen.dart';
 import 'screens/history_screen.dart';
 import 'services/sketch_provider.dart';
+import 'services/ads/ad_service.dart';
 
-void main() {
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // AdMob SDK 초기화
+  await AdService().initialize();
+
   runApp(const OjeomeoApp());
 }
 
-class OjeomeoApp extends StatelessWidget {
+class OjeomeoApp extends StatefulWidget {
   const OjeomeoApp({super.key});
+
+  @override
+  State<OjeomeoApp> createState() => _OjeomeoAppState();
+}
+
+class _OjeomeoAppState extends State<OjeomeoApp> with WidgetsBindingObserver {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    AdService().dispose();
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    // 앱 라이프사이클 변경 시 광고 서비스에 알림
+    AdService().onAppStateChanged(state);
+  }
 
   @override
   Widget build(BuildContext context) {
