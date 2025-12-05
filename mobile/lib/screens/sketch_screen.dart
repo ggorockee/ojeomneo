@@ -33,7 +33,8 @@ class _SketchScreenState extends State<SketchScreen> {
       return;
     }
 
-    final renderBox = _canvasKey.currentContext?.findRenderObject() as RenderBox?;
+    final renderBox =
+        _canvasKey.currentContext?.findRenderObject() as RenderBox?;
     if (renderBox == null) return;
 
     final imageBytes = await provider.captureCanvas(renderBox.size);
@@ -121,27 +122,42 @@ class _SketchScreenState extends State<SketchScreen> {
           children: [
             const Text(
               '펜 굵기',
-              style: AppTheme.titleMedium,
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w700,
+                color: AppTheme.onSurface,
+              ),
             ),
             const SizedBox(height: 16),
             StatefulBuilder(
               builder: (context, setState) => Column(
                 children: [
-                  Slider(
-                    value: provider.currentWidth,
-                    min: 1,
-                    max: 20,
-                    divisions: 19,
-                    label: provider.currentWidth.round().toString(),
-                    onChanged: (value) {
-                      setState(() {});
-                      provider.setStrokeWidth(value);
-                    },
+                  SliderTheme(
+                    data: SliderThemeData(
+                      activeTrackColor: AppTheme.primaryColor,
+                      inactiveTrackColor: AppTheme.dividerColor,
+                      thumbColor: AppTheme.primaryColor,
+                      overlayColor: AppTheme.primaryColor.withAlpha(51),
+                    ),
+                    child: Slider(
+                      value: provider.currentWidth,
+                      min: 1,
+                      max: 20,
+                      divisions: 19,
+                      label: provider.currentWidth.round().toString(),
+                      onChanged: (value) {
+                        setState(() {});
+                        provider.setStrokeWidth(value);
+                      },
+                    ),
                   ),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Text('1'),
+                      const Text(
+                        '1',
+                        style: TextStyle(color: AppTheme.onSurfaceVariant),
+                      ),
                       Container(
                         width: provider.currentWidth * 2,
                         height: provider.currentWidth * 2,
@@ -150,7 +166,10 @@ class _SketchScreenState extends State<SketchScreen> {
                           shape: BoxShape.circle,
                         ),
                       ),
-                      const Text('20'),
+                      const Text(
+                        '20',
+                        style: TextStyle(color: AppTheme.onSurfaceVariant),
+                      ),
                     ],
                   ),
                 ],
@@ -166,11 +185,22 @@ class _SketchScreenState extends State<SketchScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: AppTheme.surfaceColor,
       appBar: AppBar(
-        title: const Text('내 기분 그리기'),
+        backgroundColor: AppTheme.surfaceColor,
+        elevation: 0,
+        centerTitle: true,
+        title: const Text(
+          '내 기분 그리기',
+          style: TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.w700,
+            color: AppTheme.onSurface,
+          ),
+        ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.history_rounded),
+            icon: const Icon(Icons.history_rounded, color: AppTheme.onSurfaceVariant),
             tooltip: '히스토리',
             onPressed: () => Navigator.of(context).pushNamed('/history'),
           ),
@@ -183,12 +213,12 @@ class _SketchScreenState extends State<SketchScreen> {
           return Stack(
             children: [
               SafeArea(
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    children: [
-                      // Canvas area
-                      Expanded(
+                child: Column(
+                  children: [
+                    // Canvas area
+                    Expanded(
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 20),
                         child: LayoutBuilder(
                           builder: (context, constraints) {
                             final canvasSize = Size(
@@ -197,37 +227,91 @@ class _SketchScreenState extends State<SketchScreen> {
                             );
                             return Container(
                               key: _canvasKey,
-                              child: SketchCanvas(size: canvasSize),
+                              decoration: BoxDecoration(
+                                color: AppTheme.surfaceVariant,
+                                borderRadius: BorderRadius.circular(20),
+                                border: Border.all(
+                                  color: AppTheme.outlineColor,
+                                  width: 1,
+                                ),
+                              ),
+                              clipBehavior: Clip.antiAlias,
+                              child: provider.hasDrawing
+                                  ? SketchCanvas(size: canvasSize)
+                                  : _EmptyCanvasPlaceholder(
+                                      onTap: () {},
+                                      child: SketchCanvas(size: canvasSize),
+                                    ),
                             );
                           },
                         ),
                       ),
-                      const SizedBox(height: 16),
+                    ),
+                    const SizedBox(height: 16),
 
-                      // Text input
-                      TextField(
-                        controller: _textController,
-                        decoration: const InputDecoration(
-                          hintText: '지금 기분을 한 줄로 표현해보세요 (선택)',
-                          prefixIcon: Icon(Icons.edit_note_rounded),
+                    // Text input
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 18,
+                          vertical: 14,
                         ),
-                        maxLines: 1,
-                        textInputAction: TextInputAction.done,
+                        decoration: BoxDecoration(
+                          color: AppTheme.surfaceVariant,
+                          borderRadius: BorderRadius.circular(14),
+                        ),
+                        child: Row(
+                          children: [
+                            const Icon(
+                              Icons.edit_note_rounded,
+                              color: AppTheme.textHint,
+                              size: 20,
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: TextField(
+                                controller: _textController,
+                                decoration: const InputDecoration(
+                                  hintText: '지금 기분을 한 줄로 표현해보세요 (선택)',
+                                  hintStyle: TextStyle(
+                                    fontSize: 14,
+                                    color: AppTheme.textHint,
+                                  ),
+                                  border: InputBorder.none,
+                                  isDense: true,
+                                  contentPadding: EdgeInsets.zero,
+                                  filled: false,
+                                ),
+                                style: const TextStyle(
+                                  fontSize: 14,
+                                  color: AppTheme.onSurface,
+                                ),
+                                maxLines: 1,
+                                textInputAction: TextInputAction.done,
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
-                      const SizedBox(height: 16),
+                    ),
+                    const SizedBox(height: 16),
 
-                      // Tool bar
-                      Row(
+                    // Tool bar
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      child: Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           // Color picker
                           _ToolButton(
                             icon: Icons.palette_rounded,
                             color: provider.currentColor,
+                            isActive: true,
                             onTap: _showColorPicker,
                             tooltip: '색상',
                           ),
-                          const SizedBox(width: 12),
+                          const SizedBox(width: 8),
 
                           // Stroke width
                           _ToolButton(
@@ -235,85 +319,45 @@ class _SketchScreenState extends State<SketchScreen> {
                             onTap: _showStrokeWidthPicker,
                             tooltip: '굵기',
                           ),
-                          const SizedBox(width: 12),
+                          const SizedBox(width: 8),
 
                           // Undo
                           _ToolButton(
                             icon: Icons.undo_rounded,
-                            onTap: provider.hasDrawing
-                                ? provider.undoLastStroke
-                                : null,
+                            onTap:
+                                provider.hasDrawing ? provider.undoLastStroke : null,
                             tooltip: '되돌리기',
                           ),
-                          const SizedBox(width: 12),
+                          const SizedBox(width: 8),
 
                           // Clear
                           _ToolButton(
                             icon: Icons.delete_outline_rounded,
-                            onTap: provider.hasDrawing
-                                ? provider.clearCanvas
-                                : null,
+                            onTap: provider.hasDrawing ? provider.clearCanvas : null,
                             tooltip: '지우기',
                           ),
                         ],
                       ),
-                      const SizedBox(height: 24),
+                    ),
+                    const SizedBox(height: 16),
 
-                      // Analyze button
-                      SizedBox(
-                        width: double.infinity,
-                        child: FilledButton.icon(
-                          onPressed: isAnalyzing ? null : _analyzeSketch,
-                          icon: isAnalyzing
-                              ? const SizedBox(
-                                  width: 20,
-                                  height: 20,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                    color: Colors.white,
-                                  ),
-                                )
-                              : const Icon(Icons.auto_awesome_rounded),
-                          label: Text(isAnalyzing ? '분석 중...' : '메뉴 추천받기'),
-                        ),
+                    // Analyze button
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(20, 0, 20, 40),
+                      child: _GradientButton(
+                        onPressed: isAnalyzing ? null : _analyzeSketch,
+                        isEnabled: provider.hasDrawing && !isAnalyzing,
+                        isLoading: isAnalyzing,
+                        label: isAnalyzing ? '분석 중...' : '메뉴 추천받기',
+                        icon: isAnalyzing ? null : '✨',
                       ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
               ),
 
               // Loading overlay
-              if (isAnalyzing)
-                Container(
-                  color: Colors.black.withAlpha(77),
-                  child: Center(
-                    child: Card(
-                      child: Padding(
-                        padding: const EdgeInsets.all(32),
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            const CircularProgressIndicator(),
-                            const SizedBox(height: 24),
-                            Text(
-                              '그림을 분석하고 있어요...',
-                              style: AppTheme.titleMedium.copyWith(
-                                color: AppTheme.onSurface,
-                              ),
-                            ),
-                            const SizedBox(height: 8),
-                            Text(
-                              '잠시만 기다려주세요',
-                              style: AppTheme.bodyMedium.copyWith(
-                                color: AppTheme.onSurfaceVariant,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
+              if (isAnalyzing) _LoadingOverlay(),
             ],
           );
         },
@@ -322,15 +366,58 @@ class _SketchScreenState extends State<SketchScreen> {
   }
 }
 
+class _EmptyCanvasPlaceholder extends StatelessWidget {
+  final VoidCallback onTap;
+  final Widget child;
+
+  const _EmptyCanvasPlaceholder({
+    required this.onTap,
+    required this.child,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
+      children: [
+        child,
+        Positioned.fill(
+          child: Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  Icons.sentiment_satisfied_alt_rounded,
+                  size: 48,
+                  color: AppTheme.textDisabled,
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  '여기에 기분을 그려주세요',
+                  style: TextStyle(
+                    fontSize: 15,
+                    color: AppTheme.textHint,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
 class _ToolButton extends StatelessWidget {
   final IconData icon;
   final Color? color;
+  final bool isActive;
   final VoidCallback? onTap;
   final String tooltip;
 
   const _ToolButton({
     required this.icon,
     this.color,
+    this.isActive = false,
     this.onTap,
     required this.tooltip,
   });
@@ -345,25 +432,139 @@ class _ToolButton extends StatelessWidget {
         color: Colors.transparent,
         child: InkWell(
           onTap: onTap,
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(14),
           child: Container(
             width: 48,
             height: 48,
             decoration: BoxDecoration(
-              color: isEnabled
-                  ? AppTheme.surfaceVariant.withAlpha(128)
-                  : AppTheme.surfaceVariant.withAlpha(51),
-              borderRadius: BorderRadius.circular(12),
-              border: color != null
-                  ? Border.all(color: color!, width: 2)
-                  : null,
+              color: isActive
+                  ? AppTheme.toolButtonActive
+                  : (isEnabled
+                      ? AppTheme.toolButtonInactive
+                      : AppTheme.toolButtonInactive.withAlpha(128)),
+              borderRadius: BorderRadius.circular(14),
+              border: color != null ? Border.all(color: color!, width: 2) : null,
             ),
             child: Icon(
               icon,
-              color: isEnabled
-                  ? (color ?? AppTheme.onSurface)
-                  : AppTheme.onSurfaceVariant.withAlpha(77),
+              color: isActive
+                  ? Colors.white
+                  : (isEnabled
+                      ? (color ?? AppTheme.onSurfaceVariant)
+                      : AppTheme.textDisabled),
+              size: 22,
             ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _GradientButton extends StatelessWidget {
+  final VoidCallback? onPressed;
+  final bool isEnabled;
+  final bool isLoading;
+  final String label;
+  final String? icon;
+
+  const _GradientButton({
+    this.onPressed,
+    required this.isEnabled,
+    this.isLoading = false,
+    required this.label,
+    this.icon,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: isEnabled ? onPressed : null,
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(vertical: 18),
+        decoration: BoxDecoration(
+          gradient: isEnabled ? AppTheme.primaryGradient : null,
+          color: isEnabled ? null : AppTheme.buttonDisabled,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: isEnabled ? AppTheme.primaryButtonShadow : null,
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            if (isLoading)
+              const SizedBox(
+                width: 20,
+                height: 20,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  color: Colors.white,
+                ),
+              )
+            else if (icon != null) ...[
+              Text(icon!, style: const TextStyle(fontSize: 18)),
+              const SizedBox(width: 8),
+            ],
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w700,
+                color: isEnabled ? Colors.white : AppTheme.textHint,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _LoadingOverlay extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      color: Colors.black.withAlpha(77),
+      child: Center(
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 48, vertical: 32),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(20),
+            boxShadow: AppTheme.softShadow,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              SizedBox(
+                width: 48,
+                height: 48,
+                child: CircularProgressIndicator(
+                  strokeWidth: 4,
+                  valueColor: const AlwaysStoppedAnimation<Color>(
+                    AppTheme.primaryColor,
+                  ),
+                  backgroundColor: AppTheme.dividerColor,
+                ),
+              ),
+              const SizedBox(height: 16),
+              const Text(
+                '그림을 분석하고 있어요...',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w700,
+                  color: AppTheme.onSurface,
+                ),
+              ),
+              const SizedBox(height: 6),
+              const Text(
+                '잠시만 기다려주세요',
+                style: TextStyle(
+                  fontSize: 14,
+                  color: AppTheme.onSurfaceVariant,
+                ),
+              ),
+            ],
           ),
         ),
       ),

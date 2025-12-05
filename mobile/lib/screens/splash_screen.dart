@@ -56,7 +56,7 @@ class _SplashScreenState extends State<SplashScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppTheme.canvasBackground,
+      backgroundColor: AppTheme.surfaceColor,
       body: Center(
         child: AnimatedBuilder(
           animation: _controller,
@@ -76,7 +76,7 @@ class _SplashScreenState extends State<SplashScreen>
                     ),
                     const SizedBox(height: 24),
                     // Tagline
-                    Text(
+                    const Text(
                       '오늘 점심 뭐 먹지?',
                       style: TextStyle(
                         fontSize: 16,
@@ -92,7 +92,7 @@ class _SplashScreenState extends State<SplashScreen>
                       child: CircularProgressIndicator(
                         strokeWidth: 2,
                         valueColor: AlwaysStoppedAnimation<Color>(
-                          AppTheme.primaryColor.withValues(alpha: 0.6),
+                          AppTheme.primaryColor.withAlpha(153),
                         ),
                       ),
                     ),

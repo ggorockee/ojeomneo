@@ -42,14 +42,35 @@ class _HistoryScreenState extends State<HistoryScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: AppTheme.surfaceColor,
       appBar: AppBar(
-        title: const Text('히스토리'),
+        backgroundColor: AppTheme.surfaceColor,
+        elevation: 0,
+        centerTitle: true,
+        title: const Text(
+          '히스토리',
+          style: TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.w700,
+            color: AppTheme.onSurface,
+          ),
+        ),
+        leading: IconButton(
+          icon: const Icon(
+            Icons.arrow_back_ios_new_rounded,
+            color: AppTheme.onSurface,
+            size: 22,
+          ),
+          onPressed: () => Navigator.of(context).pop(),
+        ),
       ),
       body: Consumer<SketchProvider>(
         builder: (context, provider, child) {
           if (provider.isLoadingHistory && provider.history.isEmpty) {
-            return const Center(
-              child: CircularProgressIndicator(),
+            return Center(
+              child: CircularProgressIndicator(
+                color: AppTheme.primaryColor,
+              ),
             );
           }
 
@@ -59,17 +80,20 @@ class _HistoryScreenState extends State<HistoryScreen> {
 
           return RefreshIndicator(
             onRefresh: () => provider.loadHistory(refresh: true),
+            color: AppTheme.primaryColor,
             child: ListView.builder(
               controller: _scrollController,
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.all(20),
               itemCount: provider.history.length +
                   (provider.hasMoreHistory ? 1 : 0),
               itemBuilder: (context, index) {
                 if (index >= provider.history.length) {
-                  return const Padding(
-                    padding: EdgeInsets.all(16),
+                  return Padding(
+                    padding: const EdgeInsets.all(16),
                     child: Center(
-                      child: CircularProgressIndicator(),
+                      child: CircularProgressIndicator(
+                        color: AppTheme.primaryColor,
+                      ),
                     ),
                   );
                 }
@@ -101,28 +125,55 @@ class _EmptyState extends StatelessWidget {
             Icon(
               Icons.history_rounded,
               size: 80,
-              color: AppTheme.onSurfaceVariant.withAlpha(77),
+              color: AppTheme.textDisabled,
             ),
             const SizedBox(height: 24),
             Text(
               AppMessages.historyEmpty,
-              style: AppTheme.titleMedium.copyWith(
+              style: const TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
                 color: AppTheme.onSurface,
               ),
             ),
             const SizedBox(height: 8),
             Text(
               AppMessages.historyEmptyDescription,
-              style: AppTheme.bodyMedium.copyWith(
+              style: const TextStyle(
+                fontSize: 14,
                 color: AppTheme.onSurfaceVariant,
               ),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 24),
-            FilledButton.icon(
-              onPressed: () => Navigator.of(context).pop(),
-              icon: const Icon(Icons.brush_rounded),
-              label: const Text('그림 그리러 가기'),
+            GestureDetector(
+              onTap: () => Navigator.of(context).pop(),
+              child: Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 14,
+                ),
+                decoration: BoxDecoration(
+                  gradient: AppTheme.primaryGradient,
+                  borderRadius: BorderRadius.circular(14),
+                  boxShadow: AppTheme.primaryButtonShadow,
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: const [
+                    Icon(Icons.brush_rounded, color: Colors.white, size: 18),
+                    SizedBox(width: 8),
+                    Text(
+                      '그림 그리러 가기',
+                      style: TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w700,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             ),
           ],
         ),
@@ -142,104 +193,109 @@ class _HistoryCard extends StatelessWidget {
     final recommendation = history.recommendation;
     final primaryMenu = recommendation?.primary;
 
-    return Card(
-      child: InkWell(
-        onTap: () {
-          // TODO: Show detail or re-analyze
-        },
-        borderRadius: BorderRadius.circular(16),
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppTheme.cardBackground,
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Header row
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              // Date
               Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Row(
-                    children: [
-                      Text(
-                        analysis?.moodEmoji ?? '🍽️',
-                        style: const TextStyle(fontSize: 20),
-                      ),
-                      const SizedBox(width: 8),
-                      if (primaryMenu != null)
-                        Text(
-                          primaryMenu.name,
-                          style: AppTheme.titleMedium.copyWith(
-                            color: AppTheme.onSurface,
-                          ),
-                        ),
-                    ],
-                  ),
                   Text(
-                    _formatDate(history.createdAt),
-                    style: AppTheme.labelSmall.copyWith(
-                      color: AppTheme.onSurfaceVariant,
-                    ),
+                    analysis?.moodEmoji ?? '🍽️',
+                    style: const TextStyle(fontSize: 20),
                   ),
+                  const SizedBox(width: 8),
+                  if (primaryMenu != null)
+                    Text(
+                      primaryMenu.name,
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w700,
+                        color: AppTheme.onSurface,
+                      ),
+                    ),
                 ],
               ),
-              const SizedBox(height: 12),
-
-              // Emotion
-              if (analysis != null)
-                Text(
-                  analysis.emotion,
-                  style: AppTheme.bodyMedium.copyWith(
-                    color: AppTheme.onSurface,
-                  ),
+              Text(
+                _formatDate(history.createdAt),
+                style: const TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w600,
+                  color: AppTheme.onSurfaceVariant,
                 ),
-              const SizedBox(height: 8),
-
-              // Keywords
-              if (analysis != null && analysis.keywords.isNotEmpty)
-                Wrap(
-                  spacing: 6,
-                  runSpacing: 6,
-                  children: analysis.keywords.map((keyword) {
-                    return Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 4,
-                      ),
-                      decoration: BoxDecoration(
-                        color: AppTheme.primaryColor.withAlpha(26),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Text(
-                        keyword,
-                        style: AppTheme.labelSmall.copyWith(
-                          color: AppTheme.primaryColor,
-                        ),
-                      ),
-                    );
-                  }).toList(),
-                ),
-
-              // Recommendation reason
-              if (primaryMenu != null) ...[
-                const SizedBox(height: 12),
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: AppTheme.surfaceVariant.withAlpha(77),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Text(
-                    primaryMenu.reason,
-                    style: AppTheme.bodySmall.copyWith(
-                      color: AppTheme.onSurfaceVariant,
-                    ),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-              ],
+              ),
             ],
           ),
-        ),
+          const SizedBox(height: 12),
+
+          // Emotion
+          if (analysis != null)
+            Text(
+              analysis.emotion,
+              style: const TextStyle(
+                fontSize: 14,
+                color: AppTheme.onSurface,
+              ),
+            ),
+          const SizedBox(height: 8),
+
+          // Keywords
+          if (analysis != null && analysis.keywords.isNotEmpty)
+            Wrap(
+              spacing: 6,
+              runSpacing: 6,
+              children: analysis.keywords.map((keyword) {
+                return Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 5,
+                  ),
+                  decoration: BoxDecoration(
+                    color: AppTheme.primaryColor.withAlpha(26),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Text(
+                    keyword,
+                    style: const TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                      color: AppTheme.primaryColor,
+                    ),
+                  ),
+                );
+              }).toList(),
+            ),
+
+          // Recommendation reason
+          if (primaryMenu != null) ...[
+            const SizedBox(height: 12),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: AppTheme.surfaceVariant.withAlpha(128),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Text(
+                primaryMenu.reason,
+                style: const TextStyle(
+                  fontSize: 12,
+                  color: AppTheme.onSurfaceVariant,
+                  height: 1.5,
+                ),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+          ],
+        ],
       ),
     );
   }
