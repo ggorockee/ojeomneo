@@ -841,3 +841,209 @@ func (s *AuthService) RefreshToken(refreshTokenString string) (*AuthResponse, er
 		},
 	}, nil
 }
+
+// PasswordResetRequest 비밀번호 재설정 요청 (인증코드 발송)
+func (s *AuthService) PasswordResetRequest(email string) error {
+	// 이메일 정규화
+	email = normalizeEmail(email)
+
+	// 이메일 로그인 사용자만 확인
+	var user model.User
+	if err := s.db.Where("email = ? AND login_method = ?", email, "email").
+		First(&user).Error; err != nil {
+		// 보안상 이유로 사용자가 존재하지 않아도 성공 메시지 반환
+		s.logger.Warn("Password reset requested for non-existent email",
+			zap.String("email", email),
+		)
+		return nil
+	}
+
+	// 6자리 인증코드 생성
+	code := fmt.Sprintf("%06d", rand.Intn(1000000))
+
+	// 기존 인증코드 삭제
+	s.db.Where("email = ?", email).Delete(&model.EmailVerification{})
+
+	// 새 인증 레코드 생성 (비밀번호 재설정용)
+	verification := model.EmailVerification{
+		Email:     email,
+		Code:      code,
+		ExpiresAt: time.Now().Add(60 * time.Minute), // 비밀번호 재설정은 60분 유효
+		SendCount: 1,
+		LastSentAt: func() *time.Time {
+			now := time.Now()
+			return &now
+		}(),
+	}
+
+	if err := s.db.Create(&verification).Error; err != nil {
+		s.logger.Error("Failed to create password reset verification",
+			zap.Error(err),
+			zap.String("email", email),
+		)
+		return fmt.Errorf("인증코드 생성에 실패했습니다: %w", err)
+	}
+
+	// TODO: 실제 이메일 발송 서비스 구현 필요
+	s.logger.Info("Password reset code generated",
+		zap.String("email", email),
+		zap.String("code", code),
+	)
+	fmt.Printf("[개발용] 비밀번호 재설정 인증코드: %s -> %s\n", email, code)
+
+	return nil
+}
+
+// PasswordResetVerify 비밀번호 재설정 인증코드 확인
+func (s *AuthService) PasswordResetVerify(email, code string) (string, error) {
+	// 이메일 정규화
+	email = normalizeEmail(email)
+
+	var verification model.EmailVerification
+	err := s.db.Where("email = ? AND code = ? AND expires_at > ?", email, code, time.Now()).
+		First(&verification).Error
+
+	if err != nil {
+		// 실패 횟수 증가
+		var existingVerification model.EmailVerification
+		if err := s.db.Where("email = ?", email).First(&existingVerification).Error; err == nil {
+			s.db.Model(&existingVerification).Update("attempts", gorm.Expr("attempts + 1"))
+
+			// 5회 이상 실패 시 에러
+			if existingVerification.Attempts >= 5 {
+				s.logger.Warn("Password reset verification attempts exceeded",
+					zap.String("email", email),
+					zap.Int("attempts", existingVerification.Attempts),
+				)
+				return "", errors.New("인증 시도 횟수를 초과했습니다. 다시 요청해주세요")
+			}
+		}
+
+		s.logger.Warn("Password reset verification code invalid or expired",
+			zap.String("email", email),
+			zap.Error(err),
+		)
+		return "", errors.New("인증코드가 유효하지 않거나 만료되었습니다")
+	}
+
+	// Reset Token 생성
+	resetToken := fmt.Sprintf("reset_%s_%d_%d", email, time.Now().Unix(), rand.Intn(10000))
+	verification.VerificationToken = &resetToken
+	verification.IsVerified = true
+	verification.Attempts = 0
+
+	if err := s.db.Save(&verification).Error; err != nil {
+		s.logger.Error("Failed to update password reset verification",
+			zap.Error(err),
+			zap.String("email", email),
+		)
+		return "", fmt.Errorf("인증 처리에 실패했습니다: %w", err)
+	}
+
+	s.logger.Info("Password reset verification successful",
+		zap.String("email", email),
+	)
+
+	return resetToken, nil
+}
+
+// PasswordResetConfirm 비밀번호 재설정 확정 (새 비밀번호 설정)
+func (s *AuthService) PasswordResetConfirm(email, resetToken, newPassword string) error {
+	// 이메일 정규화
+	email = normalizeEmail(email)
+
+	// Reset Token 확인
+	var verification model.EmailVerification
+	if err := s.db.Where("email = ? AND verification_token = ? AND is_verified = ?",
+		email, resetToken, true).First(&verification).Error; err != nil {
+		s.logger.Warn("Password reset confirm failed: invalid token",
+			zap.String("email", email),
+			zap.Error(err),
+		)
+		return errors.New("유효하지 않은 재설정 토큰입니다")
+	}
+
+	// 사용자 조회
+	var user model.User
+	if err := s.db.Where("email = ? AND login_method = ?", email, "email").
+		First(&user).Error; err != nil {
+		s.logger.Warn("Password reset confirm failed: user not found",
+			zap.String("email", email),
+			zap.Error(err),
+		)
+		return errors.New("사용자를 찾을 수 없습니다")
+	}
+
+	// 새 비밀번호 해싱
+	hashedPassword, err := auth.HashPassword(newPassword)
+	if err != nil {
+		s.logger.Error("Failed to hash new password",
+			zap.Error(err),
+			zap.String("email", email),
+		)
+		return fmt.Errorf("비밀번호 처리에 실패했습니다: %w", err)
+	}
+
+	// 비밀번호 업데이트
+	user.Password = hashedPassword
+	if err := s.db.Save(&user).Error; err != nil {
+		s.logger.Error("Failed to update password",
+			zap.Error(err),
+			zap.String("email", email),
+			zap.Uint("user_id", user.ID),
+		)
+		return fmt.Errorf("비밀번호 변경에 실패했습니다: %w", err)
+	}
+
+	// 인증 레코드 삭제 (보안상 재사용 방지)
+	s.db.Delete(&verification)
+
+	s.logger.Info("Password reset successful",
+		zap.String("email", email),
+		zap.Uint("user_id", user.ID),
+	)
+
+	return nil
+}
+
+// GetMe 현재 사용자 정보 조회
+func (s *AuthService) GetMe(userID uint) (*model.User, error) {
+	var user model.User
+	if err := s.db.First(&user, userID).Error; err != nil {
+		s.logger.Warn("GetMe failed: user not found",
+			zap.Uint("user_id", userID),
+			zap.Error(err),
+		)
+		return nil, errors.New("사용자를 찾을 수 없습니다")
+	}
+
+	return &user, nil
+}
+
+// DeleteMe 회원 탈퇴 (Soft Delete)
+func (s *AuthService) DeleteMe(userID uint) error {
+	var user model.User
+	if err := s.db.First(&user, userID).Error; err != nil {
+		s.logger.Warn("DeleteMe failed: user not found",
+			zap.Uint("user_id", userID),
+			zap.Error(err),
+		)
+		return errors.New("사용자를 찾을 수 없습니다")
+	}
+
+	// Soft Delete (GORM의 DeletedAt 사용)
+	if err := s.db.Delete(&user).Error; err != nil {
+		s.logger.Error("Failed to delete user",
+			zap.Error(err),
+			zap.Uint("user_id", userID),
+		)
+		return fmt.Errorf("회원 탈퇴 처리에 실패했습니다: %w", err)
+	}
+
+	s.logger.Info("User deleted successfully",
+		zap.Uint("user_id", userID),
+		zap.String("email", user.Email),
+	)
+
+	return nil
+}
