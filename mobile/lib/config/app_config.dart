@@ -24,6 +24,15 @@ class AppConfig {
   static String get googleLoginUrl => '$apiUrl/auth/google';
   static String get appleLoginUrl => '$apiUrl/auth/apple';
   static String get kakaoLoginUrl => '$apiUrl/auth/kakao';
+  static String get emailSendCodeUrl => '$apiUrl/auth/email/send-code';
+  static String get emailVerifyCodeUrl => '$apiUrl/auth/email/verify-code';
+  static String get signupUrl => '$apiUrl/auth/signup';
+  static String get loginUrl => '$apiUrl/auth/login';
+  static String get refreshTokenUrl => '$apiUrl/auth/refresh';
+  static String get passwordResetRequestUrl => '$apiUrl/auth/password/reset-request';
+  static String get passwordResetVerifyUrl => '$apiUrl/auth/password/reset-verify';
+  static String get passwordResetConfirmUrl => '$apiUrl/auth/password/reset-confirm';
+  static String get meUrl => '$apiUrl/auth/me';
 
   // 이미지 설정
   static const int maxImageSize = 512;
