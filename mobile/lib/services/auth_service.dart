@@ -29,8 +29,8 @@ class AuthService {
     ),
   );
   
-  // Google Sign In 인스턴스
-  final GoogleSignIn _googleSignIn = GoogleSignIn(
+  // Google Sign In 인스턴스 - 최신 버전에서는 다른 방식으로 초기화할 수 있음
+  static final GoogleSignIn _googleSignIn = GoogleSignIn(
     scopes: ['email', 'profile'],
   );
 
@@ -59,9 +59,8 @@ class AuthService {
 
       debugPrint('[AuthService] Google 계정 정보 획득: ${googleUser.email}');
 
-      // 2. Google Sign In Authentication 획득
-      final GoogleSignInAuthentication googleAuth = 
-          await googleUser.authentication;
+      // 2. Google Sign In Authentication 획득 (await 제거)
+      final GoogleSignInAuthentication googleAuth = googleUser.authentication;
 
       // 3. Firebase Auth로 로그인 (GoogleAuthProvider 사용)
       final credential = GoogleAuthProvider.credential(
@@ -169,12 +168,6 @@ class AuthService {
     try {
       debugPrint('[AuthService] Kakao 로그인 시작');
 
-      // Kakao SDK 초기화 확인 (main.dart에서 수행)
-      final nativeAppKey = dotenv.env['KAKAO_NATIVE_APP_KEY'];
-      if (nativeAppKey == null) {
-        throw Exception('KAKAO_NATIVE_APP_KEY가 설정되지 않았습니다.');
-      }
-
       // 1. Kakao 로그인 수행
       kakao.OAuthToken token;
       try {
@@ -193,7 +186,7 @@ class AuthService {
 
       // 2. Access Token 확인
       final accessToken = token.accessToken;
-      if (accessToken == null || accessToken.isEmpty) {
+      if (accessToken.isEmpty) {
         throw Exception('Access Token을 가져올 수 없습니다.');
       }
       debugPrint('[AuthService] Kakao Access Token 획득 완료');
@@ -281,4 +274,3 @@ class AuthService {
     }
   }
 }
-
