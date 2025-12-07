@@ -20,6 +20,11 @@ class AppConfig {
   static String get menusUrl => '$apiUrl/menus';
   static String get menuCategoriesUrl => '$apiUrl/menus/categories';
 
+  // Auth Endpoints
+  static String get googleLoginUrl => '$apiUrl/auth/google';
+  static String get appleLoginUrl => '$apiUrl/auth/apple';
+  static String get kakaoLoginUrl => '$apiUrl/auth/kakao';
+
   // 이미지 설정
   static const int maxImageSize = 512;
   static const int imageQuality = 85;

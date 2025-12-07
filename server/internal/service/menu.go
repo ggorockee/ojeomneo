@@ -3,19 +3,25 @@ package service
 import (
 	"context"
 	"strings"
+	"time"
 
 	"github.com/ggorockee/ojeomneo/server/internal/model"
+	"go.uber.org/zap"
 	"gorm.io/gorm"
 )
 
 // MenuService 메뉴 서비스
 type MenuService struct {
-	db *gorm.DB
+	db     *gorm.DB
+	logger *zap.Logger
 }
 
 // NewMenuService 새 메뉴 서비스 생성
-func NewMenuService(db *gorm.DB) *MenuService {
-	return &MenuService{db: db}
+func NewMenuService(db *gorm.DB, logger *zap.Logger) *MenuService {
+	return &MenuService{
+		db:     db,
+		logger: logger,
+	}
 }
 
 // GetByID ID로 메뉴 조회
@@ -29,6 +35,15 @@ func (s *MenuService) GetByID(ctx context.Context, id uint) (*model.Menu, error)
 
 // List 메뉴 목록 조회
 func (s *MenuService) List(ctx context.Context, category string, tag string, page, limit int) ([]model.Menu, int64, error) {
+	start := time.Now()
+
+	s.logger.Debug("Menu list query",
+		zap.String("category", category),
+		zap.String("tag", tag),
+		zap.Int("page", page),
+		zap.Int("limit", limit),
+	)
+
 	var menus []model.Menu
 	var total int64
 
@@ -49,6 +64,11 @@ func (s *MenuService) List(ctx context.Context, category string, tag string, pag
 
 	// 전체 개수 조회
 	if err := query.Count(&total).Error; err != nil {
+		s.logger.Error("Menu list count failed",
+			zap.Error(err),
+			zap.String("category", category),
+			zap.String("tag", tag),
+		)
 		return nil, 0, err
 	}
 
@@ -56,8 +76,25 @@ func (s *MenuService) List(ctx context.Context, category string, tag string, pag
 	offset := (page - 1) * limit
 	if err := query.Preload("Images", "is_primary = ?", true).
 		Offset(offset).Limit(limit).Order("name ASC").Find(&menus).Error; err != nil {
+		s.logger.Error("Menu list query failed",
+			zap.Error(err),
+			zap.String("category", category),
+			zap.String("tag", tag),
+			zap.Int("page", page),
+			zap.Int("limit", limit),
+		)
 		return nil, 0, err
 	}
+
+	s.logger.Debug("Menu list completed",
+		zap.String("category", category),
+		zap.String("tag", tag),
+		zap.Int("page", page),
+		zap.Int("limit", limit),
+		zap.Int64("total", total),
+		zap.Int("count", len(menus)),
+		zap.Duration("duration", time.Since(start)),
+	)
 
 	// 대표 이미지 URL 채우기
 	s.fillPrimaryImageURLs(menus)

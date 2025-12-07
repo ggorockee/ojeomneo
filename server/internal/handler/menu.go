@@ -1,7 +1,10 @@
 package handler
 
 import (
+	"time"
+
 	"github.com/gofiber/fiber/v2"
+	"go.uber.org/zap"
 
 	"github.com/ggorockee/ojeomneo/server/internal/service"
 )
@@ -9,12 +12,14 @@ import (
 // MenuHandler 메뉴 핸들러
 type MenuHandler struct {
 	menuService *service.MenuService
+	logger      *zap.Logger
 }
 
 // NewMenuHandler 새 메뉴 핸들러 생성
-func NewMenuHandler(menuService *service.MenuService) *MenuHandler {
+func NewMenuHandler(menuService *service.MenuService, logger *zap.Logger) *MenuHandler {
 	return &MenuHandler{
 		menuService: menuService,
+		logger:      logger,
 	}
 }
 
@@ -31,6 +36,8 @@ func NewMenuHandler(menuService *service.MenuService) *MenuHandler {
 // @Success 200 {object} map[string]interface{}
 // @Router /menus [get]
 func (h *MenuHandler) List(c *fiber.Ctx) error {
+	start := time.Now()
+	
 	category := c.Query("category")
 	tag := c.Query("tag")
 	page := c.QueryInt("page", 1)
@@ -44,12 +51,36 @@ func (h *MenuHandler) List(c *fiber.Ctx) error {
 	}
 
 	menus, total, err := h.menuService.List(c.Context(), category, tag, page, limit)
+	duration := time.Since(start)
+	
 	if err != nil {
+		go func() {
+			h.logger.Error("Menu list failed",
+				zap.Error(err),
+				zap.String("category", category),
+				zap.String("tag", tag),
+				zap.Int("page", page),
+				zap.Duration("duration", duration),
+			)
+		}()
+		
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"success": false,
 			"error":   err.Error(),
 		})
 	}
+
+	go func() {
+		h.logger.Debug("Menu list completed",
+			zap.String("category", category),
+			zap.String("tag", tag),
+			zap.Int("page", page),
+			zap.Int("limit", limit),
+			zap.Int64("total", total),
+			zap.Int("count", len(menus)),
+			zap.Duration("duration", duration),
+		)
+	}()
 
 	// 응답 변환
 	items := make([]map[string]interface{}, len(menus))

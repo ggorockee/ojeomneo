@@ -1,8 +1,11 @@
 package handler
 
 import (
+	"time"
+
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
+	"go.uber.org/zap"
 
 	"github.com/ggorockee/ojeomneo/server/internal/service"
 )
@@ -10,12 +13,14 @@ import (
 // SketchHandler 스케치 핸들러
 type SketchHandler struct {
 	sketchService *service.SketchService
+	logger        *zap.Logger
 }
 
 // NewSketchHandler 새 스케치 핸들러 생성
-func NewSketchHandler(sketchService *service.SketchService) *SketchHandler {
+func NewSketchHandler(sketchService *service.SketchService, logger *zap.Logger) *SketchHandler {
 	return &SketchHandler{
 		sketchService: sketchService,
+		logger:        logger,
 	}
 }
 
@@ -39,9 +44,14 @@ type AnalyzeRequest struct {
 // @Failure 500 {object} map[string]interface{}
 // @Router /sketch/analyze [post]
 func (h *SketchHandler) Analyze(c *fiber.Ctx) error {
+	start := time.Now()
+	
 	// 디바이스 ID 확인
 	deviceID := c.FormValue("device_id")
 	if deviceID == "" {
+		h.logger.Warn("Sketch analyze missing device_id",
+			zap.String("ip", c.IP()),
+		)
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"success": false,
 			"error":   "device_id is required",
@@ -51,6 +61,11 @@ func (h *SketchHandler) Analyze(c *fiber.Ctx) error {
 	// 이미지 파일 확인
 	file, err := c.FormFile("image")
 	if err != nil {
+		h.logger.Warn("Sketch analyze missing image file",
+			zap.String("device_id", deviceID),
+			zap.String("ip", c.IP()),
+			zap.Error(err),
+		)
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"success": false,
 			"error":   "image file is required",
@@ -59,6 +74,11 @@ func (h *SketchHandler) Analyze(c *fiber.Ctx) error {
 
 	// 파일 크기 확인 (5MB)
 	if file.Size > 5*1024*1024 {
+		h.logger.Warn("Sketch analyze file too large",
+			zap.String("device_id", deviceID),
+			zap.Int64("file_size", file.Size),
+			zap.String("ip", c.IP()),
+		)
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"success": false,
 			"error":   "image file too large (max 5MB)",
@@ -68,6 +88,10 @@ func (h *SketchHandler) Analyze(c *fiber.Ctx) error {
 	// 파일 열기
 	f, err := file.Open()
 	if err != nil {
+		h.logger.Error("Sketch analyze failed to open file",
+			zap.String("device_id", deviceID),
+			zap.Error(err),
+		)
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"success": false,
 			"error":   "failed to read image file",
@@ -78,6 +102,10 @@ func (h *SketchHandler) Analyze(c *fiber.Ctx) error {
 	// 이미지 데이터 읽기
 	imageData := make([]byte, file.Size)
 	if _, err := f.Read(imageData); err != nil {
+		h.logger.Error("Sketch analyze failed to read image data",
+			zap.String("device_id", deviceID),
+			zap.Error(err),
+		)
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"success": false,
 			"error":   "failed to read image data",
@@ -91,13 +119,56 @@ func (h *SketchHandler) Analyze(c *fiber.Ctx) error {
 		DeviceID:  deviceID,
 	}
 
+	h.logger.Debug("Starting sketch analysis",
+		zap.String("device_id", deviceID),
+		zap.Int64("image_size", file.Size),
+		zap.String("has_text", func() string {
+			if req.InputText != "" {
+				return "yes"
+			}
+			return "no"
+		}()),
+	)
+
 	result, err := h.sketchService.Analyze(c.Context(), req)
+	duration := time.Since(start)
+	
 	if err != nil {
+		// 비동기로 에러 로깅 (goroutine 사용)
+		go func() {
+			h.logger.Error("Sketch analyze failed",
+				zap.Error(err),
+				zap.String("device_id", deviceID),
+				zap.Duration("duration", duration),
+				zap.String("ip", c.IP()),
+			)
+		}()
+		
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"success": false,
 			"error":   err.Error(),
 		})
 	}
+
+	// 비동기로 성공 로깅 (goroutine 사용)
+	go func() {
+		h.logger.Info("Sketch analyze completed",
+			zap.String("device_id", deviceID),
+			zap.String("sketch_id", result.SketchID.String()),
+			zap.Duration("duration", duration),
+			zap.String("ip", c.IP()),
+			zap.Int("recommendation_count", func() int {
+				if result.Recommendation != nil {
+					count := 1 // primary
+					if result.Recommendation.Alternatives != nil {
+						count += len(result.Recommendation.Alternatives)
+					}
+					return count
+				}
+				return 0
+			}()),
+		)
+	}()
 
 	return c.JSON(fiber.Map{
 		"success": true,
@@ -124,8 +195,13 @@ type HistoryQuery struct {
 // @Failure 400 {object} map[string]interface{}
 // @Router /sketch/history [get]
 func (h *SketchHandler) GetHistory(c *fiber.Ctx) error {
+	start := time.Now()
+	
 	deviceID := c.Query("device_id")
 	if deviceID == "" {
+		h.logger.Warn("Get history missing device_id",
+			zap.String("ip", c.IP()),
+		)
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"success": false,
 			"error":   "device_id is required",
@@ -149,12 +225,35 @@ func (h *SketchHandler) GetHistory(c *fiber.Ctx) error {
 	// if userIDStr != "" { userID = parseUserID(userIDStr) }
 
 	sketches, total, err := h.sketchService.GetHistory(c.Context(), deviceID, userID, page, limit)
+	duration := time.Since(start)
+	
 	if err != nil {
+		go func() {
+			h.logger.Error("Get history failed",
+				zap.Error(err),
+				zap.String("device_id", deviceID),
+				zap.Int("page", page),
+				zap.Int("limit", limit),
+				zap.Duration("duration", duration),
+			)
+		}()
+		
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"success": false,
 			"error":   err.Error(),
 		})
 	}
+
+	go func() {
+		h.logger.Info("Get history completed",
+			zap.String("device_id", deviceID),
+			zap.Int("page", page),
+			zap.Int("limit", limit),
+			zap.Int64("total", total),
+			zap.Int("count", len(sketches)),
+			zap.Duration("duration", duration),
+		)
+	}()
 
 	// 응답 변환: Menu의 image_url이 제대로 포함되도록 처리
 	items := make([]fiber.Map, len(sketches))
@@ -222,9 +321,16 @@ func (h *SketchHandler) GetHistory(c *fiber.Ctx) error {
 // @Failure 404 {object} map[string]interface{}
 // @Router /sketch/{id} [get]
 func (h *SketchHandler) GetByID(c *fiber.Ctx) error {
+	start := time.Now()
+	
 	idStr := c.Params("id")
 	id, err := uuid.Parse(idStr)
 	if err != nil {
+		h.logger.Warn("Get sketch by id invalid UUID",
+			zap.String("id", idStr),
+			zap.String("ip", c.IP()),
+			zap.Error(err),
+		)
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"success": false,
 			"error":   "invalid sketch id",
@@ -232,12 +338,29 @@ func (h *SketchHandler) GetByID(c *fiber.Ctx) error {
 	}
 
 	sketch, err := h.sketchService.GetByID(c.Context(), id)
+	duration := time.Since(start)
+	
 	if err != nil {
+		go func() {
+			h.logger.Warn("Get sketch by id not found",
+				zap.String("sketch_id", id.String()),
+				zap.Error(err),
+				zap.Duration("duration", duration),
+			)
+		}()
+		
 		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
 			"success": false,
 			"error":   "sketch not found",
 		})
 	}
+
+	go func() {
+		h.logger.Debug("Get sketch by id completed",
+			zap.String("sketch_id", id.String()),
+			zap.Duration("duration", duration),
+		)
+	}()
 
 	return c.JSON(fiber.Map{
 		"success": true,
