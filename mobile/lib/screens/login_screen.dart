@@ -4,6 +4,8 @@ import 'dart:io';
 
 import '../config/app_theme.dart';
 import '../services/auth_service.dart';
+import 'auth/password_reset_screen.dart';
+import 'auth/sign_up_screen.dart';
 
 /// 로그인 화면
 /// 참고 앱의 로그인 화면을 기반으로 제작
@@ -615,8 +617,12 @@ class _LoginScreenState extends State<LoginScreen> {
       alignment: Alignment.centerRight,
       child: GestureDetector(
         onTap: () {
-          // TODO: 비밀번호 찾기 화면 구현 (ForgotPasswordScreen)
-          _showMessage('비밀번호 찾기는 준비 중입니다.');
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => const PasswordResetScreen(),
+            ),
+          );
         },
         child: Text(
           '비밀번호 찾기',
@@ -650,8 +656,12 @@ class _LoginScreenState extends State<LoginScreen> {
           SizedBox(width: 4.w),
           GestureDetector(
             onTap: () {
-              // TODO: 회원가입 화면 구현 (SignUpScreen)
-              _showMessage('회원가입은 준비 중입니다.');
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const SignUpScreen(),
+                ),
+              );
             },
             child: Text(
               '회원가입',
