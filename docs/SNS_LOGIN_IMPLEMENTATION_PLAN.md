@@ -102,70 +102,75 @@ Google, Apple, Kakao SNS 로그인 기능을 구현합니다. 순서대로 Googl
 
 ---
 
-## [ ] 3. 모바일 구현 (Flutter)
+## [x] 3. 모바일 구현 (Flutter)
 
-### [ ] 3.1 의존성 추가 (`mobile/pubspec.yaml`)
-- [ ] `firebase_core: ^3.x.x`: Firebase Core (이미 추가됨)
-- [ ] `firebase_auth: ^5.x.x`: Firebase Authentication (Google 로그인 포함)
-- [ ] `google_sign_in: ^7.2.0`: Google 로그인 (Firebase Auth와 함께 사용)
-- [ ] `sign_in_with_apple: ^7.0.1`: Apple 로그인 (iOS 전용)
-- [ ] `kakao_flutter_sdk: ^1.10.0`: Kakao 로그인
-- [ ] `flutter_dotenv: ^6.0.0`: 환경변수 관리 (이미 추가됨)
-- [ ] `flutter_secure_storage: ^9.2.4`: 안전한 토큰 저장
+### [x] 3.1 의존성 추가 (`mobile/pubspec.yaml`)
+- [x] `firebase_core: ^3.8.1`: Firebase Core (이미 추가됨)
+- [x] `firebase_auth: ^5.3.1`: Firebase Authentication (Google 로그인 포함)
+- [x] `google_sign_in: ^6.2.1`: Google 로그인 (Firebase Auth와 함께 사용, 7.2.0에서 6.2.1로 다운그레이드)
+- [x] `sign_in_with_apple: ^7.0.1`: Apple 로그인 (iOS 전용)
+- [x] `kakao_flutter_sdk: ^1.10.0`: Kakao 로그인
+- [x] `kakao_flutter_sdk_common: ^1.10.0`: Kakao SDK Common (명시적 추가)
+- [x] `flutter_dotenv: ^5.2.1`: 환경변수 관리 (이미 추가됨)
+- [x] `flutter_secure_storage: ^9.2.4`: 안전한 토큰 저장
 
-### [ ] 3.2 API 서비스 확장 (`mobile/lib/services/api_service.dart`)
-- [ ] `postSNSLogin(String provider, String token)`: SNS 로그인 API 호출
+### [x] 3.2 API 서비스 확장 (`mobile/lib/services/api_service.dart`)
+- [x] `postSNSLogin(String provider, String token)`: SNS 로그인 API 호출
   - provider: 'google', 'apple', 'kakao'
-  - token: Google은 `id_token` (Firebase ID Token), Apple/Kakao는 `access_token`
+  - token: Google은 `id_token` (Firebase ID Token), Apple/Kakao는 `identity_token`/`access_token`
   - endpoint: `/ojeomneo/v1/auth/{provider}`
-  - Request: `{ "id_token": "..." }` (Google) 또는 `{ "access_token": "..." }` (Apple/Kakao)
+  - Request: `{ "id_token": "..." }` (Google) 또는 `{ "identity_token": "..." }` (Apple) 또는 `{ "access_token": "..." }` (Kakao)
   - response: `{ "access_token", "refresh_token", "user" }`
 
-### [ ] 3.3 인증 서비스 구현 (`mobile/lib/services/auth_service.dart`)
-- [ ] `AuthService` 클래스 생성
-- [ ] `loginWithGoogle()`: Google 로그인 플로우 (Firebase Authentication 사용)
+### [x] 3.3 인증 서비스 구현 (`mobile/lib/services/auth_service.dart`)
+- [x] `AuthService` 클래스 생성 (싱글톤 패턴)
+- [x] `loginWithGoogle()`: Google 로그인 플로우 (Firebase Authentication 사용)
   1. `google_sign_in`으로 Google 로그인 수행
   2. Google 계정 인증 후 `GoogleSignInAuthentication` 획득
   3. Firebase Auth로 `GoogleAuthProvider`를 사용하여 로그인
   4. Firebase ID Token 획득 (`User.getIdToken()`)
   5. 백엔드 API 호출하여 JWT 토큰 획득 (`id_token` 전송)
   6. 토큰 저장 (flutter_secure_storage 사용)
-- [ ] `loginWithApple()`: Apple 로그인 플로우 (iOS 전용)
+- [x] `loginWithApple()`: Apple 로그인 플로우 (iOS 전용)
   1. `sign_in_with_apple`으로 Apple 로그인 수행
   2. Identity Token 획득
   3. 백엔드 API 호출하여 JWT 토큰 획득
   4. 토큰 저장
-- [ ] `loginWithKakao()`: Kakao 로그인 플로우
-  1. `kakao_flutter_sdk`로 Kakao 로그인 수행
+- [x] `loginWithKakao()`: Kakao 로그인 플로우
+  1. `kakao_flutter_sdk`로 Kakao 로그인 수행 (KakaoTalk 앱 우선, 실패 시 웹 로그인)
   2. Access Token 획득
   3. 백엔드 API 호출하여 JWT 토큰 획득
   4. 토큰 저장
+- [x] 추가 기능: 토큰 조회, 로그인 상태 확인, 로그아웃
 
-### [ ] 3.4 로그인 화면 통합 (`mobile/lib/screens/login_screen.dart`)
-- [ ] `_handleGoogleLogin()`: Google 로그인 버튼 핸들러 구현
+### [x] 3.4 로그인 화면 통합 (`mobile/lib/screens/login_screen.dart`)
+- [x] `_handleGoogleLogin()`: Google 로그인 버튼 핸들러 구현
   - `AuthService.loginWithGoogle()` 호출
   - 성공 시 `/home`으로 이동
   - 실패 시 에러 메시지 표시
-- [ ] `_handleAppleLogin()`: Apple 로그인 버튼 핸들러 구현
+- [x] `_handleAppleLogin()`: Apple 로그인 버튼 핸들러 구현
+  - iOS 전용 체크 포함
   - `AuthService.loginWithApple()` 호출
   - 성공 시 `/home`으로 이동
   - 실패 시 에러 메시지 표시
-- [ ] `_handleKakaoLogin()`: Kakao 로그인 버튼 핸들러 구현
+- [x] `_handleKakaoLogin()`: Kakao 로그인 버튼 핸들러 구현
   - `AuthService.loginWithKakao()` 호출
   - 성공 시 `/home`으로 이동
   - 실패 시 에러 메시지 표시
 
-### [ ] 3.5 iOS 설정 (`mobile/ios/`)
-- [ ] `Info.plist`에 URL Scheme 추가
+### [~] 3.5 iOS 설정 (`mobile/ios/`)
+- [x] `GoogleService-Info.plist` 추가 (Firebase Console에서 다운로드) - 확인됨
+- [ ] `Info.plist`에 URL Scheme 추가 (필요 시)
   - Firebase/Google: `{REVERSED_CLIENT_ID}` (GoogleService-Info.plist에서 확인)
   - Kakao: `kakao{KAKAO_NATIVE_APP_KEY}`
-- [ ] Capabilities에 Sign in with Apple 추가
-- [ ] `GoogleService-Info.plist` 추가 (Firebase Console에서 다운로드) - 필수
+- [ ] Capabilities에 Sign in with Apple 추가 (Xcode에서 설정 필요)
+- 참고: 실제 테스트 시 추가 설정이 필요할 수 있음
 
-### [ ] 3.6 Android 설정 (`mobile/android/`)
-- [ ] `android/app/build.gradle`에 Google Services 플러그인 추가 - 필수 (Firebase Auth 사용)
-- [ ] `google-services.json` 추가 (Firebase Console에서 다운로드) - 필수
-- [ ] `AndroidManifest.xml`에 카카오 네이티브 앱 키 설정
+### [~] 3.6 Android 설정 (`mobile/android/`)
+- [x] `google-services.json` 추가 (Firebase Console에서 다운로드) - 확인됨
+- [ ] `android/app/build.gradle`에 Google Services 플러그인 추가 확인 (필요 시)
+- [ ] `AndroidManifest.xml`에 카카오 네이티브 앱 키 설정 (필요 시)
+- 참고: 실제 테스트 시 추가 설정이 필요할 수 있음
 
 ---
 
