@@ -6,19 +6,22 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"go.uber.org/zap"
 
+	"github.com/ggorockee/ojeomneo/server/internal/config"
 	"github.com/ggorockee/ojeomneo/server/internal/service"
 )
 
 // AuthHandler 인증 핸들러
 type AuthHandler struct {
 	authService *service.AuthService
+	cfg         *config.Config
 	logger      *zap.Logger
 }
 
 // NewAuthHandler 새 인증 핸들러 생성
-func NewAuthHandler(authService *service.AuthService, logger *zap.Logger) *AuthHandler {
+func NewAuthHandler(authService *service.AuthService, cfg *config.Config, logger *zap.Logger) *AuthHandler {
 	return &AuthHandler{
 		authService: authService,
+		cfg:         cfg,
 		logger:      logger,
 	}
 }

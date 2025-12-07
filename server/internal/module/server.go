@@ -136,6 +136,21 @@ func ServerModule() fx.Option {
 				v1.Get("/healthcheck/ready", params.HealthHandler.ReadinessCheck)
 
 				// Auth 엔드포인트
+				// 이메일 인증
+				v1.Post("/auth/email/send-code", params.AuthHandler.SendEmailCode)
+				v1.Post("/auth/email/verify-code", params.AuthHandler.VerifyEmailCode)
+				// 회원가입/로그인
+				v1.Post("/auth/signup", params.AuthHandler.Signup)
+				v1.Post("/auth/login", params.AuthHandler.Login)
+				v1.Post("/auth/refresh", params.AuthHandler.RefreshToken)
+				// 비밀번호 재설정
+				v1.Post("/auth/password/reset-request", params.AuthHandler.PasswordResetRequest)
+				v1.Post("/auth/password/reset-verify", params.AuthHandler.PasswordResetVerify)
+				v1.Post("/auth/password/reset-confirm", params.AuthHandler.PasswordResetConfirm)
+				// 사용자 관리
+				v1.Get("/auth/me", params.AuthHandler.GetMe)
+				v1.Delete("/auth/me", params.AuthHandler.DeleteMe)
+				// SNS 로그인
 				v1.Post("/auth/google", params.AuthHandler.GoogleLogin)
 				v1.Post("/auth/apple", params.AuthHandler.AppleLogin)
 				v1.Post("/auth/kakao", params.AuthHandler.KakaoLogin)

@@ -1,6 +1,7 @@
 package module
 
 import (
+	"github.com/ggorockee/ojeomneo/server/internal/config"
 	"github.com/ggorockee/ojeomneo/server/internal/handler"
 	"github.com/ggorockee/ojeomneo/server/internal/service"
 	"github.com/ggorockee/ojeomneo/server/internal/service/cloudflare"
@@ -30,8 +31,8 @@ func HandlerModule() fx.Option {
 			func(cfImages *cloudflare.ImagesClient, logger *zap.Logger) *handler.ImageHandler {
 				return handler.NewImageHandler(cfImages, logger)
 			},
-			func(authService *service.AuthService, logger *zap.Logger) *handler.AuthHandler {
-				return handler.NewAuthHandler(authService, logger)
+			func(authService *service.AuthService, cfg *config.Config, logger *zap.Logger) *handler.AuthHandler {
+				return handler.NewAuthHandler(authService, cfg, logger)
 			},
 		),
 	)
