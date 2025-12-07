@@ -53,6 +53,7 @@ dependencies:
   google_sign_in: ^6.2.1
   sign_in_with_apple: ^7.0.1
   kakao_flutter_sdk: ^1.10.0
+  kakao_flutter_sdk_common: ^1.10.0
 
   # Secure Storage
   flutter_secure_storage: ^9.2.4

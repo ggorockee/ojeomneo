@@ -8,6 +8,7 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"go.uber.org/zap"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 
@@ -69,8 +70,9 @@ func setupApp(t *testing.T) (*fiber.App, *gorm.DB) {
 	db := setupTestDB(t)
 	createTestMenus(t, db)
 
-	menuService := service.NewMenuService(db)
-	menuHandler := NewMenuHandler(menuService)
+	logger := zap.NewNop()
+	menuService := service.NewMenuService(db, logger)
+	menuHandler := NewMenuHandler(menuService, logger)
 
 	app := fiber.New()
 	app.Get("/menus", menuHandler.List)

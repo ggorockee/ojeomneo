@@ -13,6 +13,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"go.uber.org/zap"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 
@@ -96,10 +97,11 @@ func setupSketchTestDB(t *testing.T) *gorm.DB {
 func setupSketchApp(t *testing.T) (*fiber.App, *gorm.DB) {
 	db := setupSketchTestDB(t)
 
+	logger := zap.NewNop()
 	llmClient := llm.NewClient("", "gpt-4o-mini") // Mock 클라이언트
-	menuService := service.NewMenuService(db)
-	sketchService := service.NewSketchService(db, llmClient, menuService)
-	sketchHandler := NewSketchHandler(sketchService)
+	menuService := service.NewMenuService(db, logger)
+	sketchService := service.NewSketchService(db, llmClient, menuService, logger)
+	sketchHandler := NewSketchHandler(sketchService, logger)
 
 	app := fiber.New()
 	app.Post("/sketch/analyze", sketchHandler.Analyze)
