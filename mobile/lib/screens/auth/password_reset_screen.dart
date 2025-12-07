@@ -4,7 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../config/app_theme.dart';
 import '../../services/auth_service.dart';
-import 'login_screen.dart';
+import '../login_screen.dart';
 
 /// 비밀번호 찾기 화면
 class PasswordResetScreen extends StatefulWidget {
