@@ -489,7 +489,6 @@ class _GradientButton extends StatelessWidget {
           gradient: isEnabled ? AppTheme.primaryGradient : null,
           color: isEnabled ? null : AppTheme.buttonDisabled,
           borderRadius: BorderRadius.circular(16),
-          boxShadow: isEnabled ? AppTheme.primaryButtonShadow : null,
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,

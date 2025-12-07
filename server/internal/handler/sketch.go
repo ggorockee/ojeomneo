@@ -150,10 +150,50 @@ func (h *SketchHandler) GetHistory(c *fiber.Ctx) error {
 		})
 	}
 
+	// 응답 변환: Menu의 image_url이 제대로 포함되도록 처리
+	items := make([]fiber.Map, len(sketches))
+	for i, sketch := range sketches {
+		// recommendations 변환
+		recommendations := make([]fiber.Map, len(sketch.Recommendations))
+		for j, rec := range sketch.Recommendations {
+			recMap := fiber.Map{
+				"id":         rec.ID,
+				"sketch_id":  rec.SketchID,
+				"menu_id":    rec.MenuID,
+				"reason":     rec.Reason,
+				"rank":       rec.Rank,
+				"created_at": rec.CreatedAt,
+			}
+			// Menu가 있으면 image_url 포함하여 추가
+			if rec.Menu != nil {
+				recMap["menu"] = fiber.Map{
+					"id":             rec.Menu.ID,
+					"name":           rec.Menu.Name,
+					"category":       rec.Menu.Category,
+					"image_url":      rec.Menu.ImageURL,
+					"emotion_tags":   rec.Menu.EmotionTags,
+					"situation_tags": rec.Menu.SituationTags,
+					"attribute_tags": rec.Menu.AttributeTags,
+				}
+			}
+			recommendations[j] = recMap
+		}
+
+		items[i] = fiber.Map{
+			"id":              sketch.ID,
+			"device_id":       sketch.DeviceID,
+			"image_path":      sketch.ImagePath,
+			"input_text":      sketch.InputText,
+			"created_at":      sketch.CreatedAt,
+			"analysis_result": sketch.AnalysisResult,
+			"recommendations": recommendations,
+		}
+	}
+
 	return c.JSON(fiber.Map{
 		"success": true,
 		"data": fiber.Map{
-			"items": sketches,
+			"items": items,
 			"pagination": fiber.Map{
 				"page":       page,
 				"limit":      limit,

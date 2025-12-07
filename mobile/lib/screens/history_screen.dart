@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 
 import '../config/app_theme.dart';
 import '../models/sketch_result.dart';
 import '../services/sketch_provider.dart';
 import '../utils/app_messages.dart';
+import 'result_screen.dart';
 
 class HistoryScreen extends StatefulWidget {
   const HistoryScreen({super.key});
@@ -98,10 +100,38 @@ class _HistoryScreenState extends State<HistoryScreen> {
                   );
                 }
 
+                final history = provider.history[index];
+                // 디버그: 히스토리 데이터 확인
+                debugPrint('[HistoryScreen] history[$index]: id=${history.id}, recommendation=${history.recommendation != null}, analysis=${history.analysis != null}');
+                if (history.recommendation != null) {
+                  debugPrint('[HistoryScreen] recommendation.primary: name=${history.recommendation!.primary.name}, imageUrl=${history.recommendation!.primary.imageUrl}, category=${history.recommendation!.primary.category}');
+                } else {
+                  debugPrint('[HistoryScreen] recommendation is NULL!');
+                }
                 return Padding(
                   padding: const EdgeInsets.only(bottom: 12),
                   child: _HistoryCard(
-                    history: provider.history[index],
+                    history: history,
+                    onTap: () {
+                      debugPrint('[HistoryScreen] Card tapped! id=${history.id}');
+                      // 히스토리 클릭 시 결과 화면으로 이동
+                      if (history.recommendation != null && history.analysis != null) {
+                        debugPrint('[HistoryScreen] Navigating to ResultScreen...');
+                        final sketchResult = SketchResult(
+                          sketchId: history.id,
+                          analysis: history.analysis!,
+                          recommendation: history.recommendation!,
+                          createdAt: history.createdAt,
+                        );
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (context) => ResultScreen(result: sketchResult),
+                          ),
+                        );
+                      } else {
+                        debugPrint('[HistoryScreen] Cannot navigate: recommendation=${history.recommendation != null}, analysis=${history.analysis != null}');
+                      }
+                    },
                   ),
                 );
               },
@@ -156,7 +186,6 @@ class _EmptyState extends StatelessWidget {
                 decoration: BoxDecoration(
                   gradient: AppTheme.primaryGradient,
                   borderRadius: BorderRadius.circular(14),
-                  boxShadow: AppTheme.primaryButtonShadow,
                 ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
@@ -184,8 +213,9 @@ class _EmptyState extends StatelessWidget {
 
 class _HistoryCard extends StatelessWidget {
   final SketchHistory history;
+  final VoidCallback? onTap;
 
-  const _HistoryCard({required this.history});
+  const _HistoryCard({required this.history, this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -193,111 +223,197 @@ class _HistoryCard extends StatelessWidget {
     final recommendation = history.recommendation;
     final primaryMenu = recommendation?.primary;
 
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: AppTheme.cardBackground,
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Header row
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Row(
-                children: [
-                  Text(
-                    analysis?.moodEmoji ?? '🍽️',
-                    style: const TextStyle(fontSize: 20),
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: AppTheme.cardBackground,
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Header row
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Expanded(
+                  child: Row(
+                    children: [
+                      // 메뉴 이미지 또는 카테고리 아이콘
+                      Container(
+                        width: 48,
+                        height: 48,
+                        decoration: BoxDecoration(
+                          color: AppTheme.surfaceVariant,
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        clipBehavior: Clip.antiAlias,
+                        child: _buildMenuImage(primaryMenu?.imageUrl, primaryMenu?.category),
+                      ),
+                      const SizedBox(width: 12),
+                      if (primaryMenu != null)
+                        Flexible(
+                          child: Text(
+                            primaryMenu.name,
+                            style: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w700,
+                              color: AppTheme.onSurface,
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                    ],
                   ),
-                  const SizedBox(width: 8),
-                  if (primaryMenu != null)
+                ),
+                Row(
+                  children: [
                     Text(
-                      primaryMenu.name,
+                      _formatDate(history.createdAt),
                       style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w700,
-                        color: AppTheme.onSurface,
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
+                        color: AppTheme.onSurfaceVariant,
                       ),
                     ),
-                ],
-              ),
+                    const SizedBox(width: 4),
+                    const Icon(
+                      Icons.chevron_right_rounded,
+                      color: AppTheme.textDisabled,
+                      size: 18,
+                    ),
+                  ],
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+
+            // Emotion
+            if (analysis != null)
               Text(
-                _formatDate(history.createdAt),
+                analysis.emotion,
                 style: const TextStyle(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w600,
-                  color: AppTheme.onSurfaceVariant,
+                  fontSize: 14,
+                  color: AppTheme.onSurface,
+                ),
+              ),
+            const SizedBox(height: 8),
+
+            // Keywords
+            if (analysis != null && analysis.keywords.isNotEmpty)
+              Wrap(
+                spacing: 6,
+                runSpacing: 6,
+                children: analysis.keywords.map((keyword) {
+                  return Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 5,
+                    ),
+                    decoration: BoxDecoration(
+                      color: AppTheme.primaryColor.withAlpha(26),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Text(
+                      keyword,
+                      style: const TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
+                        color: AppTheme.primaryColor,
+                      ),
+                    ),
+                  );
+                }).toList(),
+              ),
+
+            // Recommendation reason
+            if (primaryMenu != null) ...[
+              const SizedBox(height: 12),
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: AppTheme.surfaceVariant.withAlpha(128),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Text(
+                  primaryMenu.reason,
+                  style: const TextStyle(
+                    fontSize: 12,
+                    color: AppTheme.onSurfaceVariant,
+                    height: 1.5,
+                  ),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
                 ),
               ),
             ],
-          ),
-          const SizedBox(height: 12),
-
-          // Emotion
-          if (analysis != null)
-            Text(
-              analysis.emotion,
-              style: const TextStyle(
-                fontSize: 14,
-                color: AppTheme.onSurface,
-              ),
-            ),
-          const SizedBox(height: 8),
-
-          // Keywords
-          if (analysis != null && analysis.keywords.isNotEmpty)
-            Wrap(
-              spacing: 6,
-              runSpacing: 6,
-              children: analysis.keywords.map((keyword) {
-                return Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 10,
-                    vertical: 5,
-                  ),
-                  decoration: BoxDecoration(
-                    color: AppTheme.primaryColor.withAlpha(26),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Text(
-                    keyword,
-                    style: const TextStyle(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w600,
-                      color: AppTheme.primaryColor,
-                    ),
-                  ),
-                );
-              }).toList(),
-            ),
-
-          // Recommendation reason
-          if (primaryMenu != null) ...[
-            const SizedBox(height: 12),
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: AppTheme.surfaceVariant.withAlpha(128),
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: Text(
-                primaryMenu.reason,
-                style: const TextStyle(
-                  fontSize: 12,
-                  color: AppTheme.onSurfaceVariant,
-                  height: 1.5,
-                ),
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-              ),
-            ),
           ],
-        ],
+        ),
       ),
     );
+  }
+
+  Widget _buildMenuImage(String? imageUrl, String? category) {
+    if (imageUrl != null && imageUrl.isNotEmpty) {
+      return CachedNetworkImage(
+        imageUrl: imageUrl,
+        fit: BoxFit.cover,
+        placeholder: (context, url) => Container(
+          color: AppTheme.surfaceVariant,
+          child: Center(
+            child: Icon(
+              _getCategoryIcon(category),
+              size: 24,
+              color: AppTheme.primaryColor.withAlpha(128),
+            ),
+          ),
+        ),
+        errorWidget: (context, url, error) => Container(
+          color: AppTheme.surfaceVariant,
+          child: Center(
+            child: Icon(
+              _getCategoryIcon(category),
+              size: 24,
+              color: AppTheme.primaryColor,
+            ),
+          ),
+        ),
+      );
+    }
+
+    return Container(
+      color: AppTheme.primaryColor.withAlpha(26),
+      child: Center(
+        child: Icon(
+          _getCategoryIcon(category),
+          size: 24,
+          color: AppTheme.primaryColor,
+        ),
+      ),
+    );
+  }
+
+  IconData _getCategoryIcon(String? category) {
+    switch (category?.toLowerCase()) {
+      case 'korean':
+        return Icons.rice_bowl_rounded;
+      case 'japanese':
+        return Icons.ramen_dining_rounded;
+      case 'chinese':
+        return Icons.takeout_dining_rounded;
+      case 'western':
+        return Icons.dinner_dining_rounded;
+      case 'asian':
+        return Icons.soup_kitchen_rounded;
+      case 'snack':
+        return Icons.bakery_dining_rounded;
+      case 'cafe':
+        return Icons.coffee_rounded;
+      default:
+        return Icons.restaurant_rounded;
+    }
   }
 
   String _formatDate(DateTime date) {

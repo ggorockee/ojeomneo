@@ -121,6 +121,7 @@ class ApiService {
 
       if (response.statusCode == 200) {
         final json = jsonDecode(response.body);
+        _log('History API Response: ${response.body.length > 1000 ? response.body.substring(0, 1000) : response.body}');
         if (json['success'] == true) {
           final items = json['data']['items'] as List<dynamic>? ?? [];
           return items.map((e) => SketchHistory.fromJson(e)).toList();

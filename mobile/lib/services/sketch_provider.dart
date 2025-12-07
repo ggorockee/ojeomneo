@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import '../models/sketch_result.dart';
 import '../utils/app_messages.dart';
 import 'api_service.dart';
+import 'ads/ad_service.dart';
 
 enum SketchState { idle, drawing, analyzing, success, error }
 
@@ -162,6 +163,9 @@ class SketchProvider extends ChangeNotifier {
         text: text,
       );
       _state = SketchState.success;
+
+      // 분석 완료 후 전면광고 표시 (2회 분석마다)
+      await AdService().showInterstitialAfterAnalysis();
     } catch (e) {
       _errorMessage = AppMessages.fromException(e);
       _state = SketchState.error;
