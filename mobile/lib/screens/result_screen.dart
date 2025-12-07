@@ -9,15 +9,22 @@ import '../services/ads/banner_ad_widget.dart';
 
 class ResultScreen extends StatefulWidget {
   final SketchResult result;
+  final MenuRecommendation? selectedMenu;
+  final bool isFromAlternative;
 
-  const ResultScreen({super.key, required this.result});
+  const ResultScreen({
+    super.key,
+    required this.result,
+    this.selectedMenu,
+    this.isFromAlternative = false,
+  });
 
   @override
   State<ResultScreen> createState() => _ResultScreenState();
 }
 
 class _ResultScreenState extends State<ResultScreen> {
-  int _selectedCardIndex = 0;
+  late MenuRecommendation _currentMenu;
 
   List<MenuRecommendation> get _allMenus {
     final list = <MenuRecommendation>[widget.result.recommendation.primary];
@@ -25,16 +32,19 @@ class _ResultScreenState extends State<ResultScreen> {
     return list;
   }
 
-  MenuRecommendation get _selectedMenu => _allMenus[_selectedCardIndex];
+  @override
+  void initState() {
+    super.initState();
+    _currentMenu = widget.selectedMenu ?? widget.result.recommendation.primary;
+  }
 
   void _shareResult() {
-    final menu = _selectedMenu;
     final text = '''
 오점너가 추천하는 오늘의 메뉴
 
-${menu.name}
+${_currentMenu.name}
 
-"${menu.reason}"
+"${_currentMenu.reason}"
 
 #오점너 #오늘점심뭐먹지 #메뉴추천
 ''';
@@ -61,13 +71,50 @@ ${menu.name}
                   children: [
                     // Main card - Key 추가하여 메뉴 변경 시 위젯 재생성
                     _PrimaryMenuCard(
-                      key: ValueKey(_selectedMenu.menuId),
-                      menu: _selectedMenu,
+                      key: ValueKey(_currentMenu.menuId),
+                      menu: _currentMenu,
                     ),
                     const SizedBox(height: 32),
 
-                    // Alternative recommendations - 선택되지 않은 메뉴가 있을 때만 표시
-                    if (_allMenus.where((m) => m.menuId != _selectedMenu.menuId).isNotEmpty) ...[
+                    // 대안 메뉴에서 온 경우: 이전 결과로 돌아가기 버튼 표시
+                    if (widget.isFromAlternative) ...[
+                      GestureDetector(
+                        onTap: () => Navigator.of(context).pop(),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 20,
+                            vertical: 14,
+                          ),
+                          decoration: BoxDecoration(
+                            color: AppTheme.surfaceVariant,
+                            borderRadius: BorderRadius.circular(14),
+                            border: Border.all(color: AppTheme.outlineColor),
+                          ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: const [
+                              Icon(
+                                Icons.arrow_back_rounded,
+                                color: AppTheme.onSurfaceVariant,
+                                size: 18,
+                              ),
+                              SizedBox(width: 8),
+                              Text(
+                                '이전 결과로 돌아가기',
+                                style: TextStyle(
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.w600,
+                                  color: AppTheme.onSurfaceVariant,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+
+                    // 대안 메뉴 추천 - 메인 결과 화면에서만 표시
+                    if (!widget.isFromAlternative && _allMenus.where((m) => m.menuId != _currentMenu.menuId).isNotEmpty) ...[
                       const Text(
                         '이런 메뉴도 어때요?',
                         style: TextStyle(
@@ -78,20 +125,25 @@ ${menu.name}
                       ),
                       const SizedBox(height: 16),
                       ..._allMenus
-                          .asMap()
-                          .entries
-                          .where((e) => e.key != _selectedCardIndex)
+                          .where((m) => m.menuId != _currentMenu.menuId)
                           .take(2)
                           .map(
-                            (entry) => Padding(
+                            (menu) => Padding(
                               padding: const EdgeInsets.only(bottom: 10),
                               child: _AlternativeMenuCard(
-                                key: ValueKey(entry.value.menuId),
-                                menu: entry.value,
+                                key: ValueKey(menu.menuId),
+                                menu: menu,
                                 onTap: () {
-                                  setState(() {
-                                    _selectedCardIndex = entry.key;
-                                  });
+                                  // 대안 메뉴 클릭 시 새 화면으로 이동
+                                  Navigator.of(context).push(
+                                    MaterialPageRoute(
+                                      builder: (context) => ResultScreen(
+                                        result: widget.result,
+                                        selectedMenu: menu,
+                                        isFromAlternative: true,
+                                      ),
+                                    ),
+                                  );
                                 },
                               ),
                             ),
@@ -576,7 +628,6 @@ class _ActionButton extends StatelessWidget {
           decoration: BoxDecoration(
             gradient: AppTheme.primaryGradient,
             borderRadius: BorderRadius.circular(14),
-            boxShadow: AppTheme.primaryButtonShadow,
           ),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,

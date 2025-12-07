@@ -53,6 +53,60 @@ class SketchHistory {
   });
 
   factory SketchHistory.fromJson(Map<String, dynamic> json) {
+    // 서버에서 'recommendations' 배열로 반환됨 (각 항목에 menu 관계 포함)
+    Recommendation? recommendation;
+
+    if (json['recommendation'] != null) {
+      // 새로운 분석 결과 형식 (primary/alternatives)
+      recommendation = Recommendation.fromJson(json['recommendation']);
+    } else if (json['recommendations'] != null) {
+      // 히스토리 API 형식 (recommendations 배열 + menu 관계)
+      final recommendations = json['recommendations'] as List<dynamic>? ?? [];
+      if (recommendations.isNotEmpty) {
+        // rank로 정렬하여 primary(rank=1)와 alternatives 분리
+        final sortedRecs = List<Map<String, dynamic>>.from(
+          recommendations.map((e) => e as Map<String, dynamic>),
+        )..sort((a, b) => (a['rank'] ?? 1).compareTo(b['rank'] ?? 1));
+
+        // primary (rank=1)
+        final primaryRec = sortedRecs.first;
+        final primaryMenu = primaryRec['menu'] as Map<String, dynamic>?;
+
+        final primary = MenuRecommendation(
+          menuId: primaryRec['menu_id'] ?? primaryMenu?['id'] ?? 0,
+          name: primaryMenu?['name'] ?? '',
+          category: primaryMenu?['category'] ?? '',
+          imageUrl: primaryMenu?['image_url'],
+          reason: primaryRec['reason'] ?? '',
+          tags: (primaryMenu?['tags'] as List<dynamic>?)
+                  ?.map((e) => e.toString())
+                  .toList() ??
+              [],
+        );
+
+        // alternatives (rank > 1)
+        final alternatives = sortedRecs.skip(1).map((rec) {
+          final menu = rec['menu'] as Map<String, dynamic>?;
+          return MenuRecommendation(
+            menuId: rec['menu_id'] ?? menu?['id'] ?? 0,
+            name: menu?['name'] ?? '',
+            category: menu?['category'] ?? '',
+            imageUrl: menu?['image_url'],
+            reason: rec['reason'] ?? '',
+            tags: (menu?['tags'] as List<dynamic>?)
+                    ?.map((e) => e.toString())
+                    .toList() ??
+                [],
+          );
+        }).toList();
+
+        recommendation = Recommendation(
+          primary: primary,
+          alternatives: alternatives,
+        );
+      }
+    }
+
     return SketchHistory(
       id: json['id'] ?? '',
       imagePath: json['image_path'],
@@ -60,9 +114,7 @@ class SketchHistory {
       analysis: json['analysis_result'] != null
           ? Analysis.fromJson(json['analysis_result'])
           : null,
-      recommendation: json['recommendation'] != null
-          ? Recommendation.fromJson(json['recommendation'])
-          : null,
+      recommendation: recommendation,
       createdAt: json['created_at'] != null
           ? DateTime.parse(json['created_at'])
           : DateTime.now(),
