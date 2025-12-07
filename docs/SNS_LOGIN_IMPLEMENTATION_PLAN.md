@@ -15,20 +15,21 @@ Google, Apple, Kakao SNS 로그인 기능을 구현합니다. 순서대로 Googl
   - `server/config/firebase/*.json`
 - [ ] 서버 코드에서 키 값을 환경변수로 읽도록 수정 <-- 키파일 경로가 아니라 키 값 자체를 환경변수로 k8s에서 시크릿으로 주입할 예정 따라서 키값만 잇으면됨 그값으로 내가 k8s의 시크릿으로 injection할 예정
 
-### [ ] 1.2 환경변수 설정
+### [x] 1.2 환경변수 설정
 #### Server (`server/.env.example` 생성)
-- [ ] `FIREBASE_ADMIN_SDK_KEY`: Firebase Admin SDK 키 JSON 문자열 (k8s 시크릿으로 주입)
-- [ ] `GOOGLE_CLIENT_ID`: Google OAuth 클라이언트 ID (모바일 앱용)
-- [ ] `APPLE_CLIENT_ID`: Apple OAuth 클라이언트 ID (iOS 앱용) - Bundle ID: `com.woohalabs.ojeomneo`
-- [ ] `APPLE_TEAM_ID`: Apple 개발팀 ID
-- [ ] `APPLE_KEY_ID`: Apple Key ID
-- [ ] `KAKAO_REST_API_KEY`: 카카오 REST API 키 (`4d3810fbbd527782757b7c2a0f737a7c`)
+- [x] `FIREBASE_ADMIN_SDK_KEY`: Firebase Admin SDK 키 JSON 문자열 (k8s 시크릿으로 주입)
+- [x] `GOOGLE_CLIENT_ID`: Google OAuth 클라이언트 ID (모바일 앱용)
+- [x] `APPLE_CLIENT_ID`: Apple OAuth 클라이언트 ID (iOS 앱용) - Bundle ID: `com.woohalabs.ojeomneo`
+- [x] `APPLE_TEAM_ID`: Apple 개발팀 ID
+- [x] `APPLE_KEY_ID`: Apple Key ID
+- [x] `KAKAO_REST_API_KEY`: 카카오 REST API 키 (`4d3810fbbd527782757b7c2a0f737a7c`)
+- [x] `server/internal/config/config.go`에 환경변수 필드 추가 완료
 
 #### Mobile (`mobile/.env.example` 생성)
-- [ ] `GOOGLE_CLIENT_ID`: Google OAuth 클라이언트 ID (iOS/Android)
-- [ ] `APPLE_CLIENT_ID`: Apple OAuth 클라이언트 ID (iOS 전용) - Bundle ID: `com.woohalabs.ojeomneo`
-- [ ] `KAKAO_NATIVE_APP_KEY`: 카카오 네이티브 앱 키 (`582b06a868603f324eb551a2e67815f6`)
-- [ ] `API_BASE_URL`: 백엔드 API 베이스 URL - `https://api.woohalabs.com/ojeomneo/v1` 
+- [x] `GOOGLE_CLIENT_ID`: Google OAuth 클라이언트 ID (iOS/Android)
+- [x] `APPLE_CLIENT_ID`: Apple OAuth 클라이언트 ID (iOS 전용) - Bundle ID: `com.woohalabs.ojeomneo`
+- [x] `KAKAO_NATIVE_APP_KEY`: 카카오 네이티브 앱 키 (`582b06a868603f324eb551a2e67815f6`)
+- [x] `API_BASE_URL`: 백엔드 API 베이스 URL - `https://api.woohalabs.com/ojeomneo/v1` 
 
 ---
 
