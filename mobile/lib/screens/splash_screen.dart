@@ -57,10 +57,10 @@ class _SplashScreenState extends State<SplashScreen>
       _scaleController.forward();
     });
 
-    // 화면 전환
+    // 화면 전환 (스플래시 후 로그인 화면으로 이동)
     Future.delayed(const Duration(milliseconds: 2500), () {
       if (mounted) {
-        Navigator.of(context).pushReplacementNamed('/home');
+        Navigator.of(context).pushReplacementNamed('/login');
       }
     });
   }
