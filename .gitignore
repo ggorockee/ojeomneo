@@ -59,3 +59,7 @@ my_request.txt
 
 # AdMob/Google credentials
 **/firebase_app_id_file.json
+
+# Firebase Admin SDK credentials
+**/firebase-adminsdk-*.json
+server/config/firebase/*.json
