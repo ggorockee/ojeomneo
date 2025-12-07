@@ -6,8 +6,6 @@ import 'package:google_sign_in/google_sign_in.dart';
 import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 import 'package:kakao_flutter_sdk/kakao_flutter_sdk.dart' as kakao;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
-
 import '../models/auth_response.dart';
 import 'api_service.dart';
 
@@ -29,8 +27,8 @@ class AuthService {
     ),
   );
   
-  // Google Sign In 인스턴스 - 최신 버전에서는 다른 방식으로 초기화할 수 있음
-  static final GoogleSignIn _googleSignIn = GoogleSignIn(
+  // Google Sign In 인스턴스
+  final GoogleSignIn _googleSignIn = GoogleSignIn(
     scopes: ['email', 'profile'],
   );
 
@@ -59,8 +57,9 @@ class AuthService {
 
       debugPrint('[AuthService] Google 계정 정보 획득: ${googleUser.email}');
 
-      // 2. Google Sign In Authentication 획득 (await 제거)
-      final GoogleSignInAuthentication googleAuth = googleUser.authentication;
+      // 2. Google Sign In Authentication 획득
+      final GoogleSignInAuthentication googleAuth = 
+          await googleUser.authentication;
 
       // 3. Firebase Auth로 로그인 (GoogleAuthProvider 사용)
       final credential = GoogleAuthProvider.credential(
