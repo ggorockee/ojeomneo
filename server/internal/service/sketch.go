@@ -271,11 +271,21 @@ func (s *SketchService) GetHistory(ctx context.Context, deviceID string, page, l
 	if err := query.
 		Preload("Recommendations").
 		Preload("Recommendations.Menu").
+		Preload("Recommendations.Menu.Images", "is_primary = ?", true).
 		Order("created_at DESC").
 		Offset(offset).
 		Limit(limit).
 		Find(&sketches).Error; err != nil {
 		return nil, 0, err
+	}
+
+	// Menu의 ImageURL 채우기 (Images 관계에서 대표 이미지 URL 가져오기)
+	for i := range sketches {
+		for j := range sketches[i].Recommendations {
+			if sketches[i].Recommendations[j].Menu != nil && len(sketches[i].Recommendations[j].Menu.Images) > 0 {
+				sketches[i].Recommendations[j].Menu.ImageURL = sketches[i].Recommendations[j].Menu.Images[0].ImageURL
+			}
+		}
 	}
 
 	return sketches, total, nil
