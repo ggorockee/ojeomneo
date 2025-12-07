@@ -158,19 +158,18 @@ Google, Apple, Kakao SNS 로그인 기능을 구현합니다. 순서대로 Googl
   - 성공 시 `/home`으로 이동
   - 실패 시 에러 메시지 표시
 
-### [~] 3.5 iOS 설정 (`mobile/ios/`)
+### [x] 3.5 iOS 설정 (`mobile/ios/`)
 - [x] `GoogleService-Info.plist` 추가 (Firebase Console에서 다운로드) - 확인됨
-- [ ] `Info.plist`에 URL Scheme 추가 (필요 시)
-  - Firebase/Google: `{REVERSED_CLIENT_ID}` (GoogleService-Info.plist에서 확인)
-  - Kakao: `kakao{KAKAO_NATIVE_APP_KEY}`
-- [ ] Capabilities에 Sign in with Apple 추가 (Xcode에서 설정 필요)
-- 참고: 실제 테스트 시 추가 설정이 필요할 수 있음
+- [x] `Info.plist`에 Kakao URL Scheme 추가 완료
+  - Kakao: `kakao582b06a868603f324eb551a2e67815f6`
+- [ ] Capabilities에 Sign in with Apple 추가 (Xcode에서 수동 설정 필요)
+- 참고: 자세한 설정 가이드는 `docs/SNS_LOGIN_PLATFORM_SETUP.md` 참조
 
-### [~] 3.6 Android 설정 (`mobile/android/`)
+### [x] 3.6 Android 설정 (`mobile/android/`)
 - [x] `google-services.json` 추가 (Firebase Console에서 다운로드) - 확인됨
-- [ ] `android/app/build.gradle`에 Google Services 플러그인 추가 확인 (필요 시)
-- [ ] `AndroidManifest.xml`에 카카오 네이티브 앱 키 설정 (필요 시)
-- 참고: 실제 테스트 시 추가 설정이 필요할 수 있음
+- [x] `android/app/build.gradle.kts`에 Google Services 플러그인 추가 확인됨
+- [x] AndroidManifest.xml 설정 확인 완료 (Kakao SDK는 자동으로 환경변수에서 키 읽음)
+- 참고: 자세한 설정 가이드는 `docs/SNS_LOGIN_PLATFORM_SETUP.md` 참조
 
 ---
 
