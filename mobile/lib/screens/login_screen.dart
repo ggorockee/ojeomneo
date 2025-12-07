@@ -388,7 +388,8 @@ class _LoginScreenState extends State<LoginScreen> {
         // Google
         _buildSocialButton(
           text: 'Google로 시작하기',
-          icon: Icons.g_mobiledata,
+          logoPath: 'assets/images/login/google.png',
+          logoLeftPadding: 0,
           onPressed: _isLoading ? null : _handleGoogleLogin,
         ),
         SizedBox(height: 12.h),
@@ -397,7 +398,8 @@ class _LoginScreenState extends State<LoginScreen> {
         if (Platform.isIOS) ...[
           _buildSocialButton(
             text: 'Apple로 시작하기',
-            icon: Icons.apple,
+            logoPath: 'assets/images/login/apple.png',
+            logoLeftPadding: -2,
             onPressed: _isLoading ? null : _handleAppleLogin,
           ),
           SizedBox(height: 12.h),
@@ -406,7 +408,8 @@ class _LoginScreenState extends State<LoginScreen> {
         // Kakao
         _buildSocialButton(
           text: 'Kakao로 시작하기',
-          icon: Icons.chat_bubble_outline,
+          logoPath: 'assets/images/login/kakao.png',
+          logoLeftPadding: -1,
           onPressed: _isLoading ? null : _handleKakaoLogin,
         ),
       ],
@@ -416,7 +419,8 @@ class _LoginScreenState extends State<LoginScreen> {
   // 소셜 로그인 버튼 공통
   Widget _buildSocialButton({
     required String text,
-    IconData? icon,
+    String? logoPath,
+    double logoLeftPadding = 0,
     required VoidCallback? onPressed,
   }) {
     return Container(
@@ -441,12 +445,16 @@ class _LoginScreenState extends State<LoginScreen> {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            // 아이콘 (있는 경우만)
-            if (icon != null) ...[
-              Icon(
-                icon,
-                size: 20.sp,
-                color: const Color(0xFF1A1C1E),
+            // 로고 이미지 (있는 경우만)
+            if (logoPath != null) ...[
+              Transform.translate(
+                offset: Offset(logoLeftPadding, 0),
+                child: Image.asset(
+                  logoPath,
+                  width: 20.w,
+                  height: 20.w,
+                  fit: BoxFit.contain,
+                ),
               ),
               SizedBox(width: 12.w),
             ],
