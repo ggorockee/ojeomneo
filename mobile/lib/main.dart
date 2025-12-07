@@ -5,7 +5,7 @@ import 'package:provider/provider.dart';
 import 'config/app_theme.dart';
 import 'screens/splash_screen.dart';
 import 'screens/login_screen.dart';
-import 'screens/sketch_screen.dart';
+import 'screens/sketch_screen.dart'; 
 import 'screens/history_screen.dart';
 import 'services/sketch_provider.dart';
 import 'services/ads/ad_service.dart';

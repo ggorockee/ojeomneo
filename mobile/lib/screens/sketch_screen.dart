@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import 'package:provider/provider.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 import '../config/app_theme.dart';
 import '../services/sketch_provider.dart';
@@ -115,20 +116,20 @@ class _SketchScreenState extends State<SketchScreen> {
     showModalBottomSheet(
       context: context,
       builder: (context) => Container(
-        padding: const EdgeInsets.all(24),
+        padding: EdgeInsets.all(24.w),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
+            Text(
               '펜 굵기',
               style: TextStyle(
-                fontSize: 16,
+                fontSize: 16.sp,
                 fontWeight: FontWeight.w700,
                 color: AppTheme.onSurface,
               ),
             ),
-            const SizedBox(height: 16),
+            SizedBox(height: 16.h),
             StatefulBuilder(
               builder: (context, setState) => Column(
                 children: [
@@ -154,28 +155,34 @@ class _SketchScreenState extends State<SketchScreen> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Text(
+                      Text(
                         '1',
-                        style: TextStyle(color: AppTheme.onSurfaceVariant),
+                        style: TextStyle(
+                          color: AppTheme.onSurfaceVariant,
+                          fontSize: 14.sp,
+                        ),
                       ),
                       Container(
-                        width: provider.currentWidth * 2,
-                        height: provider.currentWidth * 2,
+                        width: (provider.currentWidth * 2).w,
+                        height: (provider.currentWidth * 2).w,
                         decoration: BoxDecoration(
                           color: provider.currentColor,
                           shape: BoxShape.circle,
                         ),
                       ),
-                      const Text(
+                      Text(
                         '20',
-                        style: TextStyle(color: AppTheme.onSurfaceVariant),
+                        style: TextStyle(
+                          color: AppTheme.onSurfaceVariant,
+                          fontSize: 14.sp,
+                        ),
                       ),
                     ],
                   ),
                 ],
               ),
             ),
-            const SizedBox(height: 16),
+            SizedBox(height: 16.h),
           ],
         ),
       ),
@@ -190,10 +197,10 @@ class _SketchScreenState extends State<SketchScreen> {
         backgroundColor: AppTheme.surfaceColor,
         elevation: 0,
         centerTitle: true,
-        title: const Text(
+        title: Text(
           '내 기분 그리기',
           style: TextStyle(
-            fontSize: 18,
+            fontSize: 18.sp,
             fontWeight: FontWeight.w700,
             color: AppTheme.onSurface,
           ),
@@ -218,7 +225,7 @@ class _SketchScreenState extends State<SketchScreen> {
                     // Canvas area
                     Expanded(
                       child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 20),
+                        padding: EdgeInsets.symmetric(horizontal: 20.w),
                         child: LayoutBuilder(
                           builder: (context, constraints) {
                             final canvasSize = Size(
@@ -229,7 +236,7 @@ class _SketchScreenState extends State<SketchScreen> {
                               key: _canvasKey,
                               decoration: BoxDecoration(
                                 color: AppTheme.surfaceVariant,
-                                borderRadius: BorderRadius.circular(20),
+                                borderRadius: BorderRadius.circular(20.r),
                                 border: Border.all(
                                   color: AppTheme.outlineColor,
                                   width: 1,
@@ -247,35 +254,35 @@ class _SketchScreenState extends State<SketchScreen> {
                         ),
                       ),
                     ),
-                    const SizedBox(height: 16),
+                    SizedBox(height: 16.h),
 
                     // Text input
                     Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      padding: EdgeInsets.symmetric(horizontal: 20.w),
                       child: Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 18,
-                          vertical: 14,
+                        padding: EdgeInsets.symmetric(
+                          horizontal: 18.w,
+                          vertical: 14.h,
                         ),
                         decoration: BoxDecoration(
                           color: AppTheme.surfaceVariant,
-                          borderRadius: BorderRadius.circular(14),
+                          borderRadius: BorderRadius.circular(14.r),
                         ),
                         child: Row(
                           children: [
-                            const Icon(
+                            Icon(
                               Icons.edit_note_rounded,
                               color: AppTheme.textHint,
-                              size: 20,
+                              size: 20.sp,
                             ),
-                            const SizedBox(width: 12),
+                            SizedBox(width: 12.w),
                             Expanded(
                               child: TextField(
                                 controller: _textController,
-                                decoration: const InputDecoration(
+                                decoration: InputDecoration(
                                   hintText: '지금 기분을 한 줄로 표현해보세요 (선택)',
                                   hintStyle: TextStyle(
-                                    fontSize: 14,
+                                    fontSize: 14.sp,
                                     color: AppTheme.textHint,
                                   ),
                                   border: InputBorder.none,
@@ -283,8 +290,8 @@ class _SketchScreenState extends State<SketchScreen> {
                                   contentPadding: EdgeInsets.zero,
                                   filled: false,
                                 ),
-                                style: const TextStyle(
-                                  fontSize: 14,
+                                style: TextStyle(
+                                  fontSize: 14.sp,
                                   color: AppTheme.onSurface,
                                 ),
                                 maxLines: 1,
@@ -295,11 +302,11 @@ class _SketchScreenState extends State<SketchScreen> {
                         ),
                       ),
                     ),
-                    const SizedBox(height: 16),
+                    SizedBox(height: 16.h),
 
                     // Tool bar
                     Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      padding: EdgeInsets.symmetric(horizontal: 20.w),
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
@@ -311,7 +318,7 @@ class _SketchScreenState extends State<SketchScreen> {
                             onTap: _showColorPicker,
                             tooltip: '색상',
                           ),
-                          const SizedBox(width: 8),
+                          SizedBox(width: 8.w),
 
                           // Stroke width
                           _ToolButton(
@@ -319,7 +326,7 @@ class _SketchScreenState extends State<SketchScreen> {
                             onTap: _showStrokeWidthPicker,
                             tooltip: '굵기',
                           ),
-                          const SizedBox(width: 8),
+                          SizedBox(width: 8.w),
 
                           // Undo
                           _ToolButton(
@@ -328,7 +335,7 @@ class _SketchScreenState extends State<SketchScreen> {
                                 provider.hasDrawing ? provider.undoLastStroke : null,
                             tooltip: '되돌리기',
                           ),
-                          const SizedBox(width: 8),
+                          SizedBox(width: 8.w),
 
                           // Clear
                           _ToolButton(
@@ -339,11 +346,11 @@ class _SketchScreenState extends State<SketchScreen> {
                         ],
                       ),
                     ),
-                    const SizedBox(height: 16),
+                    SizedBox(height: 16.h),
 
                     // Analyze button
                     Padding(
-                      padding: const EdgeInsets.fromLTRB(20, 0, 20, 40),
+                      padding: EdgeInsets.fromLTRB(20.w, 0, 20.w, 40.h),
                       child: _GradientButton(
                         onPressed: isAnalyzing ? null : _analyzeSketch,
                         isEnabled: provider.hasDrawing && !isAnalyzing,
@@ -388,14 +395,14 @@ class _EmptyCanvasPlaceholder extends StatelessWidget {
                 children: [
                   Icon(
                     Icons.gesture_rounded,
-                    size: 48,
+                    size: 48.sp,
                     color: AppTheme.textDisabled.withAlpha(128),
                   ),
-                  const SizedBox(height: 12),
+                  SizedBox(height: 12.h),
                   Text(
                     '여기에 기분을 그려주세요',
                     style: TextStyle(
-                      fontSize: 15,
+                      fontSize: 15.sp,
                       color: AppTheme.textHint.withAlpha(180),
                     ),
                   ),
@@ -434,17 +441,17 @@ class _ToolButton extends StatelessWidget {
         color: Colors.transparent,
         child: InkWell(
           onTap: onTap,
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: BorderRadius.circular(14.r),
           child: Container(
-            width: 48,
-            height: 48,
+            width: 48.w,
+            height: 48.w,
             decoration: BoxDecoration(
               color: isActive
                   ? AppTheme.toolButtonActive
                   : (isEnabled
                       ? AppTheme.toolButtonInactive
                       : AppTheme.toolButtonInactive.withAlpha(128)),
-              borderRadius: BorderRadius.circular(14),
+              borderRadius: BorderRadius.circular(14.r),
               border: color != null ? Border.all(color: color!, width: 2) : null,
             ),
             child: Icon(
@@ -454,7 +461,7 @@ class _ToolButton extends StatelessWidget {
                   : (isEnabled
                       ? (color ?? AppTheme.onSurfaceVariant)
                       : AppTheme.textDisabled),
-              size: 22,
+              size: 22.sp,
             ),
           ),
         ),
@@ -484,36 +491,36 @@ class _GradientButton extends StatelessWidget {
       onTap: isEnabled ? onPressed : null,
       child: Container(
         width: double.infinity,
-        padding: const EdgeInsets.symmetric(vertical: 18),
+        padding: EdgeInsets.symmetric(vertical: 18.h),
         decoration: BoxDecoration(
           gradient: isEnabled ? AppTheme.primaryGradient : null,
           color: isEnabled ? null : AppTheme.buttonDisabled,
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(16.r),
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             if (isLoading)
-              const SizedBox(
-                width: 20,
-                height: 20,
-                child: CircularProgressIndicator(
+              SizedBox(
+                width: 20.w,
+                height: 20.w,
+                child: const CircularProgressIndicator(
                   strokeWidth: 2,
-                  color: Colors.white,
+                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
                 ),
               )
             else if (icon != null) ...[
               Icon(
                 icon,
-                size: 20,
+                size: 20.sp,
                 color: isEnabled ? Colors.white : AppTheme.textHint,
               ),
-              const SizedBox(width: 8),
+              SizedBox(width: 8.w),
             ],
             Text(
               label,
               style: TextStyle(
-                fontSize: 16,
+                fontSize: 16.sp,
                 fontWeight: FontWeight.w700,
                 color: isEnabled ? Colors.white : AppTheme.textHint,
               ),
@@ -532,18 +539,18 @@ class _LoadingOverlay extends StatelessWidget {
       color: Colors.black.withAlpha(77),
       child: Center(
         child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 48, vertical: 32),
+          padding: EdgeInsets.symmetric(horizontal: 48.w, vertical: 32.h),
           decoration: BoxDecoration(
             color: Colors.white,
-            borderRadius: BorderRadius.circular(20),
+            borderRadius: BorderRadius.circular(20.r),
             boxShadow: AppTheme.softShadow,
           ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               SizedBox(
-                width: 48,
-                height: 48,
+                width: 48.w,
+                height: 48.w,
                 child: CircularProgressIndicator(
                   strokeWidth: 4,
                   valueColor: const AlwaysStoppedAnimation<Color>(
@@ -552,20 +559,20 @@ class _LoadingOverlay extends StatelessWidget {
                   backgroundColor: AppTheme.dividerColor,
                 ),
               ),
-              const SizedBox(height: 16),
-              const Text(
+              SizedBox(height: 16.h),
+              Text(
                 '그림을 분석하고 있어요...',
                 style: TextStyle(
-                  fontSize: 16,
+                  fontSize: 16.sp,
                   fontWeight: FontWeight.w700,
                   color: AppTheme.onSurface,
                 ),
               ),
-              const SizedBox(height: 6),
-              const Text(
+              SizedBox(height: 6.h),
+              Text(
                 '잠시만 기다려주세요',
                 style: TextStyle(
-                  fontSize: 14,
+                  fontSize: 14.sp,
                   color: AppTheme.onSurfaceVariant,
                 ),
               ),
