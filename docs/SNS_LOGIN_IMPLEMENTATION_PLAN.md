@@ -216,6 +216,33 @@ Google, Apple, Kakao SNS 로그인 기능을 구현합니다. 순서대로 Googl
 
 ---
 
+## 현재 진행 상황 요약
+
+### 완료된 작업 ✅
+- ✅ 백엔드 SNS 로그인 API 구현 완료 (Google, Apple, Kakao)
+- ✅ Flutter 인증 서비스 구현 완료 (모든 SNS 로그인 플로우)
+- ✅ 로그인 화면 통합 완료
+- ✅ 의존성 설정 완료
+- ✅ Go 테스트 파일 수정 완료 (logger 파라미터 추가)
+- ✅ 모든 컴파일 오류 해결 완료
+
+### 다음 단계 🚀
+1. **iOS/Android 플랫폼 설정 확인 및 완료**
+   - iOS URL Scheme 설정
+   - Android Manifest 설정
+   - Xcode Capabilities 설정
+
+2. **테스트 진행**
+   - 백엔드 API 테스트 (Postman/curl)
+   - 모바일 앱 통합 테스트
+   - 실제 기기에서 SNS 로그인 테스트
+
+3. **문서화**
+   - API 문서 업데이트 (Swagger)
+   - README 업데이트
+
+---
+
 ## 참고 자료
 - 참고 서버 코드: `/Users/woohyeon/ggorockee/reviewmaps/server`
 - 참고 모바일 코드: `/Users/woohyeon/ggorockee/reviewmaps/mobile`
@@ -225,4 +252,11 @@ Google, Apple, Kakao SNS 로그인 기능을 구현합니다. 순서대로 Googl
 - Google Sign-In with Firebase: https://firebase.google.com/docs/auth/flutter/federated-auth#google
 - Apple Sign-In: https://pub.dev/packages/sign_in_with_apple
 - Kakao SDK: https://developers.kakao.com/docs
+
+---
+
+## 최종 업데이트
+- 날짜: 2024년
+- 상태: 백엔드 및 모바일 기본 구현 완료
+- 다음 작업: 플랫폼 설정 확인 및 테스트 진행
 
