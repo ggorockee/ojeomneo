@@ -14,12 +14,17 @@ class EmailSendCodeRequest {
 /// 이메일 인증코드 발송 응답 데이터
 class EmailSendCodeResponse {
   final String message;
+  final int expiresIn; // 인증코드 유효 시간 (초) - 백엔드에서 10분(600초) 고정
 
-  EmailSendCodeResponse({required this.message});
+  EmailSendCodeResponse({
+    required this.message,
+    this.expiresIn = 600, // 기본값 10분
+  });
 
   factory EmailSendCodeResponse.fromJson(Map<String, dynamic> json) {
     return EmailSendCodeResponse(
       message: json['message'] as String? ?? '인증코드가 발송되었습니다',
+      expiresIn: 600, // 백엔드에서 고정 10분
     );
   }
 }
@@ -137,13 +142,21 @@ class PasswordResetVerifyRequest {
 
 /// 비밀번호 재설정 인증코드 확인 응답 데이터
 class PasswordResetVerifyResponse {
+  final bool verified;
   final String resetToken;
+  final int expiresIn; // 인증코드 유효 시간 (초) - 백엔드에서 60분(3600초) 고정
 
-  PasswordResetVerifyResponse({required this.resetToken});
+  PasswordResetVerifyResponse({
+    required this.verified,
+    required this.resetToken,
+    this.expiresIn = 3600, // 기본값 60분
+  });
 
   factory PasswordResetVerifyResponse.fromJson(Map<String, dynamic> json) {
     return PasswordResetVerifyResponse(
+      verified: json['verified'] as bool? ?? false,
       resetToken: json['reset_token'] as String? ?? '',
+      expiresIn: 3600, // 백엔드에서 고정 60분
     );
   }
 }

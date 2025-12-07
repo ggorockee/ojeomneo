@@ -298,7 +298,10 @@ class AuthService {
         final json = jsonDecode(utf8.decode(response.bodyBytes));
         if (json['success'] == true) {
           debugPrint('[AuthService] 인증코드 발송 성공');
-          return EmailSendCodeResponse(message: json['message'] ?? '인증코드가 발송되었습니다');
+          return EmailSendCodeResponse(
+            message: json['message'] ?? '인증코드가 발송되었습니다',
+            expiresIn: 600, // 백엔드에서 10분 고정
+          );
         }
         throw Exception(json['error'] ?? '인증코드 발송에 실패했습니다');
       }
@@ -517,7 +520,13 @@ class AuthService {
       if (response.statusCode == 200) {
         final json = jsonDecode(utf8.decode(response.bodyBytes));
         debugPrint('[AuthService] 비밀번호 재설정 인증코드 확인 성공');
-        return PasswordResetVerifyResponse.fromJson(json);
+        // 백엔드 응답에 verified 필드가 없을 수 있으므로 reset_token 존재 여부로 판단
+        final resetToken = json['reset_token'] as String? ?? '';
+        return PasswordResetVerifyResponse(
+          verified: resetToken.isNotEmpty,
+          resetToken: resetToken,
+          expiresIn: 3600, // 백엔드에서 60분 고정
+        );
       }
 
       final json = jsonDecode(utf8.decode(response.bodyBytes));
