@@ -171,7 +171,7 @@ func (s *AuthService) AppleLogin(identityToken string) (*AuthResponse, error) {
 	appleUser := result.user
 	// Apple 로그인은 첫 로그인 시에만 이메일이 제공되고, 이후 로그인에서는 이메일이 없을 수 있음
 	// social_id(sub)로 사용자를 찾을 수 있으므로 이메일이 없어도 처리 가능
-	
+
 	s.logger.Debug("Apple token verified",
 		zap.String("provider", "apple"),
 		zap.String("email", appleUser.Email),
@@ -346,7 +346,7 @@ func (s *AuthService) handleSNSLogin(provider, socialID, email, name, profileIma
 
 		// 새로운 사용자 생성
 		isNewUser = true
-		
+
 		// username 생성: 이메일이 있으면 이메일 기반, 없으면 social_id 기반
 		var username string
 		if email != "" {

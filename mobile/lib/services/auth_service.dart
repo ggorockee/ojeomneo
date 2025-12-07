@@ -4,7 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:sign_in_with_apple/sign_in_with_apple.dart';
-import 'package:kakao_flutter_sdk_user/kakao_flutter_sdk_user.dart' as kakao;
+import 'package:kakao_flutter_sdk/kakao_flutter_sdk.dart' as kakao;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
@@ -28,6 +28,11 @@ class AuthService {
       accessibility: KeychainAccessibility.first_unlock_this_device,
     ),
   );
+  
+  // Google Sign In 인스턴스
+  final GoogleSignIn _googleSignIn = GoogleSignIn(
+    scopes: ['email', 'profile'],
+  );
 
   // Storage keys
   static const String _accessTokenKey = 'access_token';
@@ -47,11 +52,7 @@ class AuthService {
       debugPrint('[AuthService] Google 로그인 시작');
 
       // 1. Google Sign In
-      final GoogleSignIn googleSignIn = GoogleSignIn(
-        scopes: ['email', 'profile'],
-      );
-
-      final GoogleSignInAccount? googleUser = await googleSignIn.signIn();
+      final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
       if (googleUser == null) {
         throw Exception('Google 로그인이 취소되었습니다.');
       }
@@ -59,7 +60,7 @@ class AuthService {
       debugPrint('[AuthService] Google 계정 정보 획득: ${googleUser.email}');
 
       // 2. Google Sign In Authentication 획득
-      final GoogleSignInAuthentication googleAuth =
+      final GoogleSignInAuthentication googleAuth = 
           await googleUser.authentication;
 
       // 3. Firebase Auth로 로그인 (GoogleAuthProvider 사용)
@@ -120,8 +121,6 @@ class AuthService {
     try {
       debugPrint('[AuthService] Apple 로그인 시작');
 
-      final clientId = dotenv.env['APPLE_CLIENT_ID'] ?? 'com.woohalabs.ojeomneo';
-
       // 1. Apple 로그인 수행
       final credential = await SignInWithApple.getAppleIDCredential(
         scopes: [
@@ -177,7 +176,7 @@ class AuthService {
       }
 
       // 1. Kakao 로그인 수행
-      OAuthToken token;
+      kakao.OAuthToken token;
       try {
         token = await kakao.UserApi.instance.loginWithKakaoTalk();
         debugPrint('[AuthService] KakaoTalk 로그인 성공');
@@ -193,11 +192,10 @@ class AuthService {
       }
 
       // 2. Access Token 확인
-      if (token.accessToken == null) {
+      final accessToken = token.accessToken;
+      if (accessToken == null || accessToken.isEmpty) {
         throw Exception('Access Token을 가져올 수 없습니다.');
       }
-
-      final accessToken = token.accessToken!;
       debugPrint('[AuthService] Kakao Access Token 획득 완료');
 
       // 3. 백엔드 API 호출
@@ -266,7 +264,7 @@ class AuthService {
       await FirebaseAuth.instance.signOut();
       
       // Google 로그아웃
-      await GoogleSignIn().signOut();
+      await _googleSignIn.signOut();
 
       // 저장된 토큰 삭제
       await Future.wait([
