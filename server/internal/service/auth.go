@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"math/rand"
 	"strings"
 	"time"
 
@@ -52,6 +53,21 @@ type UserResponse struct {
 type SNSLoginRequest struct {
 	IDToken     string `json:"id_token"`     // Google (Firebase ID Token)
 	AccessToken string `json:"access_token"` // Apple/Kakao
+}
+
+// SignupRequest 회원가입 요청
+type SignupRequest struct {
+	Email           string  `json:"email"`
+	Password        string  `json:"password"`
+	FirstName       *string `json:"first_name,omitempty"`
+	LastName        *string `json:"last_name,omitempty"`
+	VerificationToken *string `json:"verification_token,omitempty"`
+}
+
+// LoginRequest 이메일 로그인 요청
+type LoginRequest struct {
+	Email    string `json:"email"`
+	Password string `json:"password"`
 }
 
 // GoogleLogin Google 로그인 처리 (Firebase ID Token 사용)
@@ -474,4 +490,354 @@ func normalizeEmail(email string) string {
 		return parts[0] + "@" + strings.ToLower(parts[1])
 	}
 	return strings.ToLower(email)
+}
+
+// SendEmailCode 이메일 인증코드 발송
+func (s *AuthService) SendEmailCode(email string) error {
+	// 이메일 정규화
+	email = normalizeEmail(email)
+
+	// 6자리 인증코드 생성
+	code := fmt.Sprintf("%06d", rand.Intn(1000000))
+
+	// 기존 인증코드 삭제
+	s.db.Where("email = ?", email).Delete(&model.EmailVerification{})
+
+	// 새 인증 레코드 생성
+	verification := model.EmailVerification{
+		Email:     email,
+		Code:      code,
+		ExpiresAt: time.Now().Add(10 * time.Minute),
+		SendCount: 1,
+		LastSentAt: func() *time.Time {
+			now := time.Now()
+			return &now
+		}(),
+	}
+
+	if err := s.db.Create(&verification).Error; err != nil {
+		s.logger.Error("Failed to create email verification",
+			zap.Error(err),
+			zap.String("email", email),
+		)
+		return fmt.Errorf("인증코드 생성에 실패했습니다: %w", err)
+	}
+
+	// TODO: 실제 이메일 발송 서비스 구현 필요
+	// 현재는 개발용으로 콘솔에 출력
+	s.logger.Info("Email verification code generated",
+		zap.String("email", email),
+		zap.String("code", code),
+	)
+	fmt.Printf("[개발용] 이메일 인증코드: %s -> %s\n", email, code)
+
+	return nil
+}
+
+// VerifyEmailCode 이메일 인증코드 확인
+func (s *AuthService) VerifyEmailCode(email, code string) (bool, string, error) {
+	// 이메일 정규화
+	email = normalizeEmail(email)
+
+	var verification model.EmailVerification
+	err := s.db.Where("email = ? AND code = ? AND expires_at > ?", email, code, time.Now()).
+		First(&verification).Error
+
+	if err != nil {
+		// 실패 횟수 증가
+		var existingVerification model.EmailVerification
+		if err := s.db.Where("email = ?", email).First(&existingVerification).Error; err == nil {
+			s.db.Model(&existingVerification).Update("attempts", gorm.Expr("attempts + 1"))
+		}
+
+		s.logger.Warn("Email verification code invalid or expired",
+			zap.String("email", email),
+			zap.Error(err),
+		)
+		return false, "", errors.New("인증코드가 유효하지 않거나 만료되었습니다")
+	}
+
+	// 인증 성공 처리
+	verification.IsVerified = true
+	verification.Attempts = 0
+
+	// VerificationToken 생성 (회원가입 시 사용)
+	token := fmt.Sprintf("%s_%d_%d", email, time.Now().Unix(), rand.Intn(10000))
+	verification.VerificationToken = &token
+
+	if err := s.db.Save(&verification).Error; err != nil {
+		s.logger.Error("Failed to update email verification",
+			zap.Error(err),
+			zap.String("email", email),
+		)
+		return false, "", fmt.Errorf("인증 처리에 실패했습니다: %w", err)
+	}
+
+	s.logger.Info("Email verification successful",
+		zap.String("email", email),
+	)
+
+	return true, token, nil
+}
+
+// Signup 회원가입
+func (s *AuthService) Signup(req *SignupRequest) (*AuthResponse, error) {
+	// 이메일 정규화
+	email := normalizeEmail(req.Email)
+
+	// 이메일 인증 확인
+	var verification model.EmailVerification
+	var verificationErr error
+
+	if req.VerificationToken != nil && *req.VerificationToken != "" {
+		// VerificationToken으로 확인
+		verificationErr = s.db.Where("email = ? AND verification_token = ? AND is_verified = ?",
+			email, *req.VerificationToken, true).First(&verification).Error
+	} else {
+		// IsVerified로 확인 (하위 호환성)
+		verificationErr = s.db.Where("email = ? AND is_verified = ?",
+			email, true).First(&verification).Error
+	}
+
+	if verificationErr != nil {
+		s.logger.Warn("Signup failed: email not verified",
+			zap.String("email", email),
+			zap.Error(verificationErr),
+		)
+		return nil, errors.New("이메일 인증이 완료되지 않았습니다")
+	}
+
+	// 기존 사용자 확인
+	var existingUser model.User
+	if err := s.db.Where("email = ? AND login_method = ?", email, "email").
+		First(&existingUser).Error; err == nil {
+		s.logger.Warn("Signup failed: user already exists",
+			zap.String("email", email),
+			zap.Uint("user_id", existingUser.ID),
+		)
+		return nil, errors.New("이미 가입된 이메일입니다")
+	}
+
+	// 비밀번호 해싱
+	hashedPassword, err := auth.HashPassword(req.Password)
+	if err != nil {
+		s.logger.Error("Failed to hash password",
+			zap.Error(err),
+			zap.String("email", email),
+		)
+		return nil, fmt.Errorf("비밀번호 처리에 실패했습니다: %w", err)
+	}
+
+	// 이름 처리
+	firstName := ""
+	lastName := ""
+	if req.FirstName != nil {
+		firstName = *req.FirstName
+	}
+	if req.LastName != nil {
+		lastName = *req.LastName
+	}
+
+	// Username 생성: email_at_email 형식
+	username := fmt.Sprintf("%s_email", strings.ReplaceAll(email, "@", "_at_"))
+
+	// 사용자 생성
+	user := model.User{
+		Username:    username,
+		Email:       email,
+		Password:    hashedPassword,
+		LoginMethod: model.LoginMethodEmail,
+		FirstName:   firstName,
+		LastName:    lastName,
+		IsActive:    true,
+	}
+
+	if err := s.db.Create(&user).Error; err != nil {
+		s.logger.Error("Failed to create user",
+			zap.Error(err),
+			zap.String("email", email),
+		)
+		return nil, fmt.Errorf("회원가입에 실패했습니다: %w", err)
+	}
+
+	// JWT 토큰 발급
+	accessToken, refreshToken, err := auth.GenerateTokenPair(
+		user.ID,
+		s.cfg.JWTSecretKey,
+		s.cfg.JWTAccessTokenExpireMin,
+		s.cfg.JWTRefreshTokenExpireDays,
+	)
+	if err != nil {
+		s.logger.Error("Failed to generate tokens",
+			zap.Error(err),
+			zap.Uint("user_id", user.ID),
+		)
+		return nil, fmt.Errorf("토큰 생성에 실패했습니다: %w", err)
+	}
+
+	s.logger.Info("User signup successful",
+		zap.Uint("user_id", user.ID),
+		zap.String("email", email),
+	)
+
+	return &AuthResponse{
+		AccessToken:  accessToken,
+		RefreshToken: refreshToken,
+		TokenType:    "bearer",
+		User: &UserResponse{
+			ID:          user.ID,
+			Email:       user.Email,
+			IsActive:    user.IsActive,
+			DateJoined:  user.DateJoined,
+			LoginMethod: string(user.LoginMethod),
+		},
+	}, nil
+}
+
+// EmailLogin 이메일 로그인
+func (s *AuthService) EmailLogin(req *LoginRequest) (*AuthResponse, error) {
+	start := time.Now()
+
+	// 이메일 정규화
+	email := normalizeEmail(req.Email)
+
+	s.logger.Debug("Starting email login",
+		zap.String("email", email),
+	)
+
+	// 사용자 조회
+	var user model.User
+	if err := s.db.Where("email = ? AND login_method = ?", email, "email").
+		First(&user).Error; err != nil {
+		s.logger.Warn("Email login failed: user not found",
+			zap.String("email", email),
+			zap.Error(err),
+		)
+		return nil, errors.New("이메일 또는 비밀번호가 올바르지 않습니다")
+	}
+
+	// 비밀번호 확인
+	if !auth.CheckPassword(req.Password, user.Password) {
+		s.logger.Warn("Email login failed: invalid password",
+			zap.String("email", email),
+			zap.Uint("user_id", user.ID),
+		)
+		return nil, errors.New("이메일 또는 비밀번호가 올바르지 않습니다")
+	}
+
+	// 사용자 활성화 확인
+	if !user.IsActive {
+		s.logger.Warn("Email login failed: user inactive",
+			zap.String("email", email),
+			zap.Uint("user_id", user.ID),
+		)
+		return nil, errors.New("비활성화된 계정입니다")
+	}
+
+	// 마지막 로그인 시간 업데이트
+	now := time.Now()
+	user.LastLogin = &now
+	if err := s.db.Save(&user).Error; err != nil {
+		s.logger.Warn("Failed to update last login",
+			zap.Error(err),
+			zap.Uint("user_id", user.ID),
+		)
+		// 로그인은 계속 진행
+	}
+
+	// JWT 토큰 발급
+	accessToken, refreshToken, err := auth.GenerateTokenPair(
+		user.ID,
+		s.cfg.JWTSecretKey,
+		s.cfg.JWTAccessTokenExpireMin,
+		s.cfg.JWTRefreshTokenExpireDays,
+	)
+	if err != nil {
+		s.logger.Error("Failed to generate tokens",
+			zap.Error(err),
+			zap.Uint("user_id", user.ID),
+		)
+		return nil, fmt.Errorf("토큰 생성에 실패했습니다: %w", err)
+	}
+
+	s.logger.Info("Email login successful",
+		zap.Uint("user_id", user.ID),
+		zap.String("email", email),
+		zap.Duration("duration", time.Since(start)),
+	)
+
+	return &AuthResponse{
+		AccessToken:  accessToken,
+		RefreshToken: refreshToken,
+		TokenType:    "bearer",
+		User: &UserResponse{
+			ID:          user.ID,
+			Email:       user.Email,
+			IsActive:    user.IsActive,
+			DateJoined:  user.DateJoined,
+			LoginMethod: string(user.LoginMethod),
+		},
+	}, nil
+}
+
+// RefreshToken Refresh Token으로 새 토큰 발급
+func (s *AuthService) RefreshToken(refreshTokenString string) (*AuthResponse, error) {
+	// Refresh Token 검증
+	claims, err := auth.ValidateRefreshToken(refreshTokenString, s.cfg.JWTSecretKey)
+	if err != nil {
+		s.logger.Warn("Refresh token validation failed",
+			zap.Error(err),
+		)
+		return nil, errors.New("유효하지 않은 토큰입니다")
+	}
+
+	// 사용자 조회
+	var user model.User
+	if err := s.db.First(&user, claims.UserID).Error; err != nil {
+		s.logger.Warn("Refresh token failed: user not found",
+			zap.Uint("user_id", claims.UserID),
+			zap.Error(err),
+		)
+		return nil, errors.New("사용자를 찾을 수 없습니다")
+	}
+
+	// 사용자 활성화 확인
+	if !user.IsActive {
+		s.logger.Warn("Refresh token failed: user inactive",
+			zap.Uint("user_id", user.ID),
+		)
+		return nil, errors.New("비활성화된 계정입니다")
+	}
+
+	// 새 토큰 발급
+	accessToken, newRefreshToken, err := auth.GenerateTokenPair(
+		user.ID,
+		s.cfg.JWTSecretKey,
+		s.cfg.JWTAccessTokenExpireMin,
+		s.cfg.JWTRefreshTokenExpireDays,
+	)
+	if err != nil {
+		s.logger.Error("Failed to generate new tokens",
+			zap.Error(err),
+			zap.Uint("user_id", user.ID),
+		)
+		return nil, fmt.Errorf("토큰 생성에 실패했습니다: %w", err)
+	}
+
+	s.logger.Debug("Token refreshed successfully",
+		zap.Uint("user_id", user.ID),
+	)
+
+	return &AuthResponse{
+		AccessToken:  accessToken,
+		RefreshToken: newRefreshToken,
+		TokenType:    "bearer",
+		User: &UserResponse{
+			ID:          user.ID,
+			Email:       user.Email,
+			IsActive:    user.IsActive,
+			DateJoined:  user.DateJoined,
+			LoginMethod: string(user.LoginMethod),
+		},
+	}, nil
 }

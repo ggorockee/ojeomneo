@@ -46,7 +46,7 @@ func ConnectDB(cfg *Config) (*gorm.DB, error) {
 	sqlDB.SetMaxOpenConns(100)
 
 	// AutoMigrate - 테이블 자동 생성/업데이트
-	if err := db.AutoMigrate(&model.User{}); err != nil {
+	if err := db.AutoMigrate(&model.User{}, &model.EmailVerification{}); err != nil {
 		return nil, fmt.Errorf("failed to auto migrate: %w", err)
 	}
 
