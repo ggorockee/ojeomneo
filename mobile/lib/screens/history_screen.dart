@@ -6,6 +6,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../config/app_theme.dart';
 import '../models/sketch_result.dart';
 import '../services/sketch_provider.dart';
+import '../services/auth_service.dart';
 import '../utils/app_messages.dart';
 import 'result_screen.dart';
 
@@ -18,16 +19,30 @@ class HistoryScreen extends StatefulWidget {
 
 class _HistoryScreenState extends State<HistoryScreen> {
   final ScrollController _scrollController = ScrollController();
+  final _authService = AuthService();
+  bool? _isLoggedIn;
 
   @override
   void initState() {
     super.initState();
+    // 로그인 상태 확인
+    _checkLoginStatus();
+    
     // 히스토리 로드 (비로그인 사용자도 사용 가능, 3일 이상 된 데이터는 자동 필터링)
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<SketchProvider>().loadHistory(refresh: true);
     });
 
     _scrollController.addListener(_onScroll);
+  }
+
+  Future<void> _checkLoginStatus() async {
+    final isLoggedIn = await _authService.isLoggedIn();
+    if (mounted) {
+      setState(() {
+        _isLoggedIn = isLoggedIn;
+      });
+    }
   }
 
   @override
@@ -78,12 +93,11 @@ class _HistoryScreenState extends State<HistoryScreen> {
             );
           }
 
-          // TODO: 로그인 기능 구현 후 로그인 여부 확인
-          final isLoggedIn = false; // 임시: 로그인 기능 구현 후 실제 상태 확인
+          // 로그인 상태 확인 (초기 로딩 중이면 기본값 false 사용)
+          final isLoggedIn = _isLoggedIn ?? false;
           
           // 서버에서 이미 비로그인 사용자의 3일 이상 된 데이터를 필터링함
-          // 클라이언트에서 추가 필터링은 필요 없지만, 나중에 로그인 기능 구현 시
-          // 로그인 사용자는 모든 데이터를 볼 수 있도록 할 예정
+          // 로그인 사용자는 모든 데이터를 볼 수 있음
           final filteredHistory = provider.history;
 
           if (filteredHistory.isEmpty) {

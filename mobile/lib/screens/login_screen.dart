@@ -131,7 +131,7 @@ class _LoginScreenState extends State<LoginScreen> {
       return;
     }
 
-    // TODO: 이메일 로그인 구현
+    // TODO: 이메일 로그인 구현 (백엔드 API 연동 필요)
     _showMessage('이메일 로그인은 준비 중입니다.');
   }
 
@@ -189,7 +189,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         alignment: Alignment.centerRight,
                         child: TextButton(
                           onPressed: () {
-                            // TODO: 비밀번호 찾기 화면으로 이동
+                            // TODO: 비밀번호 찾기 화면 구현 (ForgotPasswordScreen)
                             _showMessage('비밀번호 찾기는 준비 중입니다.');
                           },
                           child: Text(
@@ -615,7 +615,7 @@ class _LoginScreenState extends State<LoginScreen> {
       alignment: Alignment.centerRight,
       child: GestureDetector(
         onTap: () {
-          // TODO: 비밀번호 찾기 화면으로 이동
+          // TODO: 비밀번호 찾기 화면 구현 (ForgotPasswordScreen)
           _showMessage('비밀번호 찾기는 준비 중입니다.');
         },
         child: Text(
@@ -650,7 +650,7 @@ class _LoginScreenState extends State<LoginScreen> {
           SizedBox(width: 4.w),
           GestureDetector(
             onTap: () {
-              // TODO: 회원가입 화면으로 이동
+              // TODO: 회원가입 화면 구현 (SignUpScreen)
               _showMessage('회원가입은 준비 중입니다.');
             },
             child: Text(

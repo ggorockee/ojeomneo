@@ -110,7 +110,6 @@ func (s *AuthService) GoogleLogin(idToken string) (*AuthResponse, error) {
 		firebaseUser.ID,
 		firebaseUser.Email,
 		firebaseUser.Name,
-		firebaseUser.ProfileImage,
 	)
 
 	if err != nil {
@@ -184,7 +183,6 @@ func (s *AuthService) AppleLogin(identityToken string) (*AuthResponse, error) {
 		appleUser.ID,
 		appleUser.Email, // 빈 문자열일 수 있음
 		appleUser.Name,
-		appleUser.ProfileImage,
 	)
 
 	if err != nil {
@@ -263,7 +261,6 @@ func (s *AuthService) KakaoLogin(accessToken string) (*AuthResponse, error) {
 		kakaoUser.ID,
 		kakaoUser.Email,
 		kakaoUser.Name,
-		kakaoUser.ProfileImage,
 	)
 
 	if err != nil {
@@ -287,7 +284,8 @@ func (s *AuthService) KakaoLogin(accessToken string) (*AuthResponse, error) {
 }
 
 // handleSNSLogin 공통 SNS 로그인 로직 (goroutine으로 최적화)
-func (s *AuthService) handleSNSLogin(provider, socialID, email, name, profileImage string) (*AuthResponse, error) {
+// profileImage는 현재 User 모델에 필드가 없어 사용하지 않음
+func (s *AuthService) handleSNSLogin(provider, socialID, email, name string) (*AuthResponse, error) {
 	start := time.Now()
 
 	// 이메일 정규화
