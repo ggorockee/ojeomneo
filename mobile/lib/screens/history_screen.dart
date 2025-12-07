@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 import '../config/app_theme.dart';
 import '../models/sketch_result.dart';
@@ -50,19 +51,19 @@ class _HistoryScreenState extends State<HistoryScreen> {
         backgroundColor: AppTheme.surfaceColor,
         elevation: 0,
         centerTitle: true,
-        title: const Text(
+        title: Text(
           '히스토리',
           style: TextStyle(
-            fontSize: 18,
+            fontSize: 18.sp,
             fontWeight: FontWeight.w700,
             color: AppTheme.onSurface,
           ),
         ),
         leading: IconButton(
-          icon: const Icon(
+          icon: Icon(
             Icons.arrow_back_ios_new_rounded,
             color: AppTheme.onSurface,
-            size: 22,
+            size: 22.sp,
           ),
           onPressed: () => Navigator.of(context).pop(),
         ),
@@ -94,13 +95,13 @@ class _HistoryScreenState extends State<HistoryScreen> {
             color: AppTheme.primaryColor,
             child: ListView.builder(
               controller: _scrollController,
-              padding: const EdgeInsets.all(20),
+              padding: EdgeInsets.all(20.w),
               itemCount: filteredHistory.length +
                   (provider.hasMoreHistory ? 1 : 0),
               itemBuilder: (context, index) {
                 if (index >= filteredHistory.length) {
                   return Padding(
-                    padding: const EdgeInsets.all(16),
+                    padding: EdgeInsets.all(16.w),
                     child: Center(
                       child: CircularProgressIndicator(
                         color: AppTheme.primaryColor,
@@ -118,7 +119,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                   debugPrint('[HistoryScreen] recommendation is NULL!');
                 }
                 return Padding(
-                  padding: const EdgeInsets.only(bottom: 12),
+                  padding: EdgeInsets.only(bottom: 12.h),
                   child: _HistoryCard(
                     history: history,
                     onTap: () {
@@ -169,55 +170,55 @@ class _EmptyState extends StatelessWidget {
     if (!isLoggedIn) {
       return Center(
         child: Padding(
-          padding: const EdgeInsets.all(32),
+          padding: EdgeInsets.all(32.w),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Icon(
                 Icons.history_rounded,
-                size: 80,
+                size: 80.sp,
                 color: AppTheme.textDisabled,
               ),
-              const SizedBox(height: 24),
+              SizedBox(height: 24.h),
               Text(
                 AppMessages.historyEmpty,
-                style: const TextStyle(
-                  fontSize: 16,
+                style: TextStyle(
+                  fontSize: 16.sp,
                   fontWeight: FontWeight.w600,
                   color: AppTheme.onSurface,
                 ),
               ),
-              const SizedBox(height: 8),
+              SizedBox(height: 8.h),
               Text(
                 '비로그인 사용자는 최근 3일간의 기록만\n조회할 수 있어요.\n\n더 오래 보관하려면 로그인해 주세요!',
-                style: const TextStyle(
-                  fontSize: 14,
+                style: TextStyle(
+                  fontSize: 14.sp,
                   color: AppTheme.onSurfaceVariant,
                   height: 1.6,
                 ),
                 textAlign: TextAlign.center,
               ),
-              const SizedBox(height: 24),
+              SizedBox(height: 24.h),
               GestureDetector(
                 onTap: () => Navigator.of(context).pop(),
                 child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 24,
-                    vertical: 14,
+                  padding: EdgeInsets.symmetric(
+                    horizontal: 24.w,
+                    vertical: 14.h,
                   ),
                   decoration: BoxDecoration(
                     gradient: AppTheme.primaryGradient,
-                    borderRadius: BorderRadius.circular(14),
+                    borderRadius: BorderRadius.circular(14.r),
                   ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
-                    children: const [
-                      Icon(Icons.brush_rounded, color: Colors.white, size: 18),
-                      SizedBox(width: 8),
+                    children: [
+                      Icon(Icons.brush_rounded, color: Colors.white, size: 18.sp),
+                      SizedBox(width: 8.w),
                       Text(
                         '그림 그리러 가기',
                         style: TextStyle(
-                          fontSize: 15,
+                          fontSize: 15.sp,
                           fontWeight: FontWeight.w700,
                           color: Colors.white,
                         ),
@@ -233,54 +234,54 @@ class _EmptyState extends StatelessWidget {
     }
     return Center(
       child: Padding(
-        padding: const EdgeInsets.all(32),
+        padding: EdgeInsets.all(32.w),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(
               Icons.history_rounded,
-              size: 80,
+              size: 80.sp,
               color: AppTheme.textDisabled,
             ),
-            const SizedBox(height: 24),
+            SizedBox(height: 24.h),
             Text(
               AppMessages.historyEmpty,
-              style: const TextStyle(
-                fontSize: 16,
+              style: TextStyle(
+                fontSize: 16.sp,
                 fontWeight: FontWeight.w600,
                 color: AppTheme.onSurface,
               ),
             ),
-            const SizedBox(height: 8),
+            SizedBox(height: 8.h),
             Text(
               AppMessages.historyEmptyDescription,
-              style: const TextStyle(
-                fontSize: 14,
+              style: TextStyle(
+                fontSize: 14.sp,
                 color: AppTheme.onSurfaceVariant,
               ),
               textAlign: TextAlign.center,
             ),
-            const SizedBox(height: 24),
+            SizedBox(height: 24.h),
             GestureDetector(
               onTap: () => Navigator.of(context).pop(),
               child: Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 24,
-                  vertical: 14,
+                padding: EdgeInsets.symmetric(
+                  horizontal: 24.w,
+                  vertical: 14.h,
                 ),
                 decoration: BoxDecoration(
                   gradient: AppTheme.primaryGradient,
-                  borderRadius: BorderRadius.circular(14),
+                  borderRadius: BorderRadius.circular(14.r),
                 ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
-                  children: const [
-                    Icon(Icons.brush_rounded, color: Colors.white, size: 18),
-                    SizedBox(width: 8),
+                  children: [
+                    Icon(Icons.brush_rounded, color: Colors.white, size: 18.sp),
+                    SizedBox(width: 8.w),
                     Text(
                       '그림 그리러 가기',
                       style: TextStyle(
-                        fontSize: 15,
+                        fontSize: 15.sp,
                         fontWeight: FontWeight.w700,
                         color: Colors.white,
                       ),
@@ -311,10 +312,10 @@ class _HistoryCard extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.all(16),
+        padding: EdgeInsets.all(16.w),
         decoration: BoxDecoration(
           color: AppTheme.cardBackground,
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(20.r),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -328,22 +329,22 @@ class _HistoryCard extends StatelessWidget {
                     children: [
                       // 메뉴 이미지 또는 카테고리 아이콘
                       Container(
-                        width: 48,
-                        height: 48,
+                        width: 48.w,
+                        height: 48.w,
                         decoration: BoxDecoration(
                           color: AppTheme.surfaceVariant,
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: BorderRadius.circular(12.r),
                         ),
                         clipBehavior: Clip.antiAlias,
-                        child: _buildMenuImage(primaryMenu?.imageUrl, primaryMenu?.category),
+                        child: _buildMenuImage(primaryMenu?.imageUrl, primaryMenu?.category                        ),
                       ),
-                      const SizedBox(width: 12),
+                      SizedBox(width: 12.w),
                       if (primaryMenu != null)
                         Flexible(
                           child: Text(
                             primaryMenu.name,
-                            style: const TextStyle(
-                              fontSize: 16,
+                            style: TextStyle(
+                              fontSize: 16.sp,
                               fontWeight: FontWeight.w700,
                               color: AppTheme.onSurface,
                             ),
@@ -357,54 +358,54 @@ class _HistoryCard extends StatelessWidget {
                   children: [
                     Text(
                       _formatDate(history.createdAt),
-                      style: const TextStyle(
-                        fontSize: 11,
+                      style: TextStyle(
+                        fontSize: 11.sp,
                         fontWeight: FontWeight.w600,
                         color: AppTheme.onSurfaceVariant,
                       ),
                     ),
-                    const SizedBox(width: 4),
-                    const Icon(
+                    SizedBox(width: 4.w),
+                    Icon(
                       Icons.chevron_right_rounded,
                       color: AppTheme.textDisabled,
-                      size: 18,
+                      size: 18.sp,
                     ),
                   ],
                 ),
               ],
             ),
-            const SizedBox(height: 12),
+            SizedBox(height: 12.h),
 
             // Emotion
             if (analysis != null)
               Text(
                 analysis.emotion,
-                style: const TextStyle(
-                  fontSize: 14,
+                style: TextStyle(
+                  fontSize: 14.sp,
                   color: AppTheme.onSurface,
                 ),
               ),
-            const SizedBox(height: 8),
+            SizedBox(height: 8.h),
 
             // Keywords
             if (analysis != null && analysis.keywords.isNotEmpty)
               Wrap(
-                spacing: 6,
-                runSpacing: 6,
+                spacing: 6.w,
+                runSpacing: 6.h,
                 children: analysis.keywords.map((keyword) {
                   return Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 10,
-                      vertical: 5,
+                    padding: EdgeInsets.symmetric(
+                      horizontal: 10.w,
+                      vertical: 5.h,
                     ),
                     decoration: BoxDecoration(
                       color: AppTheme.primaryColor.withAlpha(26),
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(12.r),
                     ),
                     child: Text(
                       keyword,
-                      style: const TextStyle(
-                        fontSize: 11,
+                      style: TextStyle(
+                        fontSize: 11.sp,
                         fontWeight: FontWeight.w600,
                         color: AppTheme.primaryColor,
                       ),
@@ -415,17 +416,17 @@ class _HistoryCard extends StatelessWidget {
 
             // Recommendation reason
             if (primaryMenu != null) ...[
-              const SizedBox(height: 12),
+              SizedBox(height: 12.h),
               Container(
-                padding: const EdgeInsets.all(12),
+                padding: EdgeInsets.all(12.w),
                 decoration: BoxDecoration(
                   color: AppTheme.surfaceVariant.withAlpha(128),
-                  borderRadius: BorderRadius.circular(10),
+                  borderRadius: BorderRadius.circular(10.r),
                 ),
                 child: Text(
                   primaryMenu.reason,
-                  style: const TextStyle(
-                    fontSize: 12,
+                  style: TextStyle(
+                    fontSize: 12.sp,
                     color: AppTheme.onSurfaceVariant,
                     height: 1.5,
                   ),
@@ -450,7 +451,7 @@ class _HistoryCard extends StatelessWidget {
           child: Center(
             child: Icon(
               _getCategoryIcon(category),
-              size: 24,
+              size: 24.sp,
               color: AppTheme.primaryColor.withAlpha(128),
             ),
           ),
@@ -460,7 +461,7 @@ class _HistoryCard extends StatelessWidget {
           child: Center(
             child: Icon(
               _getCategoryIcon(category),
-              size: 24,
+              size: 24.sp,
               color: AppTheme.primaryColor,
             ),
           ),
@@ -473,7 +474,7 @@ class _HistoryCard extends StatelessWidget {
       child: Center(
         child: Icon(
           _getCategoryIcon(category),
-          size: 24,
+          size: 24.sp,
           color: AppTheme.primaryColor,
         ),
       ),

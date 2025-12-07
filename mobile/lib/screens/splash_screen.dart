@@ -1,5 +1,6 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 import '../config/app_theme.dart';
 
@@ -89,8 +90,8 @@ class _SplashScreenState extends State<SplashScreen>
                   Transform.scale(
                     scale: _scaleAnimation.value,
                     child: Container(
-                      width: 160,
-                      height: 160,
+                      width: 160.w,
+                      height: 160.w,
                       decoration: const BoxDecoration(
                         color: Colors.white,
                         shape: BoxShape.circle,
@@ -98,25 +99,25 @@ class _SplashScreenState extends State<SplashScreen>
                       child: ClipOval(
                         child: Image.asset(
                           'assets/images/logo.png',
-                          width: 160,
-                          height: 160,
+                          width: 160.w,
+                          height: 160.w,
                           fit: BoxFit.contain,
                         ),
                       ),
                     ),
                   ),
-                  const SizedBox(height: 28),
+                  SizedBox(height: 28.h),
                   // Tagline
-                  const Text(
+                  Text(
                     '오늘 점심은 너야!',
                     style: TextStyle(
-                      fontSize: 17,
+                      fontSize: 17.sp,
                       fontWeight: FontWeight.w600,
                       color: AppTheme.onSurfaceVariant,
                       letterSpacing: 0.5,
                     ),
                   ),
-                  const SizedBox(height: 48),
+                  SizedBox(height: 48.h),
                   // 로딩 도트 애니메이션
                   _LoadingDots(controller: _scaleController),
                 ],
@@ -150,12 +151,12 @@ class _LoadingDots extends StatelessWidget {
             final opacity = 0.5 + (0.5 * wave);
 
             return Container(
-              margin: const EdgeInsets.symmetric(horizontal: 5),
+              margin: EdgeInsets.symmetric(horizontal: 5.w),
               child: Transform.scale(
                 scale: scale,
                 child: Container(
-                  width: 10,
-                  height: 10,
+                  width: 10.w,
+                  height: 10.w,
                   decoration: BoxDecoration(
                     color: AppTheme.primaryColor.withAlpha((opacity * 255).toInt()),
                     shape: BoxShape.circle,

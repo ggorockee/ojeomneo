@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 import '../config/app_theme.dart';
 import '../models/sketch_result.dart';
@@ -70,7 +71,7 @@ ${_currentMenu.name}
             // Scrollable content
             Expanded(
               child: SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(horizontal: 20),
+                padding: EdgeInsets.symmetric(horizontal: 20.w),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -79,35 +80,35 @@ ${_currentMenu.name}
                       key: ValueKey(_currentMenu.menuId),
                       menu: _currentMenu,
                     ),
-                    const SizedBox(height: 32),
+                    SizedBox(height: 32.h),
 
                     // 대안 메뉴에서 온 경우: 이전 결과로 돌아가기 버튼 표시
                     if (widget.isFromAlternative) ...[
                       GestureDetector(
                         onTap: () => Navigator.of(context).pop(),
                         child: Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 20,
-                            vertical: 14,
+                          padding: EdgeInsets.symmetric(
+                            horizontal: 20.w,
+                            vertical: 14.h,
                           ),
                           decoration: BoxDecoration(
                             color: AppTheme.surfaceVariant,
-                            borderRadius: BorderRadius.circular(14),
+                            borderRadius: BorderRadius.circular(14.r),
                             border: Border.all(color: AppTheme.outlineColor),
                           ),
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.center,
-                            children: const [
+                            children: [
                               Icon(
                                 Icons.arrow_back_rounded,
                                 color: AppTheme.onSurfaceVariant,
-                                size: 18,
+                                size: 18.sp,
                               ),
-                              SizedBox(width: 8),
+                              SizedBox(width: 8.w),
                               Text(
                                 '이전 결과로 돌아가기',
                                 style: TextStyle(
-                                  fontSize: 15,
+                                  fontSize: 15.sp,
                                   fontWeight: FontWeight.w600,
                                   color: AppTheme.onSurfaceVariant,
                                 ),
@@ -120,21 +121,21 @@ ${_currentMenu.name}
 
                     // 대안 메뉴 추천 - 메인 결과 화면에서만 표시
                     if (!widget.isFromAlternative && _allMenus.where((m) => m.menuId != _currentMenu.menuId).isNotEmpty) ...[
-                      const Text(
+                      Text(
                         '이런 메뉴도 어때요?',
                         style: TextStyle(
-                          fontSize: 16,
+                          fontSize: 16.sp,
                           fontWeight: FontWeight.w700,
                           color: AppTheme.onSurface,
                         ),
                       ),
-                      const SizedBox(height: 16),
+                      SizedBox(height: 16.h),
                       ..._allMenus
                           .where((m) => m.menuId != _currentMenu.menuId)
                           .take(2)
                           .map(
                             (menu) => Padding(
-                              padding: const EdgeInsets.only(bottom: 10),
+                              padding: EdgeInsets.only(bottom: 10.h),
                               child: _AlternativeMenuCard(
                                 key: ValueKey(menu.menuId),
                                 menu: menu,
@@ -154,16 +155,16 @@ ${_currentMenu.name}
                             ),
                           ),
                     ],
-                    const SizedBox(height: 120),
+                    SizedBox(height: 120.h),
                   ],
                 ),
               ),
             ),
 
             // 배너 광고
-            const Padding(
-              padding: EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-              child: BannerAdWidget(bannerType: 1),
+            Padding(
+              padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 8.h),
+              child: const BannerAdWidget(bannerType: 1),
             ),
           ],
         ),
@@ -176,32 +177,32 @@ ${_currentMenu.name}
 
   Widget _buildHeader() {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+      padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 8.h),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           IconButton(
             onPressed: () => Navigator.of(context).pop(),
-            icon: const Icon(
+            icon: Icon(
               Icons.arrow_back_ios_new_rounded,
               color: AppTheme.onSurface,
-              size: 22,
+              size: 22.sp,
             ),
           ),
-          const Text(
+          Text(
             '추천 결과',
             style: TextStyle(
-              fontSize: 18,
+              fontSize: 18.sp,
               fontWeight: FontWeight.w700,
               color: AppTheme.onSurface,
             ),
           ),
           IconButton(
             onPressed: () {},
-            icon: const Icon(
+            icon: Icon(
               Icons.more_vert_rounded,
               color: AppTheme.onSurface,
-              size: 22,
+              size: 22.sp,
             ),
           ),
         ],
@@ -211,7 +212,7 @@ ${_currentMenu.name}
 
   Widget _buildBottomButtons() {
     return Container(
-      padding: const EdgeInsets.fromLTRB(20, 16, 20, 36),
+      padding: EdgeInsets.fromLTRB(20.w, 16.h, 20.w, 36.h),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topCenter,
@@ -237,7 +238,7 @@ ${_currentMenu.name}
               isPrimary: false,
             ),
           ),
-          const SizedBox(width: 12),
+          SizedBox(width: 12.w),
 
           // Share button
           Expanded(
@@ -267,9 +268,9 @@ class _PrimaryMenuCard extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         color: AppTheme.cardBackground,
-        borderRadius: BorderRadius.circular(24),
+        borderRadius: BorderRadius.circular(24.r),
       ),
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.all(16.w),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -279,7 +280,7 @@ class _PrimaryMenuCard extends StatelessWidget {
             child: Container(
               decoration: BoxDecoration(
                 color: _getCategoryColor(menu.category).withAlpha(51),
-                borderRadius: BorderRadius.circular(16),
+                borderRadius: BorderRadius.circular(16.r),
               ),
               clipBehavior: Clip.antiAlias,
               child: _hasValidImage
@@ -293,71 +294,71 @@ class _PrimaryMenuCard extends StatelessWidget {
                   : _buildEmojiPlaceholder(),
             ),
           ),
-          const SizedBox(height: 20),
+          SizedBox(height: 20.h),
 
           // Category badge
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 6.h),
             decoration: BoxDecoration(
               color: AppTheme.outlineColor,
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: BorderRadius.circular(8.r),
             ),
             child: Text(
               _getCategoryLabel(menu.category),
-              style: const TextStyle(
-                fontSize: 13,
+              style: TextStyle(
+                fontSize: 13.sp,
                 fontWeight: FontWeight.w600,
                 color: AppTheme.onSurfaceVariant,
               ),
             ),
           ),
-          const SizedBox(height: 12),
+          SizedBox(height: 12.h),
 
           // Menu name
           Text(
             menu.name,
-            style: const TextStyle(
-              fontSize: 26,
+            style: TextStyle(
+              fontSize: 26.sp,
               fontWeight: FontWeight.w800,
               color: AppTheme.onSurface,
               letterSpacing: -0.5,
             ),
           ),
-          const SizedBox(height: 12),
+          SizedBox(height: 12.h),
 
           // Recommendation reason
           Text(
             menu.reason,
-            style: const TextStyle(
-              fontSize: 15,
+            style: TextStyle(
+              fontSize: 15.sp,
               height: 1.7,
-              color: Color(0xFF555555),
+              color: const Color(0xFF555555),
             ),
           ),
-          const SizedBox(height: 20),
+          SizedBox(height: 20.h),
 
           // Tags
           if (menu.tags.isNotEmpty)
             Wrap(
-              spacing: 8,
-              runSpacing: 8,
+              spacing: 8.w,
+              runSpacing: 8.h,
               children: menu.tags.map((tag) {
                 return Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 14,
-                    vertical: 8,
+                  padding: EdgeInsets.symmetric(
+                    horizontal: 14.w,
+                    vertical: 8.h,
                   ),
                   decoration: BoxDecoration(
                     color: AppTheme.surfaceColor,
-                    borderRadius: BorderRadius.circular(20),
+                    borderRadius: BorderRadius.circular(20.r),
                     border: Border.all(color: const Color(0xFFE0E0E0)),
                   ),
                   child: Text(
                     '#$tag',
-                    style: const TextStyle(
-                      fontSize: 13,
+                    style: TextStyle(
+                      fontSize: 13.sp,
                       fontWeight: FontWeight.w500,
-                      color: Color(0xFF444444),
+                      color: const Color(0xFF444444),
                     ),
                   ),
                 );
@@ -371,11 +372,11 @@ class _PrimaryMenuCard extends StatelessWidget {
   Widget _buildPlaceholder() {
     return Container(
       color: AppTheme.surfaceVariant,
-      child: const Center(
+      child: Center(
         child: SizedBox(
-          width: 32,
-          height: 32,
-          child: CircularProgressIndicator(
+          width: 32.w,
+          height: 32.w,
+          child: const CircularProgressIndicator(
             strokeWidth: 2,
             color: AppTheme.primaryColor,
           ),
@@ -388,7 +389,7 @@ class _PrimaryMenuCard extends StatelessWidget {
     return Center(
       child: Icon(
         _getCategoryIcon(menu.category),
-        size: 80,
+        size: 80.sp,
         color: _getCategoryColor(menu.category).withAlpha(200),
       ),
     );
@@ -472,20 +473,20 @@ class _AlternativeMenuCard extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.all(14),
+        padding: EdgeInsets.all(14.w),
         decoration: BoxDecoration(
           color: AppTheme.cardBackground,
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(16.r),
         ),
         child: Row(
           children: [
             // Thumbnail
             Container(
-              width: 56,
-              height: 56,
+              width: 56.w,
+              height: 56.w,
               decoration: BoxDecoration(
                 color: _getCategoryColor(menu.category),
-                borderRadius: BorderRadius.circular(14),
+                borderRadius: BorderRadius.circular(14.r),
               ),
               clipBehavior: Clip.antiAlias,
               child: _hasValidImage
@@ -500,7 +501,7 @@ class _AlternativeMenuCard extends StatelessWidget {
                     )
                   : _buildSmallPlaceholder(),
             ),
-            const SizedBox(width: 14),
+            SizedBox(width: 14.w),
 
             // Content
             Expanded(
@@ -509,17 +510,17 @@ class _AlternativeMenuCard extends StatelessWidget {
                 children: [
                   Text(
                     _getCategoryLabel(menu.category),
-                    style: const TextStyle(
-                      fontSize: 12,
+                    style: TextStyle(
+                      fontSize: 12.sp,
                       fontWeight: FontWeight.w500,
                       color: AppTheme.onSurfaceVariant,
                     ),
                   ),
-                  const SizedBox(height: 2),
+                  SizedBox(height: 2.h),
                   Text(
                     menu.name,
-                    style: const TextStyle(
-                      fontSize: 16,
+                    style: TextStyle(
+                      fontSize: 16.sp,
                       fontWeight: FontWeight.w700,
                       color: AppTheme.onSurface,
                     ),
@@ -529,10 +530,10 @@ class _AlternativeMenuCard extends StatelessWidget {
             ),
 
             // Arrow
-            const Icon(
+            Icon(
               Icons.chevron_right_rounded,
               color: AppTheme.textDisabled,
-              size: 20,
+              size: 20.sp,
             ),
           ],
         ),
@@ -544,7 +545,7 @@ class _AlternativeMenuCard extends StatelessWidget {
     return Center(
       child: Icon(
         _getCategoryIcon(menu.category),
-        size: 28,
+        size: 28.sp,
         color: _getCategoryColor(menu.category).withAlpha(200),
       ),
     );
@@ -629,20 +630,20 @@ class _ActionButton extends StatelessWidget {
       return GestureDetector(
         onTap: onPressed,
         child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 18),
+          padding: EdgeInsets.symmetric(vertical: 18.h),
           decoration: BoxDecoration(
             gradient: AppTheme.primaryGradient,
-            borderRadius: BorderRadius.circular(14),
+            borderRadius: BorderRadius.circular(14.r),
           ),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(icon, color: Colors.white, size: 18),
-              const SizedBox(width: 8),
+              Icon(icon, color: Colors.white, size: 18.sp),
+              SizedBox(width: 8.w),
               Text(
                 label,
-                style: const TextStyle(
-                  fontSize: 15,
+                style: TextStyle(
+                  fontSize: 15.sp,
                   fontWeight: FontWeight.w700,
                   color: Colors.white,
                 ),
@@ -656,20 +657,20 @@ class _ActionButton extends StatelessWidget {
     return GestureDetector(
       onTap: onPressed,
       child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 18),
+        padding: EdgeInsets.symmetric(vertical: 18.h),
         decoration: BoxDecoration(
           color: AppTheme.toolButtonInactive,
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: BorderRadius.circular(14.r),
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(icon, color: AppTheme.onSurface, size: 18),
-            const SizedBox(width: 8),
+            Icon(icon, color: AppTheme.onSurface, size: 18.sp),
+            SizedBox(width: 8.w),
             Text(
               label,
-              style: const TextStyle(
-                fontSize: 15,
+              style: TextStyle(
+                fontSize: 15.sp,
                 fontWeight: FontWeight.w700,
                 color: AppTheme.onSurface,
               ),
