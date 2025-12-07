@@ -17,8 +17,7 @@ Google, Apple, Kakao SNS 로그인 기능을 구현합니다. 순서대로 Googl
 
 ### [x] 1.2 환경변수 설정
 #### Server (`server/.env.example` 생성)
-- [x] `FIREBASE_ADMIN_SDK_KEY`: Firebase Admin SDK 키 JSON 문자열 (k8s 시크릿으로 주입)
-- [x] `GOOGLE_CLIENT_ID`: Google OAuth 클라이언트 ID (모바일 앱용)
+- [x] `FIREBASE_ADMIN_SDK_KEY`: Firebase Admin SDK 키 JSON 문자열 (k8s 시크릿으로 주입) - Google 로그인 토큰 검증용
 - [x] `APPLE_CLIENT_ID`: Apple OAuth 클라이언트 ID (iOS 앱용) - Bundle ID: `com.woohalabs.ojeomneo`
 - [x] `APPLE_TEAM_ID`: Apple 개발팀 ID
 - [x] `APPLE_KEY_ID`: Apple Key ID
@@ -26,10 +25,10 @@ Google, Apple, Kakao SNS 로그인 기능을 구현합니다. 순서대로 Googl
 - [x] `server/internal/config/config.go`에 환경변수 필드 추가 완료
 
 #### Mobile (`mobile/.env.example` 생성)
-- [x] `GOOGLE_CLIENT_ID`: Google OAuth 클라이언트 ID (iOS/Android)
 - [x] `APPLE_CLIENT_ID`: Apple OAuth 클라이언트 ID (iOS 전용) - Bundle ID: `com.woohalabs.ojeomneo`
 - [x] `KAKAO_NATIVE_APP_KEY`: 카카오 네이티브 앱 키 (`582b06a868603f324eb551a2e67815f6`)
-- [x] `API_BASE_URL`: 백엔드 API 베이스 URL - `https://api.woohalabs.com/ojeomneo/v1` 
+- [x] `API_BASE_URL`: 백엔드 API 베이스 URL - `https://api.woohalabs.com/ojeomneo/v1`
+- 참고: Google 로그인은 Firebase Authentication 사용 (추가 환경변수 불필요) 
 
 ---
 
@@ -38,9 +37,10 @@ Google, Apple, Kakao SNS 로그인 기능을 구현합니다. 순서대로 Googl
 ### [ ] 2.1 SNS 토큰 검증 패키지 구현 (`server/pkg/sns/`)
 참고: `/Users/woohyeon/ggorockee/reviewmaps/server/pkg/sns/`
 
-- [ ] `google.go`: Google Access Token 검증 및 사용자 정보 추출
-  - API: `https://www.googleapis.com/oauth2/v2/userinfo`
-  - 함수: `VerifyGoogleToken(ctx context.Context, accessToken string) (*GoogleUserInfo, error)`
+- [ ] `firebase.go`: Firebase Admin SDK 초기화 및 Google ID Token 검증
+  - Firebase Admin SDK 초기화 (환경변수에서 JSON 키 값 읽기)
+  - 함수: `VerifyFirebaseIDToken(ctx context.Context, idToken string) (*FirebaseUserInfo, error)`
+  - Firebase ID Token 검증 및 사용자 정보 추출 (email, name, photo_url, uid)
   
 - [ ] `apple.go`: Apple Identity Token 검증 및 사용자 정보 추출
   - API: `https://appleid.apple.com/auth/keys` (JWKS)
@@ -53,11 +53,11 @@ Google, Apple, Kakao SNS 로그인 기능을 구현합니다. 순서대로 Googl
 ### [ ] 2.2 인증 서비스 확장 (`server/internal/service/auth.go`)
 참고: `/Users/woohyeon/ggorockee/reviewmaps/server/internal/services/auth.go`
 
-- [ ] `AuthService` 구조체에 SNS 검증 패키지 추가
-- [ ] `GoogleLogin(accessToken string) (*AuthResponse, error)` 구현
-  - Google 토큰 검증
-  - 사용자 정보 추출 (email, name, profile_image)
-  - DB에 사용자 생성/조회 (login_method='google', social_id=google_id)
+- [ ] `AuthService` 구조체에 SNS 검증 패키지 및 Firebase Admin SDK 추가
+- [ ] `GoogleLogin(idToken string) (*AuthResponse, error)` 구현
+  - Firebase ID Token 검증 (Firebase Admin SDK 사용)
+  - 사용자 정보 추출 (email, name, photo_url, uid)
+  - DB에 사용자 생성/조회 (login_method='google', social_id=uid)
   - JWT 토큰 발급
 - [ ] `AppleLogin(identityToken string) (*AuthResponse, error)` 구현
   - Apple Identity Token 검증
@@ -74,7 +74,7 @@ Google, Apple, Kakao SNS 로그인 기능을 구현합니다. 순서대로 Googl
 - [ ] `AuthHandler` 구조체 생성
 - [ ] 라우터 설정 함수: `SetupAuthRoutes(router fiber.Router, db *database.DB, cfg *config.Config)`
 - [ ] `POST /ojeomneo/v1/auth/google`: Google 로그인 엔드포인트
-  - Request: `{ "access_token": "..." }`
+  - Request: `{ "id_token": "..." }` (Firebase ID Token)
   - Response: `{ "access_token": "...", "refresh_token": "...", "user": {...} }`
 - [ ] `POST /ojeomneo/v1/auth/apple`: Apple 로그인 엔드포인트
   - Request: `{ "access_token": "..." }` (identity_token)
@@ -96,25 +96,31 @@ Google, Apple, Kakao SNS 로그인 기능을 구현합니다. 순서대로 Googl
 ## [ ] 3. 모바일 구현 (Flutter)
 
 ### [ ] 3.1 의존성 추가 (`mobile/pubspec.yaml`)
-- [ ] `google_sign_in: ^7.2.0`: Google 로그인
+- [ ] `firebase_core: ^3.x.x`: Firebase Core (이미 추가됨)
+- [ ] `firebase_auth: ^5.x.x`: Firebase Authentication (Google 로그인 포함)
+- [ ] `google_sign_in: ^7.2.0`: Google 로그인 (Firebase Auth와 함께 사용)
 - [ ] `sign_in_with_apple: ^7.0.1`: Apple 로그인 (iOS 전용)
 - [ ] `kakao_flutter_sdk: ^1.10.0`: Kakao 로그인
 - [ ] `flutter_dotenv: ^6.0.0`: 환경변수 관리 (이미 추가됨)
 - [ ] `flutter_secure_storage: ^9.2.4`: 안전한 토큰 저장
 
 ### [ ] 3.2 API 서비스 확장 (`mobile/lib/services/api_service.dart`)
-- [ ] `postSNSLogin(String provider, String accessToken)`: SNS 로그인 API 호출
+- [ ] `postSNSLogin(String provider, String token)`: SNS 로그인 API 호출
   - provider: 'google', 'apple', 'kakao'
+  - token: Google은 `id_token` (Firebase ID Token), Apple/Kakao는 `access_token`
   - endpoint: `/ojeomneo/v1/auth/{provider}`
+  - Request: `{ "id_token": "..." }` (Google) 또는 `{ "access_token": "..." }` (Apple/Kakao)
   - response: `{ "access_token", "refresh_token", "user" }`
 
 ### [ ] 3.3 인증 서비스 구현 (`mobile/lib/services/auth_service.dart`)
 - [ ] `AuthService` 클래스 생성
-- [ ] `loginWithGoogle()`: Google 로그인 플로우
+- [ ] `loginWithGoogle()`: Google 로그인 플로우 (Firebase Authentication 사용)
   1. `google_sign_in`으로 Google 로그인 수행
-  2. Access Token 획득
-  3. 백엔드 API 호출하여 JWT 토큰 획득
-  4. 토큰 저장 (SharedPreferences 또는 secure storage)
+  2. Google 계정 인증 후 `GoogleSignInAuthentication` 획득
+  3. Firebase Auth로 `GoogleAuthProvider`를 사용하여 로그인
+  4. Firebase ID Token 획득 (`User.getIdToken()`)
+  5. 백엔드 API 호출하여 JWT 토큰 획득 (`id_token` 전송)
+  6. 토큰 저장 (flutter_secure_storage 사용)
 - [ ] `loginWithApple()`: Apple 로그인 플로우 (iOS 전용)
   1. `sign_in_with_apple`으로 Apple 로그인 수행
   2. Identity Token 획득
@@ -142,14 +148,14 @@ Google, Apple, Kakao SNS 로그인 기능을 구현합니다. 순서대로 Googl
 
 ### [ ] 3.5 iOS 설정 (`mobile/ios/`)
 - [ ] `Info.plist`에 URL Scheme 추가
-  - Google: `{REVERSED_CLIENT_ID}`
+  - Firebase/Google: `{REVERSED_CLIENT_ID}` (GoogleService-Info.plist에서 확인)
   - Kakao: `kakao{KAKAO_NATIVE_APP_KEY}`
 - [ ] Capabilities에 Sign in with Apple 추가
-- [ ] `GoogleService-Info.plist` 추가 (Firebase Console에서 다운로드)
+- [ ] `GoogleService-Info.plist` 추가 (Firebase Console에서 다운로드) - 필수
 
 ### [ ] 3.6 Android 설정 (`mobile/android/`)
-- [ ] `android/app/build.gradle`에 Google Services 플러그인 추가
-- [ ] `google-services.json` 추가 (Firebase Console에서 다운로드)
+- [ ] `android/app/build.gradle`에 Google Services 플러그인 추가 - 필수 (Firebase Auth 사용)
+- [ ] `google-services.json` 추가 (Firebase Console에서 다운로드) - 필수
 - [ ] `AndroidManifest.xml`에 카카오 네이티브 앱 키 설정
 
 ---
@@ -157,7 +163,7 @@ Google, Apple, Kakao SNS 로그인 기능을 구현합니다. 순서대로 Googl
 ## [ ] 4. 테스트
 
 ### [ ] 4.1 백엔드 API 테스트
-- [ ] Google 로그인 API 테스트 (Postman/curl)
+- [ ] Google 로그인 API 테스트 (Postman/curl) - Firebase ID Token으로 테스트
 - [ ] Apple 로그인 API 테스트 (Postman/curl)
 - [ ] Kakao 로그인 API 테스트 (Postman/curl)
 - [ ] 에러 케이스 테스트 (잘못된 토큰, 만료된 토큰 등)
@@ -200,7 +206,9 @@ Google, Apple, Kakao SNS 로그인 기능을 구현합니다. 순서대로 Googl
 - 참고 서버 코드: `/Users/woohyeon/ggorockee/reviewmaps/server`
 - 참고 모바일 코드: `/Users/woohyeon/ggorockee/reviewmaps/mobile`
 - Firebase Admin SDK: https://firebase.google.com/docs/admin/setup
-- Google Sign-In: https://pub.dev/packages/google_sign_in
+- Firebase Authentication: https://firebase.google.com/docs/auth
+- Firebase Auth Flutter: https://firebase.google.com/docs/auth/flutter/start
+- Google Sign-In with Firebase: https://firebase.google.com/docs/auth/flutter/federated-auth#google
 - Apple Sign-In: https://pub.dev/packages/sign_in_with_apple
 - Kakao SDK: https://developers.kakao.com/docs
 

@@ -31,11 +31,10 @@ type Config struct {
 	CloudflareAccountHash string
 	CloudflareAPIKey      string
 
-	// Firebase Admin SDK 설정
+	// Firebase Admin SDK 설정 (Google 로그인 토큰 검증용)
 	FirebaseAdminSDKKey string
 
 	// SNS Login 설정
-	GoogleClientID string
 	AppleClientID  string
 	AppleTeamID    string
 	AppleKeyID     string
@@ -70,7 +69,6 @@ func Load() *Config {
 
 		FirebaseAdminSDKKey: getEnv("FIREBASE_ADMIN_SDK_KEY", ""),
 
-		GoogleClientID:  getEnv("GOOGLE_CLIENT_ID", ""),
 		AppleClientID:   getEnv("APPLE_CLIENT_ID", ""),
 		AppleTeamID:     getEnv("APPLE_TEAM_ID", ""),
 		AppleKeyID:      getEnv("APPLE_KEY_ID", ""),
