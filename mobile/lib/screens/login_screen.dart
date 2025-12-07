@@ -3,6 +3,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'dart:io';
 
 import '../config/app_theme.dart';
+import '../services/auth_service.dart';
 
 /// 로그인 화면
 /// 참고 앱의 로그인 화면을 기반으로 제작
@@ -16,6 +17,7 @@ class LoginScreen extends StatefulWidget {
 class _LoginScreenState extends State<LoginScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
+  final _authService = AuthService();
   bool _obscurePassword = true;
   bool _isLoading = false;
 
@@ -31,26 +33,87 @@ class _LoginScreenState extends State<LoginScreen> {
     Navigator.of(context).pushReplacementNamed('/home');
   }
 
-  /// 카카오 로그인 처리 (임시)
+  /// 카카오 로그인 처리
   Future<void> _handleKakaoLogin() async {
-    // TODO: 카카오 로그인 구현
-    _showMessage('카카오 로그인은 준비 중입니다.');
+    if (_isLoading) return;
+    
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      await _authService.loginWithKakao();
+      if (mounted) {
+        Navigator.of(context).pushReplacementNamed('/home');
+      }
+    } catch (e) {
+      if (mounted) {
+        _showMessage('카카오 로그인에 실패했습니다: ${e.toString()}');
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
   }
 
-  /// 구글 로그인 처리 (임시)
+  /// 구글 로그인 처리
   Future<void> _handleGoogleLogin() async {
-    // TODO: 구글 로그인 구현
-    _showMessage('구글 로그인은 준비 중입니다.');
+    if (_isLoading) return;
+    
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      await _authService.loginWithGoogle();
+      if (mounted) {
+        Navigator.of(context).pushReplacementNamed('/home');
+      }
+    } catch (e) {
+      if (mounted) {
+        _showMessage('구글 로그인에 실패했습니다: ${e.toString()}');
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
   }
 
-  /// 애플 로그인 처리 (임시)
+  /// 애플 로그인 처리
   Future<void> _handleAppleLogin() async {
+    if (_isLoading) return;
+    
     if (!Platform.isIOS) {
       _showMessage('Apple 로그인은 iOS에서만 사용할 수 있습니다.');
       return;
     }
-    // TODO: 애플 로그인 구현
-    _showMessage('Apple 로그인은 준비 중입니다.');
+
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      await _authService.loginWithApple();
+      if (mounted) {
+        Navigator.of(context).pushReplacementNamed('/home');
+      }
+    } catch (e) {
+      if (mounted) {
+        _showMessage('Apple 로그인에 실패했습니다: ${e.toString()}');
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
   }
 
   /// 이메일 로그인 처리 (임시)
@@ -68,7 +131,7 @@ class _LoginScreenState extends State<LoginScreen> {
       return;
     }
 
-    // TODO: 이메일 로그인 구현
+    // TODO: 이메일 로그인 구현 (백엔드 API 연동 필요)
     _showMessage('이메일 로그인은 준비 중입니다.');
   }
 
@@ -126,7 +189,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         alignment: Alignment.centerRight,
                         child: TextButton(
                           onPressed: () {
-                            // TODO: 비밀번호 찾기 화면으로 이동
+                            // TODO: 비밀번호 찾기 화면 구현 (ForgotPasswordScreen)
                             _showMessage('비밀번호 찾기는 준비 중입니다.');
                           },
                           child: Text(
@@ -552,7 +615,7 @@ class _LoginScreenState extends State<LoginScreen> {
       alignment: Alignment.centerRight,
       child: GestureDetector(
         onTap: () {
-          // TODO: 비밀번호 찾기 화면으로 이동
+          // TODO: 비밀번호 찾기 화면 구현 (ForgotPasswordScreen)
           _showMessage('비밀번호 찾기는 준비 중입니다.');
         },
         child: Text(
@@ -587,7 +650,7 @@ class _LoginScreenState extends State<LoginScreen> {
           SizedBox(width: 4.w),
           GestureDetector(
             onTap: () {
-              // TODO: 회원가입 화면으로 이동
+              // TODO: 회원가입 화면 구현 (SignUpScreen)
               _showMessage('회원가입은 준비 중입니다.');
             },
             child: Text(

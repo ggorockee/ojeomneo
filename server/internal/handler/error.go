@@ -4,6 +4,7 @@ import (
 	"os"
 
 	"github.com/gofiber/fiber/v2"
+	"go.uber.org/zap"
 )
 
 // ErrorResponse 에러 응답 구조체 (Naver 스타일)
@@ -78,6 +79,22 @@ func CustomErrorHandler(c *fiber.Ctx, err error) error {
 		}
 	}
 
+	// 에러 로깅 (비동기 처리 - goroutine 사용)
+	go func() {
+		logger := GetLogger()
+		if logger != nil {
+			logger.Error("Request error",
+				zap.Int("status_code", code),
+				zap.String("error_code", errorCode),
+				zap.String("path", c.Path()),
+				zap.String("method", c.Method()),
+				zap.String("ip", c.IP()),
+				zap.String("user_agent", c.Get("User-Agent")),
+				zap.Error(err),
+			)
+		}
+	}()
+
 	response := ErrorResponse{
 		Success: false,
 		Error: ErrorInfo{
@@ -92,6 +109,18 @@ func CustomErrorHandler(c *fiber.Ctx, err error) error {
 	}
 
 	return c.Status(code).JSON(response)
+}
+
+var globalLogger *zap.Logger
+
+// SetLogger 전역 로거 설정 (module에서 호출)
+func SetLogger(logger *zap.Logger) {
+	globalLogger = logger
+}
+
+// GetLogger 전역 로거 가져오기 (에러 핸들러용)
+func GetLogger() *zap.Logger {
+	return globalLogger
 }
 
 // NewError 에러 응답 생성 헬퍼

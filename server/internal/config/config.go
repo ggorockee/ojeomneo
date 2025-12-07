@@ -2,6 +2,7 @@ package config
 
 import (
 	"os"
+	"strconv"
 )
 
 // Config 애플리케이션 설정
@@ -30,6 +31,20 @@ type Config struct {
 	CloudflareAccountID   string
 	CloudflareAccountHash string
 	CloudflareAPIKey      string
+
+	// Firebase Admin SDK 설정 (Google 로그인 토큰 검증용)
+	FirebaseAdminSDKKey string
+
+	// JWT 설정
+	JWTSecretKey              string
+	JWTAccessTokenExpireMin   int
+	JWTRefreshTokenExpireDays int
+
+	// SNS Login 설정
+	AppleClientID  string
+	AppleTeamID    string
+	AppleKeyID     string
+	KakaoRestAPIKey string
 }
 
 // Load 환경변수에서 설정 로드
@@ -57,6 +72,17 @@ func Load() *Config {
 		CloudflareAccountID:   getEnv("CLOUDFLARE_ACCOUNT_ID", ""),
 		CloudflareAccountHash: getEnv("CLOUDFLARE_ACCOUNT_HASH", ""),
 		CloudflareAPIKey:      getEnv("CLOUDFLARE_API_KEY", ""),
+
+		FirebaseAdminSDKKey: getEnv("FIREBASE_ADMIN_SDK_KEY", ""),
+
+		JWTSecretKey:              getEnv("JWT_SECRET_KEY", ""),
+		JWTAccessTokenExpireMin:   getEnvAsInt("JWT_ACCESS_TOKEN_EXPIRE_MINUTES", 15),
+		JWTRefreshTokenExpireDays: getEnvAsInt("JWT_REFRESH_TOKEN_EXPIRE_DAYS", 7),
+
+		AppleClientID:   getEnv("APPLE_CLIENT_ID", ""),
+		AppleTeamID:     getEnv("APPLE_TEAM_ID", ""),
+		AppleKeyID:      getEnv("APPLE_KEY_ID", ""),
+		KakaoRestAPIKey: getEnv("KAKAO_REST_API_KEY", ""),
 	}
 }
 
@@ -64,6 +90,16 @@ func Load() *Config {
 func getEnv(key, defaultValue string) string {
 	if value := os.Getenv(key); value != "" {
 		return value
+	}
+	return defaultValue
+}
+
+// getEnvAsInt 환경변수를 정수로 조회 (기본값 지원)
+func getEnvAsInt(key string, defaultValue int) int {
+	if value := os.Getenv(key); value != "" {
+		if intValue, err := strconv.Atoi(value); err == nil {
+			return intValue
+		}
 	}
 	return defaultValue
 }

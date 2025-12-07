@@ -4,17 +4,22 @@ import (
 	"time"
 
 	"github.com/gofiber/fiber/v2"
+	"go.uber.org/zap"
 	"gorm.io/gorm"
 )
 
 // HealthHandler 헬스체크 핸들러
 type HealthHandler struct {
-	db *gorm.DB
+	db     *gorm.DB
+	logger *zap.Logger
 }
 
 // NewHealthHandler HealthHandler 생성자
-func NewHealthHandler(db *gorm.DB) *HealthHandler {
-	return &HealthHandler{db: db}
+func NewHealthHandler(db *gorm.DB, logger *zap.Logger) *HealthHandler {
+	return &HealthHandler{
+		db:     db,
+		logger: logger,
+	}
 }
 
 // HealthResponse 헬스체크 응답 구조체

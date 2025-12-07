@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:provider/provider.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:kakao_flutter_sdk_common/kakao_flutter_sdk_common.dart';
 
 import 'config/app_theme.dart';
 import 'screens/splash_screen.dart';
@@ -12,6 +15,18 @@ import 'services/ads/ad_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // 환경변수 로드
+  await dotenv.load(fileName: '.env');
+
+  // Firebase 초기화
+  await Firebase.initializeApp();
+
+  // Kakao SDK 초기화
+  final nativeAppKey = dotenv.env['KAKAO_NATIVE_APP_KEY'];
+  if (nativeAppKey != null) {
+    KakaoSdk.init(nativeAppKey: nativeAppKey);
+  }
 
   // AdMob SDK 초기화
   await AdService().initialize();

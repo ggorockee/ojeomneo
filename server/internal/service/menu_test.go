@@ -7,6 +7,7 @@ import (
 	"github.com/ggorockee/ojeomneo/server/internal/model"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"go.uber.org/zap"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 )
@@ -21,6 +22,11 @@ func setupTestDB(t *testing.T) *gorm.DB {
 	require.NoError(t, err)
 
 	return db
+}
+
+// setupTestLogger 테스트용 로거 생성
+func setupTestLogger() *zap.Logger {
+	return zap.NewNop()
 }
 
 // createTestMenus 테스트용 메뉴 데이터 생성
@@ -79,7 +85,8 @@ func createTestMenus(t *testing.T, db *gorm.DB) []model.Menu {
 func TestMenuService_GetByID(t *testing.T) {
 	db := setupTestDB(t)
 	menus := createTestMenus(t, db)
-	svc := NewMenuService(db)
+	logger := setupTestLogger()
+	svc := NewMenuService(db, logger)
 	ctx := context.Background()
 
 	t.Run("존재하는 메뉴 조회", func(t *testing.T) {
@@ -99,7 +106,8 @@ func TestMenuService_GetByID(t *testing.T) {
 func TestMenuService_List(t *testing.T) {
 	db := setupTestDB(t)
 	createTestMenus(t, db)
-	svc := NewMenuService(db)
+	logger := setupTestLogger()
+	svc := NewMenuService(db, logger)
 	ctx := context.Background()
 
 	t.Run("전체 목록 조회 (활성 메뉴만)", func(t *testing.T) {
@@ -135,7 +143,8 @@ func TestMenuService_List(t *testing.T) {
 
 func TestMenuService_GetCategories(t *testing.T) {
 	db := setupTestDB(t)
-	svc := NewMenuService(db)
+	logger := setupTestLogger()
+	svc := NewMenuService(db, logger)
 
 	categories := svc.GetCategories()
 
@@ -162,7 +171,8 @@ func TestMenuService_GetCategories(t *testing.T) {
 
 func TestMenuService_mapKeywordsToTags(t *testing.T) {
 	db := setupTestDB(t)
-	svc := NewMenuService(db)
+	logger := setupTestLogger()
+	svc := NewMenuService(db, logger)
 
 	t.Run("키워드 매핑 - 따뜻함", func(t *testing.T) {
 		tags := svc.mapKeywordsToTags([]string{"따뜻함"})
@@ -193,7 +203,8 @@ func TestMenuService_mapKeywordsToTags(t *testing.T) {
 
 func TestMenuService_Create(t *testing.T) {
 	db := setupTestDB(t)
-	svc := NewMenuService(db)
+	logger := setupTestLogger()
+	svc := NewMenuService(db, logger)
 	ctx := context.Background()
 
 	menu := &model.Menu{
@@ -218,7 +229,8 @@ func TestMenuService_Create(t *testing.T) {
 func TestMenuService_Update(t *testing.T) {
 	db := setupTestDB(t)
 	menus := createTestMenus(t, db)
-	svc := NewMenuService(db)
+	logger := setupTestLogger()
+	svc := NewMenuService(db, logger)
 	ctx := context.Background()
 
 	menu := &menus[0]
@@ -236,7 +248,8 @@ func TestMenuService_Update(t *testing.T) {
 func TestMenuService_Delete(t *testing.T) {
 	db := setupTestDB(t)
 	menus := createTestMenus(t, db)
-	svc := NewMenuService(db)
+	logger := setupTestLogger()
+	svc := NewMenuService(db, logger)
 	ctx := context.Background()
 
 	err := svc.Delete(ctx, menus[0].ID)

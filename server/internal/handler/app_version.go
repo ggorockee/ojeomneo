@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"github.com/gofiber/fiber/v2"
+	"go.uber.org/zap"
 	"gorm.io/gorm"
 
 	"github.com/ggorockee/ojeomneo/server/internal/model"
@@ -12,12 +13,16 @@ import (
 
 // AppVersionHandler 앱 버전 핸들러
 type AppVersionHandler struct {
-	db *gorm.DB
+	db     *gorm.DB
+	logger *zap.Logger
 }
 
 // NewAppVersionHandler AppVersionHandler 생성자
-func NewAppVersionHandler(db *gorm.DB) *AppVersionHandler {
-	return &AppVersionHandler{db: db}
+func NewAppVersionHandler(db *gorm.DB, logger *zap.Logger) *AppVersionHandler {
+	return &AppVersionHandler{
+		db:     db,
+		logger: logger,
+	}
 }
 
 // CheckVersion godoc

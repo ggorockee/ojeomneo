@@ -45,6 +45,17 @@
 	<true/>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
+	<!-- URL Schemes for SNS Login -->
+	<key>CFBundleURLTypes</key>
+	<array>
+		<!-- Kakao Login URL Scheme -->
+		<dict>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>kakao582b06a868603f324eb551a2e67815f6</string>
+			</array>
+		</dict>
+	</array>
 	<!-- AdMob App ID -->
 	<key>GADApplicationIdentifier</key>
 	<string>ca-app-pub-8516861197467665~1964832674</string>

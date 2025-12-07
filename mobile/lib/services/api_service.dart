@@ -204,6 +204,84 @@ class ApiService {
     }
   }
 
+  /// SNS 로그인 API 호출
+  /// 
+  /// [provider] - 'google', 'apple', 'kakao'
+  /// [token] - Google은 id_token (Firebase ID Token), Apple/Kakao는 access_token
+  Future<Map<String, dynamic>> postSNSLogin({
+    required String provider,
+    required String token,
+  }) async {
+    final url = _getAuthUrl(provider);
+    _log('=== postSNSLogin 시작 ===');
+    _log('Provider: $provider');
+    _log('URL: $url');
+
+    try {
+      // Request body 구성
+      final Map<String, dynamic> body;
+      if (provider == 'google') {
+        body = {'id_token': token};
+      } else {
+        // Apple은 identity_token, Kakao는 access_token
+        final fieldName = provider == 'apple' ? 'identity_token' : 'access_token';
+        body = {fieldName: token};
+      }
+
+      _log('Request body: ${body.keys}');
+
+      final response = await _client.post(
+        Uri.parse(url),
+        headers: _headers,
+        body: jsonEncode(body),
+      );
+
+      _log('응답 수신: ${response.statusCode}');
+      _log('응답 Body: ${response.body.length > 500 ? response.body.substring(0, 500) : response.body}');
+
+      if (response.statusCode == 200) {
+        final jsonData = jsonDecode(response.body);
+        if (jsonData['success'] == true && jsonData['data'] != null) {
+          _log('SNS 로그인 성공');
+          return jsonData['data'] as Map<String, dynamic>;
+        }
+        final errorMsg = jsonData['error'] as String? ?? '로그인에 실패했습니다.';
+        _log('API 실패: $errorMsg');
+        throw ApiException(errorMsg);
+      }
+
+      // 에러 응답 파싱 시도
+      try {
+        final jsonData = jsonDecode(response.body);
+        final errorMsg = jsonData['error'] as String? ?? '로그인에 실패했습니다.';
+        throw ApiException(errorMsg, statusCode: response.statusCode);
+      } catch (_) {
+        throw ApiException(
+          AppMessages.networkErrorWithCode(response.statusCode),
+          statusCode: response.statusCode,
+        );
+      }
+    } catch (e) {
+      _log('예외 발생: $e');
+      if (e is ApiException) rethrow;
+      throw ApiException('로그인 중 오류가 발생했습니다: ${e.toString()}');
+    }
+  }
+
+  /// 인증 엔드포인트 URL 가져오기
+  String _getAuthUrl(String provider) {
+    switch (provider) {
+      case 'google':
+        return AppConfig.googleLoginUrl;
+      case 'apple':
+        return AppConfig.appleLoginUrl;
+      case 'kakao':
+        return AppConfig.kakaoLoginUrl;
+      default:
+        throw ArgumentError('Unknown provider: $provider');
+    }
+  }
+
   void dispose() {
     _client.close();
   }

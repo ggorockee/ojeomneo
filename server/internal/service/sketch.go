@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"go.uber.org/zap"
 	"gorm.io/datatypes"
 	"gorm.io/gorm"
 
@@ -20,15 +21,16 @@ import (
 
 // SketchService 스케치 서비스
 type SketchService struct {
-	db              *gorm.DB
-	llmClient       *llm.Client
-	menuService     *MenuService
-	uploadPath      string
-	reasonCache     *cache.RecommendationCache
+	db          *gorm.DB
+	llmClient   *llm.Client
+	menuService *MenuService
+	uploadPath  string
+	reasonCache *cache.RecommendationCache
+	logger      *zap.Logger
 }
 
 // NewSketchService 새 스케치 서비스 생성
-func NewSketchService(db *gorm.DB, llmClient *llm.Client, menuService *MenuService) *SketchService {
+func NewSketchService(db *gorm.DB, llmClient *llm.Client, menuService *MenuService, logger *zap.Logger) *SketchService {
 	uploadPath := os.Getenv("UPLOAD_PATH")
 	if uploadPath == "" {
 		uploadPath = "./uploads"
@@ -46,6 +48,7 @@ func NewSketchService(db *gorm.DB, llmClient *llm.Client, menuService *MenuServi
 		menuService: menuService,
 		uploadPath:  uploadPath,
 		reasonCache: reasonCache,
+		logger:      logger,
 	}
 }
 
@@ -67,17 +70,48 @@ type AnalyzeResponse struct {
 
 // Analyze 스케치 분석 및 메뉴 추천
 func (s *SketchService) Analyze(ctx context.Context, req *AnalyzeRequest) (*AnalyzeResponse, error) {
+	start := time.Now()
+
+	s.logger.Debug("Starting sketch analysis",
+		zap.String("device_id", req.DeviceID),
+		zap.Int("image_size", len(req.ImageData)),
+		zap.Bool("has_text", req.InputText != ""),
+	)
+
 	// 1. 이미지 저장
 	imagePath, err := s.saveImage(req.ImageData, req.DeviceID)
 	if err != nil {
+		s.logger.Error("Failed to save image",
+			zap.Error(err),
+			zap.String("device_id", req.DeviceID),
+		)
 		return nil, fmt.Errorf("failed to save image: %w", err)
 	}
+	s.logger.Debug("Image saved",
+		zap.String("device_id", req.DeviceID),
+		zap.String("image_path", imagePath),
+		zap.Duration("save_duration", time.Since(start)),
+	)
 
-	// 2. LLM으로 스케치 분석
+	// 2. LLM으로 스케치 분석 (비동기 처리 준비)
+	llmStart := time.Now()
 	analysis, err := s.llmClient.AnalyzeSketch(ctx, req.ImageData, req.InputText)
+	llmDuration := time.Since(llmStart)
+
 	if err != nil {
+		s.logger.Error("LLM analysis failed",
+			zap.Error(err),
+			zap.String("device_id", req.DeviceID),
+			zap.Duration("llm_duration", llmDuration),
+		)
 		return nil, fmt.Errorf("failed to analyze sketch: %w", err)
 	}
+
+	s.logger.Debug("LLM analysis completed",
+		zap.String("device_id", req.DeviceID),
+		zap.Int("keyword_count", len(analysis.Keywords)),
+		zap.Duration("llm_duration", llmDuration),
+	)
 
 	// 3. 분석 결과를 JSON으로 변환
 	analysisJSON, err := json.Marshal(analysis)
@@ -302,16 +336,16 @@ func (s *SketchService) GetHistory(ctx context.Context, deviceID string, userID 
 // 이 함수는 주기적으로 실행되어야 함 (예: cron job)
 func (s *SketchService) CleanupOldAnonymousHistory(ctx context.Context) error {
 	threeDaysAgo := time.Now().AddDate(0, 0, -3)
-	
+
 	// user_id가 NULL이고 3일 이상 된 스케치 삭제
 	result := s.db.WithContext(ctx).
 		Where("user_id IS NULL AND created_at < ?", threeDaysAgo).
 		Delete(&model.Sketch{})
-	
+
 	if result.Error != nil {
 		return result.Error
 	}
-	
+
 	// TODO: 로그 기록 (삭제된 레코드 수: result.RowsAffected)
 	return nil
 }
