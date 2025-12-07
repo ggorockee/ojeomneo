@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:firebase_auth/firebase_auth.dart';
@@ -6,7 +7,10 @@ import 'package:google_sign_in/google_sign_in.dart';
 import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 import 'package:kakao_flutter_sdk/kakao_flutter_sdk.dart' as kakao;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:http/http.dart' as http;
 import '../models/auth_response.dart';
+import '../models/auth_models.dart';
+import '../config/app_config.dart';
 import 'api_service.dart';
 
 /// 인증 서비스
@@ -269,6 +273,369 @@ class AuthService {
       debugPrint('[AuthService] 로그아웃 완료');
     } catch (e) {
       debugPrint('[AuthService] 로그아웃 중 오류: $e');
+      rethrow;
+    }
+  }
+
+  /// 이메일 인증코드 발송
+  Future<EmailSendCodeResponse> sendEmailCode(String email) async {
+    try {
+      debugPrint('[AuthService] 이메일 인증코드 발송 요청: $email');
+
+      final client = http.Client();
+      final uri = Uri.parse(AppConfig.emailSendCodeUrl);
+      final request = EmailSendCodeRequest(email: email);
+
+      final response = await client
+          .post(
+            uri,
+            headers: {'Content-Type': 'application/json'},
+            body: jsonEncode(request.toJson()),
+          )
+          .timeout(const Duration(seconds: 30));
+
+      if (response.statusCode == 200) {
+        final json = jsonDecode(utf8.decode(response.bodyBytes));
+        if (json['success'] == true) {
+          debugPrint('[AuthService] 인증코드 발송 성공');
+          return EmailSendCodeResponse(message: json['message'] ?? '인증코드가 발송되었습니다');
+        }
+        throw Exception(json['error'] ?? '인증코드 발송에 실패했습니다');
+      }
+
+      final json = jsonDecode(utf8.decode(response.bodyBytes));
+      throw Exception(json['error'] ?? '인증코드 발송에 실패했습니다');
+    } catch (e) {
+      debugPrint('[AuthService] 인증코드 발송 실패: $e');
+      rethrow;
+    }
+  }
+
+  /// 이메일 인증코드 확인
+  Future<EmailVerifyCodeResponse> verifyEmailCode(String email, String code) async {
+    try {
+      debugPrint('[AuthService] 이메일 인증코드 확인 요청');
+
+      final client = http.Client();
+      final uri = Uri.parse(AppConfig.emailVerifyCodeUrl);
+      final request = EmailVerifyCodeRequest(email: email, code: code);
+
+      final response = await client
+          .post(
+            uri,
+            headers: {'Content-Type': 'application/json'},
+            body: jsonEncode(request.toJson()),
+          )
+          .timeout(const Duration(seconds: 10));
+
+      if (response.statusCode == 200) {
+        final json = jsonDecode(utf8.decode(response.bodyBytes));
+        debugPrint('[AuthService] 인증코드 확인 성공');
+        return EmailVerifyCodeResponse.fromJson(json);
+      }
+
+      final json = jsonDecode(utf8.decode(response.bodyBytes));
+      throw Exception(json['error'] ?? '인증코드가 올바르지 않습니다');
+    } catch (e) {
+      debugPrint('[AuthService] 인증코드 확인 실패: $e');
+      rethrow;
+    }
+  }
+
+  /// 이메일 로그인
+  Future<AuthResponse> loginWithEmail(String email, String password) async {
+    try {
+      debugPrint('[AuthService] 이메일 로그인 시작: $email');
+
+      final client = http.Client();
+      final uri = Uri.parse(AppConfig.loginUrl);
+      final request = LoginRequest(email: email, password: password);
+
+      final response = await client
+          .post(
+            uri,
+            headers: {'Content-Type': 'application/json'},
+            body: jsonEncode(request.toJson()),
+          )
+          .timeout(const Duration(seconds: 10));
+
+      if (response.statusCode == 200) {
+        final json = jsonDecode(utf8.decode(response.bodyBytes));
+        if (json['success'] == true && json['data'] != null) {
+          final authResponse = AuthResponse.fromJson(json['data']);
+          await _saveTokens(authResponse);
+          debugPrint('[AuthService] 이메일 로그인 성공');
+          return authResponse;
+        }
+        throw Exception(json['error'] ?? '로그인에 실패했습니다');
+      }
+
+      final json = jsonDecode(utf8.decode(response.bodyBytes));
+      throw Exception(json['error'] ?? '로그인에 실패했습니다');
+    } catch (e) {
+      debugPrint('[AuthService] 이메일 로그인 실패: $e');
+      rethrow;
+    }
+  }
+
+  /// 회원가입
+  Future<AuthResponse> signUp({
+    required String email,
+    required String password,
+    String? firstName,
+    String? lastName,
+    required String verificationToken,
+  }) async {
+    try {
+      debugPrint('[AuthService] 회원가입 시작: $email');
+
+      final client = http.Client();
+      final uri = Uri.parse(AppConfig.signupUrl);
+      final request = SignUpRequest(
+        email: email,
+        password: password,
+        firstName: firstName,
+        lastName: lastName,
+        verificationToken: verificationToken,
+      );
+
+      final response = await client
+          .post(
+            uri,
+            headers: {'Content-Type': 'application/json'},
+            body: jsonEncode(request.toJson()),
+          )
+          .timeout(const Duration(seconds: 10));
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        final json = jsonDecode(utf8.decode(response.bodyBytes));
+        if (json['success'] == true && json['data'] != null) {
+          final authResponse = AuthResponse.fromJson(json['data']);
+          await _saveTokens(authResponse);
+          debugPrint('[AuthService] 회원가입 성공');
+          return authResponse;
+        }
+        throw Exception(json['error'] ?? '회원가입에 실패했습니다');
+      }
+
+      final json = jsonDecode(utf8.decode(response.bodyBytes));
+      throw Exception(json['error'] ?? '회원가입에 실패했습니다');
+    } catch (e) {
+      debugPrint('[AuthService] 회원가입 실패: $e');
+      rethrow;
+    }
+  }
+
+  /// Refresh Token으로 새 토큰 발급
+  Future<AuthResponse> refreshToken() async {
+    try {
+      debugPrint('[AuthService] 토큰 갱신 시작');
+
+      final refreshTokenValue = await getRefreshToken();
+      if (refreshTokenValue == null) {
+        throw Exception('Refresh Token이 없습니다');
+      }
+
+      final client = http.Client();
+      final uri = Uri.parse(AppConfig.refreshTokenUrl);
+      final request = RefreshTokenRequest(refreshToken: refreshTokenValue);
+
+      final response = await client
+          .post(
+            uri,
+            headers: {'Content-Type': 'application/json'},
+            body: jsonEncode(request.toJson()),
+          )
+          .timeout(const Duration(seconds: 10));
+
+      if (response.statusCode == 200) {
+        final json = jsonDecode(utf8.decode(response.bodyBytes));
+        if (json['success'] == true && json['data'] != null) {
+          final authResponse = AuthResponse.fromJson(json['data']);
+          await _saveTokens(authResponse);
+          debugPrint('[AuthService] 토큰 갱신 성공');
+          return authResponse;
+        }
+        throw Exception(json['error'] ?? '토큰 갱신에 실패했습니다');
+      }
+
+      final json = jsonDecode(utf8.decode(response.bodyBytes));
+      throw Exception(json['error'] ?? '토큰 갱신에 실패했습니다');
+    } catch (e) {
+      debugPrint('[AuthService] 토큰 갱신 실패: $e');
+      rethrow;
+    }
+  }
+
+  /// 비밀번호 재설정 요청
+  Future<void> passwordResetRequest(String email) async {
+    try {
+      debugPrint('[AuthService] 비밀번호 재설정 요청: $email');
+
+      final client = http.Client();
+      final uri = Uri.parse(AppConfig.passwordResetRequestUrl);
+      final request = PasswordResetRequest(email: email);
+
+      final response = await client
+          .post(
+            uri,
+            headers: {'Content-Type': 'application/json'},
+            body: jsonEncode(request.toJson()),
+          )
+          .timeout(const Duration(seconds: 30));
+
+      if (response.statusCode == 200) {
+        debugPrint('[AuthService] 비밀번호 재설정 요청 성공');
+        return;
+      }
+
+      // 보안상 이유로 실패해도 성공 메시지 반환
+      debugPrint('[AuthService] 비밀번호 재설정 요청 처리 완료');
+    } catch (e) {
+      debugPrint('[AuthService] 비밀번호 재설정 요청 실패: $e');
+      // 보안상 이유로 에러를 던지지 않음
+    }
+  }
+
+  /// 비밀번호 재설정 인증코드 확인
+  Future<PasswordResetVerifyResponse> passwordResetVerify(String email, String code) async {
+    try {
+      debugPrint('[AuthService] 비밀번호 재설정 인증코드 확인');
+
+      final client = http.Client();
+      final uri = Uri.parse(AppConfig.passwordResetVerifyUrl);
+      final request = PasswordResetVerifyRequest(email: email, code: code);
+
+      final response = await client
+          .post(
+            uri,
+            headers: {'Content-Type': 'application/json'},
+            body: jsonEncode(request.toJson()),
+          )
+          .timeout(const Duration(seconds: 10));
+
+      if (response.statusCode == 200) {
+        final json = jsonDecode(utf8.decode(response.bodyBytes));
+        debugPrint('[AuthService] 비밀번호 재설정 인증코드 확인 성공');
+        return PasswordResetVerifyResponse.fromJson(json);
+      }
+
+      final json = jsonDecode(utf8.decode(response.bodyBytes));
+      throw Exception(json['error'] ?? '인증코드가 올바르지 않습니다');
+    } catch (e) {
+      debugPrint('[AuthService] 비밀번호 재설정 인증코드 확인 실패: $e');
+      rethrow;
+    }
+  }
+
+  /// 비밀번호 재설정 확정
+  Future<void> passwordResetConfirm(String email, String resetToken, String newPassword) async {
+    try {
+      debugPrint('[AuthService] 비밀번호 재설정 확정');
+
+      final client = http.Client();
+      final uri = Uri.parse(AppConfig.passwordResetConfirmUrl);
+      final request = PasswordResetConfirmRequest(
+        email: email,
+        resetToken: resetToken,
+        newPassword: newPassword,
+      );
+
+      final response = await client
+          .post(
+            uri,
+            headers: {'Content-Type': 'application/json'},
+            body: jsonEncode(request.toJson()),
+          )
+          .timeout(const Duration(seconds: 10));
+
+      if (response.statusCode == 200) {
+        debugPrint('[AuthService] 비밀번호 재설정 성공');
+        return;
+      }
+
+      final json = jsonDecode(utf8.decode(response.bodyBytes));
+      throw Exception(json['error'] ?? '비밀번호 변경에 실패했습니다');
+    } catch (e) {
+      debugPrint('[AuthService] 비밀번호 재설정 실패: $e');
+      rethrow;
+    }
+  }
+
+  /// 현재 사용자 정보 조회
+  Future<Map<String, dynamic>> getUserInfo() async {
+    try {
+      debugPrint('[AuthService] 사용자 정보 조회');
+
+      final accessToken = await getAccessToken();
+      if (accessToken == null) {
+        throw Exception('로그인이 필요합니다');
+      }
+
+      final client = http.Client();
+      final uri = Uri.parse(AppConfig.meUrl);
+
+      final response = await client
+          .get(
+            uri,
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': 'Bearer $accessToken',
+            },
+          )
+          .timeout(const Duration(seconds: 10));
+
+      if (response.statusCode == 200) {
+        final json = jsonDecode(utf8.decode(response.bodyBytes));
+        if (json['success'] == true && json['data'] != null) {
+          debugPrint('[AuthService] 사용자 정보 조회 성공');
+          return json['data'] as Map<String, dynamic>;
+        }
+        throw Exception(json['error'] ?? '사용자 정보를 가져올 수 없습니다');
+      }
+
+      final json = jsonDecode(utf8.decode(response.bodyBytes));
+      throw Exception(json['error'] ?? '사용자 정보를 가져올 수 없습니다');
+    } catch (e) {
+      debugPrint('[AuthService] 사용자 정보 조회 실패: $e');
+      rethrow;
+    }
+  }
+
+  /// 회원 탈퇴
+  Future<void> deleteAccount() async {
+    try {
+      debugPrint('[AuthService] 회원 탈퇴 요청');
+
+      final accessToken = await getAccessToken();
+      if (accessToken == null) {
+        throw Exception('로그인이 필요합니다');
+      }
+
+      final client = http.Client();
+      final uri = Uri.parse(AppConfig.meUrl);
+
+      final response = await client
+          .delete(
+            uri,
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': 'Bearer $accessToken',
+            },
+          )
+          .timeout(const Duration(seconds: 10));
+
+      if (response.statusCode == 200) {
+        // 탈퇴 성공 시 로그아웃 처리
+        await logout();
+        debugPrint('[AuthService] 회원 탈퇴 성공');
+        return;
+      }
+
+      final json = jsonDecode(utf8.decode(response.bodyBytes));
+      throw Exception(json['error'] ?? '회원 탈퇴에 실패했습니다');
+    } catch (e) {
+      debugPrint('[AuthService] 회원 탈퇴 실패: $e');
       rethrow;
     }
   }
