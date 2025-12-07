@@ -48,6 +48,10 @@ class AppMessages {
 
   static String get historyEmptyDescription => '그림을 그리고 메뉴 추천을 받아보세요!';
 
+  static String get historyLoginRequired => '로그인이 필요한 기능이에요';
+
+  static String get historyLoginRequiredDescription => '히스토리 기능을 사용하려면\n로그인이 필요합니다.\n\n현재는 디바이스별 임시 데이터만\n저장되고 있어요.';
+
   // ===== 메뉴 관련 =====
   static String get menuLoadFailed => kDebugMode
       ? '[DEV] 메뉴 로드 실패'

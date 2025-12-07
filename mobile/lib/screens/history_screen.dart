@@ -21,6 +21,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
   @override
   void initState() {
     super.initState();
+    // 히스토리 로드 (비로그인 사용자도 사용 가능, 3일 이상 된 데이터는 자동 필터링)
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<SketchProvider>().loadHistory(refresh: true);
     });
@@ -76,8 +77,16 @@ class _HistoryScreenState extends State<HistoryScreen> {
             );
           }
 
-          if (provider.history.isEmpty) {
-            return _EmptyState();
+          // TODO: 로그인 기능 구현 후 로그인 여부 확인
+          final isLoggedIn = false; // 임시: 로그인 기능 구현 후 실제 상태 확인
+          
+          // 서버에서 이미 비로그인 사용자의 3일 이상 된 데이터를 필터링함
+          // 클라이언트에서 추가 필터링은 필요 없지만, 나중에 로그인 기능 구현 시
+          // 로그인 사용자는 모든 데이터를 볼 수 있도록 할 예정
+          final filteredHistory = provider.history;
+
+          if (filteredHistory.isEmpty) {
+            return _EmptyState(isLoggedIn: isLoggedIn);
           }
 
           return RefreshIndicator(
@@ -86,10 +95,10 @@ class _HistoryScreenState extends State<HistoryScreen> {
             child: ListView.builder(
               controller: _scrollController,
               padding: const EdgeInsets.all(20),
-              itemCount: provider.history.length +
+              itemCount: filteredHistory.length +
                   (provider.hasMoreHistory ? 1 : 0),
               itemBuilder: (context, index) {
-                if (index >= provider.history.length) {
+                if (index >= filteredHistory.length) {
                   return Padding(
                     padding: const EdgeInsets.all(16),
                     child: Center(
@@ -100,7 +109,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                   );
                 }
 
-                final history = provider.history[index];
+                final history = filteredHistory[index];
                 // 디버그: 히스토리 데이터 확인
                 debugPrint('[HistoryScreen] history[$index]: id=${history.id}, recommendation=${history.recommendation != null}, analysis=${history.analysis != null}');
                 if (history.recommendation != null) {
@@ -117,12 +126,18 @@ class _HistoryScreenState extends State<HistoryScreen> {
                       // 히스토리 클릭 시 결과 화면으로 이동
                       if (history.recommendation != null && history.analysis != null) {
                         debugPrint('[HistoryScreen] Navigating to ResultScreen...');
+                        // 이미지 URL 확인용 디버그 로그
+                        final primaryImageUrl = history.recommendation!.primary.imageUrl;
+                        debugPrint('[HistoryScreen] Primary imageUrl: $primaryImageUrl');
+                        debugPrint('[HistoryScreen] Primary imageUrl isNotEmpty: ${primaryImageUrl?.isNotEmpty ?? false}');
                         final sketchResult = SketchResult(
                           sketchId: history.id,
                           analysis: history.analysis!,
                           recommendation: history.recommendation!,
                           createdAt: history.createdAt,
                         );
+                        // SketchResult 생성 후에도 이미지 URL 확인
+                        debugPrint('[HistoryScreen] After creating SketchResult, primary imageUrl: ${sketchResult.recommendation.primary.imageUrl}');
                         Navigator.of(context).push(
                           MaterialPageRoute(
                             builder: (context) => ResultScreen(result: sketchResult),
@@ -144,8 +159,78 @@ class _HistoryScreenState extends State<HistoryScreen> {
 }
 
 class _EmptyState extends StatelessWidget {
+  final bool isLoggedIn;
+
+  const _EmptyState({this.isLoggedIn = false});
+
   @override
   Widget build(BuildContext context) {
+    // 비로그인 사용자이고 3일 이상 된 데이터만 있는 경우 안내 메시지
+    if (!isLoggedIn) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(32),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                Icons.history_rounded,
+                size: 80,
+                color: AppTheme.textDisabled,
+              ),
+              const SizedBox(height: 24),
+              Text(
+                AppMessages.historyEmpty,
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                  color: AppTheme.onSurface,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                '비로그인 사용자는 최근 3일간의 기록만\n조회할 수 있어요.\n\n더 오래 보관하려면 로그인해 주세요!',
+                style: const TextStyle(
+                  fontSize: 14,
+                  color: AppTheme.onSurfaceVariant,
+                  height: 1.6,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 24),
+              GestureDetector(
+                onTap: () => Navigator.of(context).pop(),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 24,
+                    vertical: 14,
+                  ),
+                  decoration: BoxDecoration(
+                    gradient: AppTheme.primaryGradient,
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: const [
+                      Icon(Icons.brush_rounded, color: Colors.white, size: 18),
+                      SizedBox(width: 8),
+                      Text(
+                        '그림 그리러 가기',
+                        style: TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w700,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(32),

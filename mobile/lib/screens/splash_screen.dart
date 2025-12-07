@@ -57,10 +57,10 @@ class _SplashScreenState extends State<SplashScreen>
       _scaleController.forward();
     });
 
-    // 화면 전환
+    // 화면 전환 (스플래시 후 로그인 화면으로 이동)
     Future.delayed(const Duration(milliseconds: 2500), () {
       if (mounted) {
-        Navigator.of(context).pushReplacementNamed('/home');
+        Navigator.of(context).pushReplacementNamed('/login');
       }
     });
   }
@@ -75,7 +75,7 @@ class _SplashScreenState extends State<SplashScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppTheme.surfaceColor,
+      backgroundColor: Colors.white,
       body: AnimatedBuilder(
         animation: Listenable.merge([_fadeController, _scaleController]),
         builder: (context, child) {
@@ -88,10 +88,21 @@ class _SplashScreenState extends State<SplashScreen>
                   // 로고 with 크기 애니메이션
                   Transform.scale(
                     scale: _scaleAnimation.value,
-                    child: Image.asset(
-                      'assets/images/logo.png',
+                    child: Container(
                       width: 160,
                       height: 160,
+                      decoration: const BoxDecoration(
+                        color: Colors.white,
+                        shape: BoxShape.circle,
+                      ),
+                      child: ClipOval(
+                        child: Image.asset(
+                          'assets/images/logo.png',
+                          width: 160,
+                          height: 160,
+                          fit: BoxFit.contain,
+                        ),
+                      ),
                     ),
                   ),
                   const SizedBox(height: 28),
