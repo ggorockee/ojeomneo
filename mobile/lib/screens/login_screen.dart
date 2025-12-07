@@ -87,58 +87,96 @@ class _LoginScreenState extends State<LoginScreen> {
     return Scaffold(
       backgroundColor: Colors.white,
       body: SafeArea(
-        child: SingleChildScrollView(
-          padding: EdgeInsets.symmetric(horizontal: 24.w),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              SizedBox(height: 32.h),
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            return SingleChildScrollView(
+              padding: EdgeInsets.symmetric(horizontal: 24.w),
+              child: ConstrainedBox(
+                constraints: BoxConstraints(
+                  minHeight: constraints.maxHeight,
+                ),
+                child: IntrinsicHeight(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      SizedBox(height: 32.h),
 
-              // 헤드라인
-              _buildHeadline(),
+                      // 헤드라인
+                      _buildHeadline(),
 
-              SizedBox(height: 24.h),
-              
-              // 이메일 입력 필드
-              _buildInputField(
-                title: '이메일',
-                controller: _emailController,
-                hintText: '이메일을 입력해 주세요',
-                prefixIcon: Icons.person_outline,
+                      SizedBox(height: 24.h),
+                      
+                      // 이메일 입력 필드
+                      _buildInputField(
+                        title: '이메일',
+                        controller: _emailController,
+                        hintText: '이메일을 입력해 주세요',
+                        prefixIcon: Icons.person_outline,
+                      ),
+                      
+                      SizedBox(height: 16.h),
+                      
+                      // 비밀번호 입력 필드
+                      _buildPasswordField(),
+
+                      SizedBox(height: 8.h),
+
+                      // 비밀번호 찾기 (비밀번호 필드 바로 아래)
+                      Align(
+                        alignment: Alignment.centerRight,
+                        child: TextButton(
+                          onPressed: () {
+                            // TODO: 비밀번호 찾기 화면으로 이동
+                            _showMessage('비밀번호 찾기는 준비 중입니다.');
+                          },
+                          child: Text(
+                            '비밀번호를 잊으셨나요?',
+                            style: TextStyle(
+                              fontSize: 12.sp,
+                              fontWeight: FontWeight.w600,
+                              color: AppTheme.primaryColor,
+                              letterSpacing: -0.12,
+                            ),
+                          ),
+                        ),
+                      ),
+
+                      SizedBox(height: 16.h),
+                      
+                      // 로그인 버튼
+                      _buildLoginButton(),
+
+                      SizedBox(height: 12.h),
+
+                      // 비밀번호 찾기 링크
+                      _buildForgotPasswordLink(),
+
+                      SizedBox(height: 20.h),
+
+                      // 또는 구분선
+                      _buildOrDivider(),
+
+                      SizedBox(height: 20.h),
+
+                      // 소셜 로그인 버튼들
+                      _buildSocialLoginButtons(),
+
+                      // 로그인 없이 진행 버튼 (카카오 로그인 아래)
+                      SizedBox(height: 12.h),
+                      _buildContinueWithoutLoginButton(),
+
+                      SizedBox(height: 24.h),
+
+                      // 회원가입 링크
+                      _buildSignUpLink(),
+
+                      SizedBox(height: 32.h),
+                    ],
+                  ),
+                ),
               ),
-              
-              SizedBox(height: 16.h),
-              
-              // 비밀번호 입력 필드
-              _buildPasswordField(),
-
-              SizedBox(height: 16.h),
-              
-              // 로그인 버튼
-              _buildLoginButton(),
-
-              SizedBox(height: 20.h),
-
-              // 또는 구분선
-              _buildOrDivider(),
-
-              SizedBox(height: 20.h),
-
-              // 소셜 로그인 버튼들
-              _buildSocialLoginButtons(),
-
-              // 로그인 없이 진행 버튼 (카카오 로그인 아래)
-              SizedBox(height: 12.h),
-              _buildContinueWithoutLoginButton(),
-
-              SizedBox(height: 24.h),
-
-              // 회원가입 링크
-              _buildSignUpLink(),
-
-              SizedBox(height: 32.h),
-            ],
-          ),
+            );
+          },
         ),
       ),
     );
@@ -502,6 +540,29 @@ class _LoginScreenState extends State<LoginScreen> {
             fontWeight: FontWeight.w600,
             color: AppTheme.primaryColor,
             letterSpacing: -0.14,
+          ),
+        ),
+      ),
+    );
+  }
+
+  // 비밀번호 찾기 링크
+  Widget _buildForgotPasswordLink() {
+    return Align(
+      alignment: Alignment.centerRight,
+      child: GestureDetector(
+        onTap: () {
+          // TODO: 비밀번호 찾기 화면으로 이동
+          _showMessage('비밀번호 찾기는 준비 중입니다.');
+        },
+        child: Text(
+          '비밀번호 찾기',
+          style: TextStyle(
+            fontSize: 12.sp,
+            fontWeight: FontWeight.w500,
+            color: const Color(0xFF6C7278),
+            letterSpacing: -0.12,
+            decoration: TextDecoration.underline,
           ),
         ),
       ),
