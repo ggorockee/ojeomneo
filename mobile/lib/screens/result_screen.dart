@@ -36,6 +36,11 @@ class _ResultScreenState extends State<ResultScreen> {
   void initState() {
     super.initState();
     _currentMenu = widget.selectedMenu ?? widget.result.recommendation.primary;
+    // 디버그: 이미지 URL 확인
+    debugPrint('[ResultScreen] initState - primary imageUrl: ${widget.result.recommendation.primary.imageUrl}');
+    debugPrint('[ResultScreen] initState - primary imageUrl isNotEmpty: ${widget.result.recommendation.primary.imageUrl?.isNotEmpty ?? false}');
+    debugPrint('[ResultScreen] initState - _currentMenu imageUrl: ${_currentMenu.imageUrl}');
+    debugPrint('[ResultScreen] initState - _currentMenu imageUrl isNotEmpty: ${_currentMenu.imageUrl?.isNotEmpty ?? false}');
   }
 
   void _shareResult() {

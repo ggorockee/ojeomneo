@@ -117,12 +117,18 @@ class _HistoryScreenState extends State<HistoryScreen> {
                       // 히스토리 클릭 시 결과 화면으로 이동
                       if (history.recommendation != null && history.analysis != null) {
                         debugPrint('[HistoryScreen] Navigating to ResultScreen...');
+                        // 이미지 URL 확인용 디버그 로그
+                        final primaryImageUrl = history.recommendation!.primary.imageUrl;
+                        debugPrint('[HistoryScreen] Primary imageUrl: $primaryImageUrl');
+                        debugPrint('[HistoryScreen] Primary imageUrl isNotEmpty: ${primaryImageUrl?.isNotEmpty ?? false}');
                         final sketchResult = SketchResult(
                           sketchId: history.id,
                           analysis: history.analysis!,
                           recommendation: history.recommendation!,
                           createdAt: history.createdAt,
                         );
+                        // SketchResult 생성 후에도 이미지 URL 확인
+                        debugPrint('[HistoryScreen] After creating SketchResult, primary imageUrl: ${sketchResult.recommendation.primary.imageUrl}');
                         Navigator.of(context).push(
                           MaterialPageRoute(
                             builder: (context) => ResultScreen(result: sketchResult),

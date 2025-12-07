@@ -72,31 +72,65 @@ class SketchHistory {
         final primaryRec = sortedRecs.first;
         final primaryMenu = primaryRec['menu'] as Map<String, dynamic>?;
 
+        // 이미지 URL 처리: 빈 문자열이 아닌 경우에만 설정
+        final primaryImageUrl = primaryMenu?['image_url'];
+        final primaryTags = <String>[];
+        if (primaryMenu != null) {
+          // 모든 태그 타입을 합쳐서 tags에 추가
+          final emotionTags = (primaryMenu['emotion_tags'] as List<dynamic>?)
+              ?.map((e) => e.toString())
+              .toList() ?? [];
+          final situationTags = (primaryMenu['situation_tags'] as List<dynamic>?)
+              ?.map((e) => e.toString())
+              .toList() ?? [];
+          final attributeTags = (primaryMenu['attribute_tags'] as List<dynamic>?)
+              ?.map((e) => e.toString())
+              .toList() ?? [];
+          primaryTags.addAll(emotionTags);
+          primaryTags.addAll(situationTags);
+          primaryTags.addAll(attributeTags);
+        }
+
         final primary = MenuRecommendation(
           menuId: primaryRec['menu_id'] ?? primaryMenu?['id'] ?? 0,
           name: primaryMenu?['name'] ?? '',
           category: primaryMenu?['category'] ?? '',
-          imageUrl: primaryMenu?['image_url'],
+          imageUrl: (primaryImageUrl != null && primaryImageUrl.toString().isNotEmpty)
+              ? primaryImageUrl.toString()
+              : null,
           reason: primaryRec['reason'] ?? '',
-          tags: (primaryMenu?['tags'] as List<dynamic>?)
-                  ?.map((e) => e.toString())
-                  .toList() ??
-              [],
+          tags: primaryTags,
         );
 
         // alternatives (rank > 1)
         final alternatives = sortedRecs.skip(1).map((rec) {
           final menu = rec['menu'] as Map<String, dynamic>?;
+          final altImageUrl = menu?['image_url'];
+          final altTags = <String>[];
+          if (menu != null) {
+            // 모든 태그 타입을 합쳐서 tags에 추가
+            final emotionTags = (menu['emotion_tags'] as List<dynamic>?)
+                ?.map((e) => e.toString())
+                .toList() ?? [];
+            final situationTags = (menu['situation_tags'] as List<dynamic>?)
+                ?.map((e) => e.toString())
+                .toList() ?? [];
+            final attributeTags = (menu['attribute_tags'] as List<dynamic>?)
+                ?.map((e) => e.toString())
+                .toList() ?? [];
+            altTags.addAll(emotionTags);
+            altTags.addAll(situationTags);
+            altTags.addAll(attributeTags);
+          }
           return MenuRecommendation(
             menuId: rec['menu_id'] ?? menu?['id'] ?? 0,
             name: menu?['name'] ?? '',
             category: menu?['category'] ?? '',
-            imageUrl: menu?['image_url'],
+            imageUrl: (altImageUrl != null && altImageUrl.toString().isNotEmpty)
+                ? altImageUrl.toString()
+                : null,
             reason: rec['reason'] ?? '',
-            tags: (menu?['tags'] as List<dynamic>?)
-                    ?.map((e) => e.toString())
-                    .toList() ??
-                [],
+            tags: altTags,
           );
         }).toList();
 
