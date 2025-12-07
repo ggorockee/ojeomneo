@@ -30,6 +30,16 @@ type Config struct {
 	CloudflareAccountID   string
 	CloudflareAccountHash string
 	CloudflareAPIKey      string
+
+	// Firebase Admin SDK 설정
+	FirebaseAdminSDKKey string
+
+	// SNS Login 설정
+	GoogleClientID string
+	AppleClientID  string
+	AppleTeamID    string
+	AppleKeyID     string
+	KakaoRestAPIKey string
 }
 
 // Load 환경변수에서 설정 로드
@@ -57,6 +67,14 @@ func Load() *Config {
 		CloudflareAccountID:   getEnv("CLOUDFLARE_ACCOUNT_ID", ""),
 		CloudflareAccountHash: getEnv("CLOUDFLARE_ACCOUNT_HASH", ""),
 		CloudflareAPIKey:      getEnv("CLOUDFLARE_API_KEY", ""),
+
+		FirebaseAdminSDKKey: getEnv("FIREBASE_ADMIN_SDK_KEY", ""),
+
+		GoogleClientID:  getEnv("GOOGLE_CLIENT_ID", ""),
+		AppleClientID:   getEnv("APPLE_CLIENT_ID", ""),
+		AppleTeamID:     getEnv("APPLE_TEAM_ID", ""),
+		AppleKeyID:      getEnv("APPLE_KEY_ID", ""),
+		KakaoRestAPIKey: getEnv("KAKAO_REST_API_KEY", ""),
 	}
 }
 

@@ -7,28 +7,28 @@ Google, Apple, Kakao SNS 로그인 기능을 구현합니다. 순서대로 Googl
 
 ## [ ] 1. 환경 설정 및 보안 준비
 
-### [ ] 1.1 Firebase Admin SDK 키 파일 보안 조치
-- [ ] Firebase Admin SDK 키 파일을 `server/config/firebase/` 디렉토리로 이동
+### [x] 1.1 Firebase Admin SDK 키 파일 보안 조치
+- [x] Firebase Admin SDK 키 파일을 `server/config/firebase/` 디렉토리로 이동
   - 파일명: `ojeomneo-e7f17-firebase-adminsdk-fbsvc-ce8f5d54fe.json`
   - 목적: Firebase Admin SDK를 통한 사용자 인증 토큰 검증
-- [ ] `.gitignore`에 Firebase 키 파일 경로 추가
+- [x] `.gitignore`에 Firebase 키 파일 경로 추가
   - `server/config/firebase/*.json`
-- [ ] 서버 코드에서 키 파일 경로를 환경변수로 관리
+- [ ] 서버 코드에서 키 값을 환경변수로 읽도록 수정 <-- 키파일 경로가 아니라 키 값 자체를 환경변수로 k8s에서 시크릿으로 주입할 예정 따라서 키값만 잇으면됨 그값으로 내가 k8s의 시크릿으로 injection할 예정
 
 ### [ ] 1.2 환경변수 설정
-#### Server (`server/.env`)
-- [ ] `FIREBASE_ADMIN_SDK_KEY_PATH`: Firebase Admin SDK 키 파일 경로
+#### Server (`server/.env.example` 생성)
+- [ ] `FIREBASE_ADMIN_SDK_KEY`: Firebase Admin SDK 키 JSON 문자열 (k8s 시크릿으로 주입)
 - [ ] `GOOGLE_CLIENT_ID`: Google OAuth 클라이언트 ID (모바일 앱용)
-- [ ] `APPLE_CLIENT_ID`: Apple OAuth 클라이언트 ID (iOS 앱용)
+- [ ] `APPLE_CLIENT_ID`: Apple OAuth 클라이언트 ID (iOS 앱용) - Bundle ID: `com.woohalabs.ojeomneo`
 - [ ] `APPLE_TEAM_ID`: Apple 개발팀 ID
 - [ ] `APPLE_KEY_ID`: Apple Key ID
 - [ ] `KAKAO_REST_API_KEY`: 카카오 REST API 키 (`4d3810fbbd527782757b7c2a0f737a7c`)
 
-#### Mobile (`mobile/.env`)
+#### Mobile (`mobile/.env.example` 생성)
 - [ ] `GOOGLE_CLIENT_ID`: Google OAuth 클라이언트 ID (iOS/Android)
-- [ ] `APPLE_CLIENT_ID`: Apple OAuth 클라이언트 ID (iOS 전용)
+- [ ] `APPLE_CLIENT_ID`: Apple OAuth 클라이언트 ID (iOS 전용) - Bundle ID: `com.woohalabs.ojeomneo`
 - [ ] `KAKAO_NATIVE_APP_KEY`: 카카오 네이티브 앱 키 (`582b06a868603f324eb551a2e67815f6`)
-- [ ] `API_BASE_URL`: 백엔드 API 베이스 URL
+- [ ] `API_BASE_URL`: 백엔드 API 베이스 URL - `https://api.woohalabs.com/ojeomneo/v1` 
 
 ---
 
@@ -95,10 +95,11 @@ Google, Apple, Kakao SNS 로그인 기능을 구현합니다. 순서대로 Googl
 ## [ ] 3. 모바일 구현 (Flutter)
 
 ### [ ] 3.1 의존성 추가 (`mobile/pubspec.yaml`)
-- [ ] `google_sign_in: ^6.x.x`: Google 로그인
-- [ ] `sign_in_with_apple: ^5.x.x`: Apple 로그인 (iOS 전용)
-- [ ] `kakao_flutter_sdk: ^1.x.x`: Kakao 로그인
-- [ ] `flutter_dotenv: ^5.2.1`: 환경변수 관리 (이미 추가됨)
+- [ ] `google_sign_in: ^7.2.0`: Google 로그인
+- [ ] `sign_in_with_apple: ^7.0.1`: Apple 로그인 (iOS 전용)
+- [ ] `kakao_flutter_sdk: ^1.10.0`: Kakao 로그인
+- [ ] `flutter_dotenv: ^6.0.0`: 환경변수 관리 (이미 추가됨)
+- [ ] `flutter_secure_storage: ^9.2.4`: 안전한 토큰 저장
 
 ### [ ] 3.2 API 서비스 확장 (`mobile/lib/services/api_service.dart`)
 - [ ] `postSNSLogin(String provider, String accessToken)`: SNS 로그인 API 호출
