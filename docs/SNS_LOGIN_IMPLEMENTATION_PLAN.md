@@ -5,7 +5,7 @@ Google, Apple, Kakao SNS 로그인 기능을 구현합니다. 순서대로 Googl
 
 ---
 
-## [ ] 1. 환경 설정 및 보안 준비
+## [x] 1. 환경 설정 및 보안 준비
 
 ### [x] 1.1 Firebase Admin SDK 키 파일 보안 조치
 - [x] Firebase Admin SDK 키 파일을 `server/config/firebase/` 디렉토리로 이동
@@ -13,7 +13,7 @@ Google, Apple, Kakao SNS 로그인 기능을 구현합니다. 순서대로 Googl
   - 목적: Firebase Admin SDK를 통한 사용자 인증 토큰 검증
 - [x] `.gitignore`에 Firebase 키 파일 경로 추가
   - `server/config/firebase/*.json`
-- [ ] 서버 코드에서 키 값을 환경변수로 읽도록 수정 <-- 키파일 경로가 아니라 키 값 자체를 환경변수로 k8s에서 시크릿으로 주입할 예정 따라서 키값만 잇으면됨 그값으로 내가 k8s의 시크릿으로 injection할 예정
+- [x] 서버 코드에서 키 값을 환경변수로 읽도록 수정 <-- 키파일 경로가 아니라 키 값 자체를 환경변수로 k8s에서 시크릿으로 주입할 예정 따라서 키값만 잇으면됨 그값으로 내가 k8s의 시크릿으로 injection할 예정
 
 ### [x] 1.2 환경변수 설정
 #### Server (`server/.env.example` 생성)
@@ -26,70 +26,79 @@ Google, Apple, Kakao SNS 로그인 기능을 구현합니다. 순서대로 Googl
 
 #### Mobile (`mobile/.env.example` 생성)
 - [x] `APPLE_CLIENT_ID`: Apple OAuth 클라이언트 ID (iOS 전용) - Bundle ID: `com.woohalabs.ojeomneo`
-- [x] `KAKAO_NATIVE_APP_KEY`: 카카오 네이티브 앱 키 (`582b06a868603f324eb551a2e67815f6`)
+- [x] `KAKAO_NATIVE_APP_KEY`: 카카오 네이티브 앱 키
 - [x] `API_BASE_URL`: 백엔드 API 베이스 URL - `https://api.woohalabs.com/ojeomneo/v1`
 - 참고: Google 로그인은 Firebase Authentication 사용 (추가 환경변수 불필요) 
 
 ---
 
-## [ ] 2. 백엔드 구현 (Server)
+## [x] 2. 백엔드 구현 (Server)
 
-### [ ] 2.1 SNS 토큰 검증 패키지 구현 (`server/pkg/sns/`)
+### [x] 2.1 SNS 토큰 검증 패키지 구현 (`server/pkg/sns/`)
 참고: `/Users/woohyeon/ggorockee/reviewmaps/server/pkg/sns/`
 
-- [ ] `firebase.go`: Firebase Admin SDK 초기화 및 Google ID Token 검증
+- [x] `firebase.go`: Firebase Admin SDK 초기화 및 Google ID Token 검증
   - Firebase Admin SDK 초기화 (환경변수에서 JSON 키 값 읽기)
   - 함수: `VerifyFirebaseIDToken(ctx context.Context, idToken string) (*FirebaseUserInfo, error)`
   - Firebase ID Token 검증 및 사용자 정보 추출 (email, name, photo_url, uid)
+  - Goroutine을 활용한 비동기 토큰 검증 및 사용자 정보 조회
   
-- [ ] `apple.go`: Apple Identity Token 검증 및 사용자 정보 추출
+- [x] `apple.go`: Apple Identity Token 검증 및 사용자 정보 추출
   - API: `https://appleid.apple.com/auth/keys` (JWKS)
   - 함수: `VerifyAppleToken(ctx context.Context, identityToken string, clientID string) (*AppleUserInfo, error)`
+  - Goroutine을 활용한 비동기 토큰 파싱 및 검증
   
-- [ ] `kakao.go`: Kakao Access Token 검증 및 사용자 정보 추출
+- [x] `kakao.go`: Kakao Access Token 검증 및 사용자 정보 추출
   - API: `https://kapi.kakao.com/v2/user/me`
   - 함수: `VerifyKakaoToken(ctx context.Context, accessToken string) (*KakaoUserInfo, error)`
+  - Goroutine을 활용한 비동기 API 호출
 
-### [ ] 2.2 인증 서비스 확장 (`server/internal/service/auth.go`)
+### [x] 2.2 인증 서비스 확장 (`server/internal/service/auth.go`)
 참고: `/Users/woohyeon/ggorockee/reviewmaps/server/internal/services/auth.go`
 
-- [ ] `AuthService` 구조체에 SNS 검증 패키지 및 Firebase Admin SDK 추가
-- [ ] `GoogleLogin(idToken string) (*AuthResponse, error)` 구현
+- [x] `AuthService` 구조체에 SNS 검증 패키지 및 Firebase Admin SDK 추가
+- [x] `GoogleLogin(idToken string) (*AuthResponse, error)` 구현
   - Firebase ID Token 검증 (Firebase Admin SDK 사용)
   - 사용자 정보 추출 (email, name, photo_url, uid)
   - DB에 사용자 생성/조회 (login_method='google', social_id=uid)
-  - JWT 토큰 발급
-- [ ] `AppleLogin(identityToken string) (*AuthResponse, error)` 구현
+  - JWT 토큰 발급 (goroutine으로 병렬 처리)
+- [x] `AppleLogin(identityToken string) (*AuthResponse, error)` 구현
   - Apple Identity Token 검증
   - 사용자 정보 추출 (email, sub)
   - DB에 사용자 생성/조회 (login_method='apple', social_id=sub)
-  - JWT 토큰 발급
-- [ ] `KakaoLogin(accessToken string) (*AuthResponse, error)` 구현
+  - JWT 토큰 발급 (goroutine으로 병렬 처리)
+- [x] `KakaoLogin(accessToken string) (*AuthResponse, error)` 구현
   - Kakao 토큰 검증
   - 사용자 정보 추출 (email, nickname, profile_image)
   - DB에 사용자 생성/조회 (login_method='kakao', social_id=kakao_id)
-  - JWT 토큰 발급
+  - JWT 토큰 발급 (goroutine으로 병렬 처리)
+- [x] `handleSNSLogin`: 공통 SNS 로그인 로직 구현 (goroutine 활용, Zap 로깅 통합)
 
-### [ ] 2.3 인증 핸들러 구현 (`server/internal/handler/auth.go`)
-- [ ] `AuthHandler` 구조체 생성
-- [ ] 라우터 설정 함수: `SetupAuthRoutes(router fiber.Router, db *database.DB, cfg *config.Config)`
-- [ ] `POST /ojeomneo/v1/auth/google`: Google 로그인 엔드포인트
+### [x] 2.3 인증 핸들러 구현 (`server/internal/handler/auth.go`)
+- [x] `AuthHandler` 구조체 생성 (Zap 로거 통합)
+- [x] 라우터 설정: Uber-fx 모듈을 통한 자동 등록 (`server/internal/module/server.go`)
+- [x] `POST /ojeomneo/v1/auth/google`: Google 로그인 엔드포인트
   - Request: `{ "id_token": "..." }` (Firebase ID Token)
   - Response: `{ "access_token": "...", "refresh_token": "...", "user": {...} }`
-- [ ] `POST /ojeomneo/v1/auth/apple`: Apple 로그인 엔드포인트
-  - Request: `{ "access_token": "..." }` (identity_token)
+  - Goroutine을 활용한 비동기 로깅
+- [x] `POST /ojeomneo/v1/auth/apple`: Apple 로그인 엔드포인트
+  - Request: `{ "identity_token": "..." }` (Identity Token)
   - Response: `{ "access_token": "...", "refresh_token": "...", "user": {...} }`
-- [ ] `POST /ojeomneo/v1/auth/kakao`: Kakao 로그인 엔드포인트
+  - Goroutine을 활용한 비동기 로깅
+- [x] `POST /ojeomneo/v1/auth/kakao`: Kakao 로그인 엔드포인트
   - Request: `{ "access_token": "..." }`
   - Response: `{ "access_token": "...", "refresh_token": "...", "user": {...} }`
+  - Goroutine을 활용한 비동기 로깅
 
-### [ ] 2.4 메인 라우터에 인증 라우트 추가 (`server/cmd/api/main.go`)
-- [ ] `SetupAuthRoutes` 호출하여 인증 엔드포인트 등록
+### [x] 2.4 메인 라우터에 인증 라우트 추가 (`server/internal/module/server.go`)
+- [x] Uber-fx 모듈을 통한 인증 엔드포인트 자동 등록
+- [x] `/ojeomneo/v1/auth/google`, `/ojeomneo/v1/auth/apple`, `/ojeomneo/v1/auth/kakao` 라우트 설정
 
-### [ ] 2.5 JWT 토큰 관리 (`server/pkg/auth/jwt.go`)
-- [ ] Access Token 발급 함수 확인/구현
-- [ ] Refresh Token 발급 함수 확인/구현
-- [ ] 토큰 검증 함수 확인/구현
+### [x] 2.5 JWT 토큰 관리 (`server/pkg/auth/jwt.go`)
+- [x] Access Token 발급 함수 구현 (`GenerateAccessToken`)
+- [x] Refresh Token 발급 함수 구현 (`GenerateRefreshToken`)
+- [x] 토큰 검증 함수 구현 (`ValidateAccessToken`, `ValidateRefreshToken`)
+- [x] 토큰 쌍 생성 함수 구현 (`GenerateTokenPair` - goroutine으로 병렬 처리)
 
 ---
 
