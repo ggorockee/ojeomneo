@@ -1,0 +1,3688 @@
+
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+		<title>api: Go Coverage Report</title>
+		<style>
+			body {
+				background: black;
+				color: rgb(80, 80, 80);
+			}
+			body, pre, #legend span {
+				font-family: Menlo, monospace;
+				font-weight: bold;
+			}
+			#topbar {
+				background: black;
+				position: fixed;
+				top: 0; left: 0; right: 0;
+				height: 42px;
+				border-bottom: 1px solid rgb(80, 80, 80);
+			}
+			#content {
+				margin-top: 50px;
+			}
+			#nav, #legend {
+				float: left;
+				margin-left: 10px;
+			}
+			#legend {
+				margin-top: 12px;
+			}
+			#nav {
+				margin-top: 10px;
+			}
+			#legend span {
+				margin: 0 5px;
+			}
+			.cov0 { color: rgb(192, 0, 0) }
+.cov1 { color: rgb(128, 128, 128) }
+.cov2 { color: rgb(116, 140, 131) }
+.cov3 { color: rgb(104, 152, 134) }
+.cov4 { color: rgb(92, 164, 137) }
+.cov5 { color: rgb(80, 176, 140) }
+.cov6 { color: rgb(68, 188, 143) }
+.cov7 { color: rgb(56, 200, 146) }
+.cov8 { color: rgb(44, 212, 149) }
+.cov9 { color: rgb(32, 224, 152) }
+.cov10 { color: rgb(20, 236, 155) }
+
+		</style>
+	</head>
+	<body>
+		<div id="topbar">
+			<div id="nav">
+				<select id="files">
+				
+				<option value="file0">github.com/ggorockee/ojeomneo/server/cmd/api/main.go (0.0%)</option>
+				
+				<option value="file1">github.com/ggorockee/ojeomneo/server/docs/docs.go (0.0%)</option>
+				
+				<option value="file2">github.com/ggorockee/ojeomneo/server/internal/config/config.go (0.0%)</option>
+				
+				<option value="file3">github.com/ggorockee/ojeomneo/server/internal/config/database.go (0.0%)</option>
+				
+				<option value="file4">github.com/ggorockee/ojeomneo/server/internal/config/redis.go (0.0%)</option>
+				
+				<option value="file5">github.com/ggorockee/ojeomneo/server/internal/handler/error.go (0.0%)</option>
+				
+				<option value="file6">github.com/ggorockee/ojeomneo/server/internal/handler/health.go (0.0%)</option>
+				
+				<option value="file7">github.com/ggorockee/ojeomneo/server/internal/handler/menu.go (88.0%)</option>
+				
+				<option value="file8">github.com/ggorockee/ojeomneo/server/internal/handler/sketch.go (83.3%)</option>
+				
+				<option value="file9">github.com/ggorockee/ojeomneo/server/internal/middleware/cache.go (0.0%)</option>
+				
+				<option value="file10">github.com/ggorockee/ojeomneo/server/internal/middleware/prometheus.go (0.0%)</option>
+				
+				<option value="file11">github.com/ggorockee/ojeomneo/server/internal/middleware/ratelimit.go (0.0%)</option>
+				
+				<option value="file12">github.com/ggorockee/ojeomneo/server/internal/model/menu.go (52.4%)</option>
+				
+				<option value="file13">github.com/ggorockee/ojeomneo/server/internal/model/recommendation.go (20.0%)</option>
+				
+				<option value="file14">github.com/ggorockee/ojeomneo/server/internal/model/sketch.go (40.0%)</option>
+				
+				<option value="file15">github.com/ggorockee/ojeomneo/server/internal/model/user.go (20.0%)</option>
+				
+				<option value="file16">github.com/ggorockee/ojeomneo/server/internal/seed/menu.go (0.0%)</option>
+				
+				<option value="file17">github.com/ggorockee/ojeomneo/server/internal/service/llm/gemini.go (17.6%)</option>
+				
+				<option value="file18">github.com/ggorockee/ojeomneo/server/internal/service/menu.go (58.6%)</option>
+				
+				<option value="file19">github.com/ggorockee/ojeomneo/server/internal/service/sketch.go (0.0%)</option>
+				
+				</select>
+			</div>
+			<div id="legend">
+				<span>not tracked</span>
+			
+				<span class="cov0">not covered</span>
+				<span class="cov8">covered</span>
+			
+			</div>
+		</div>
+		<div id="content">
+		
+		<pre class="file" id="file0" style="display: none">package main
+
+import (
+        "log"
+        "os"
+
+        "github.com/gofiber/fiber/v2"
+        "github.com/gofiber/fiber/v2/middleware/cors"
+        "github.com/gofiber/fiber/v2/middleware/logger"
+        "github.com/gofiber/fiber/v2/middleware/recover"
+        "github.com/gofiber/swagger"
+        "github.com/joho/godotenv"
+
+        "github.com/ggorockee/ojeomneo/server/internal/config"
+        "github.com/ggorockee/ojeomneo/server/internal/handler"
+        "github.com/ggorockee/ojeomneo/server/internal/middleware"
+        "github.com/ggorockee/ojeomneo/server/internal/model"
+        "github.com/ggorockee/ojeomneo/server/internal/seed"
+        "github.com/ggorockee/ojeomneo/server/internal/service"
+        "github.com/ggorockee/ojeomneo/server/internal/service/llm"
+
+        _ "github.com/ggorockee/ojeomneo/server/docs"
+)
+
+// @title Ojeomneo API
+// @version 1.0.0
+// @description Go Fiber v2 기반 REST API 서버 - 스케치 기반 메뉴 추천
+// @termsOfService http://swagger.io/terms/
+
+// @contact.name API Support
+// @contact.email support@woohalabs.com
+
+// @license.name Apache 2.0
+// @license.url http://www.apache.org/licenses/LICENSE-2.0.html
+
+// @host api.woohalabs.com
+// @BasePath /ojeomneo/v1
+
+// @schemes https http
+func main() <span class="cov0" title="0">{
+        // .env 파일 로드
+        if err := godotenv.Load(); err != nil </span><span class="cov0" title="0">{
+                log.Println("Warning: .env file not found, using environment variables")
+        }</span>
+
+        // 설정 로드
+        <span class="cov0" title="0">cfg := config.Load()
+
+        // 데이터베이스 연결
+        db, err := config.ConnectDB(cfg)
+        if err != nil </span><span class="cov0" title="0">{
+                log.Printf("Warning: Failed to connect to database: %v", err)
+                log.Println("Server will start without database connection")
+        }</span>
+
+        // AutoMigrate (스키마 동기화)
+        <span class="cov0" title="0">if db != nil </span><span class="cov0" title="0">{
+                log.Println("Running database migrations...")
+                if err := db.AutoMigrate(
+                        &amp;model.User{},
+                        &amp;model.Menu{},
+                        &amp;model.Sketch{},
+                        &amp;model.Recommendation{},
+                ); err != nil </span><span class="cov0" title="0">{
+                        log.Printf("Warning: Failed to run migrations: %v", err)
+                }</span> else<span class="cov0" title="0"> {
+                        log.Println("Database migrations completed")
+                }</span>
+
+                // 메뉴 시드 데이터 삽입 (SEED_DATA=true 일 때만)
+                <span class="cov0" title="0">if os.Getenv("SEED_DATA") == "true" </span><span class="cov0" title="0">{
+                        log.Println("Seeding menu data...")
+                        if err := seed.SeedMenus(db); err != nil </span><span class="cov0" title="0">{
+                                log.Printf("Warning: Failed to seed menus: %v", err)
+                        }</span>
+                }
+        }
+
+        // Redis 연결
+        <span class="cov0" title="0">rdb, err := config.ConnectRedis(cfg)
+        if err != nil </span><span class="cov0" title="0">{
+                log.Printf("Warning: Failed to connect to redis: %v", err)
+                log.Println("Server will start without redis connection")
+        }</span> else<span class="cov0" title="0"> {
+                log.Println("Redis connection established")
+                defer rdb.Close()
+        }</span>
+
+        // LLM 클라이언트 초기화 (Gemini)
+        <span class="cov0" title="0">llmClient := llm.NewClient(cfg.GeminiAPIKey, cfg.GeminiModel)
+        if llmClient.IsAvailable() </span><span class="cov0" title="0">{
+                log.Printf("Gemini client initialized (model: %s)", cfg.GeminiModel)
+        }</span> else<span class="cov0" title="0"> {
+                log.Println("Warning: Gemini API key not configured, using mock responses")
+        }</span>
+
+        // 서비스 초기화
+        <span class="cov0" title="0">menuService := service.NewMenuService(db)
+        sketchService := service.NewSketchService(db, llmClient, menuService)
+
+        // Fiber 앱 생성
+        app := fiber.New(fiber.Config{
+                AppName:      "Ojeomneo API v1.0.0",
+                ServerHeader: "Ojeomneo",
+                ErrorHandler: handler.CustomErrorHandler,
+                BodyLimit:    10 * 1024 * 1024, // 10MB (스케치 이미지 업로드용)
+        })
+
+        // 전역 미들웨어 설정
+        app.Use(recover.New())
+        app.Use(logger.New(logger.Config{
+                Format:     "${time} | ${status} | ${latency} | ${ip} | ${method} | ${path}\n",
+                TimeFormat: "2006-01-02 15:04:05",
+        }))
+        app.Use(cors.New(cors.Config{
+                AllowOrigins: "*",
+                AllowMethods: "GET,POST,PUT,DELETE,PATCH,OPTIONS",
+                AllowHeaders: "Origin,Content-Type,Accept,Authorization",
+        }))
+
+        // ============================================
+        // /ojeomneo 그룹 (Ingress에서 전달받는 prefix)
+        // Swagger 정적 파일 로딩 문제 방지를 위해 Fiber에서 전체 경로 처리
+        // ============================================
+        ojeomneo := app.Group("/ojeomneo")
+
+        // Prometheus 메트릭 (내부망 접근 제한)
+        ojeomneo.Get("/metrics", middleware.InternalOnly(), middleware.PrometheusHandler())
+
+        // API v1 라우터
+        v1 := ojeomneo.Group("/v1")
+
+        // Rate Limiting 미들웨어 (Redis 연결 시에만 활성화)
+        if rdb != nil </span><span class="cov0" title="0">{
+                rateLimitCfg := middleware.DefaultRateLimitConfig()
+                rateLimitCfg.RedisClient = rdb
+                v1.Use(middleware.RateLimiter(rateLimitCfg))
+                log.Println("Rate Limiting middleware enabled")
+        }</span>
+
+        // API 캐싱 미들웨어 (Redis 연결 시에만 활성화)
+        <span class="cov0" title="0">if rdb != nil </span><span class="cov0" title="0">{
+                cacheCfg := middleware.DefaultCacheConfig()
+                cacheCfg.RedisClient = rdb
+                v1.Use(middleware.Cache(cacheCfg))
+                log.Println("API Cache middleware enabled")
+        }</span>
+
+        // Prometheus 미들웨어 (API 요청만 측정)
+        <span class="cov0" title="0">v1.Use(middleware.PrometheusMiddleware())
+
+        // Swagger 문서 - /ojeomneo/v1/docs
+        v1.Get("/docs/*", swagger.New(swagger.Config{
+                URL:          "/ojeomneo/v1/docs/doc.json",
+                DeepLinking:  true,
+                DocExpansion: "list",
+                Title:        "Ojeomneo API Documentation",
+        }))
+
+        // 핸들러 초기화
+        healthHandler := handler.NewHealthHandler(db)
+        menuHandler := handler.NewMenuHandler(menuService)
+        sketchHandler := handler.NewSketchHandler(sketchService)
+
+        // Health Check 엔드포인트
+        // /ojeomneo/v1/healthcheck - 상세 상태 (모니터링용, 항상 200)
+        // /ojeomneo/v1/healthcheck/live - Kubernetes startup/liveness probe용 (항상 200)
+        // /ojeomneo/v1/healthcheck/ready - Kubernetes readiness probe용 (DB 연결 시 200)
+        v1.Get("/healthcheck", healthHandler.HealthCheck)
+        v1.Get("/healthcheck/live", healthHandler.LivenessCheck)
+        v1.Get("/healthcheck/ready", healthHandler.ReadinessCheck)
+
+        // Menu 엔드포인트
+        v1.Get("/menus", menuHandler.List)
+        v1.Get("/menus/categories", menuHandler.GetCategories)
+        v1.Get("/menus/:id", menuHandler.GetByID)
+
+        // Sketch 엔드포인트
+        v1.Post("/sketch/analyze", sketchHandler.Analyze)
+        v1.Get("/sketch/history", sketchHandler.GetHistory)
+        v1.Get("/sketch/:id", sketchHandler.GetByID)
+
+        // 서버 시작
+        port := os.Getenv("APP_PORT")
+        if port == "" </span><span class="cov0" title="0">{
+                port = "3000"
+        }</span>
+
+        <span class="cov0" title="0">log.Printf("🚀 Server starting on port %s", port)
+        log.Printf("📚 Swagger: http://localhost:%s/ojeomneo/v1/docs", port)
+        log.Printf("📊 Metrics: http://localhost:%s/ojeomneo/metrics (internal only)", port)
+        log.Printf("🎨 Sketch API: POST http://localhost:%s/ojeomneo/v1/sketch/analyze", port)
+
+        if err := app.Listen(":" + port); err != nil </span><span class="cov0" title="0">{
+                log.Fatalf("Failed to start server: %v", err)
+        }</span>
+}
+</pre>
+		
+		<pre class="file" id="file1" style="display: none">// Package docs Code generated by swaggo/swag. DO NOT EDIT
+package docs
+
+import "github.com/swaggo/swag"
+
+const docTemplate = `{
+    "schemes": {{ marshal .Schemes }},
+    "swagger": "2.0",
+    "info": {
+        "description": "{{escape .Description}}",
+        "title": "{{.Title}}",
+        "termsOfService": "http://swagger.io/terms/",
+        "contact": {
+            "name": "API Support",
+            "email": "support@woohalabs.com"
+        },
+        "license": {
+            "name": "Apache 2.0",
+            "url": "http://www.apache.org/licenses/LICENSE-2.0.html"
+        },
+        "version": "{{.Version}}"
+    },
+    "host": "{{.Host}}",
+    "basePath": "{{.BasePath}}",
+    "paths": {
+        "/healthcheck": {
+            "get": {
+                "description": "서버 및 데이터베이스 상태 상세 확인 (모니터링/디버깅용)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Health"
+                ],
+                "summary": "서버 상세 헬스체크",
+                "responses": {
+                    "200": {
+                        "description": "상태 정보 반환 (DB 연결 실패해도 200)",
+                        "schema": {
+                            "$ref": "#/definitions/internal_handler.HealthResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/healthcheck/live": {
+            "get": {
+                "description": "서버가 살아있는지 확인 (DB 연결 무관)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Health"
+                ],
+                "summary": "Liveness 체크 (Kubernetes startup/liveness probe용)",
+                "responses": {
+                    "200": {
+                        "description": "서버 정상 가동 중",
+                        "schema": {
+                            "$ref": "#/definitions/internal_handler.LivenessResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/healthcheck/ready": {
+            "get": {
+                "description": "서버가 트래픽을 받을 준비가 됐는지 확인 (DB 연결 포함)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Health"
+                ],
+                "summary": "Readiness 체크 (Kubernetes readiness probe용)",
+                "responses": {
+                    "200": {
+                        "description": "트래픽 수신 준비 완료",
+                        "schema": {
+                            "$ref": "#/definitions/internal_handler.ReadinessResponse"
+                        }
+                    },
+                    "503": {
+                        "description": "트래픽 수신 불가 (DB 연결 실패)",
+                        "schema": {
+                            "$ref": "#/definitions/internal_handler.ReadinessResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/menus": {
+            "get": {
+                "description": "메뉴 목록을 조회합니다. 카테고리와 태그로 필터링할 수 있습니다.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "menu"
+                ],
+                "summary": "메뉴 목록 조회",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "카테고리 필터 (korean, chinese, japanese, western, asian, snack, cafe, other)",
+                        "name": "category",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "태그 필터",
+                        "name": "tag",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 1,
+                        "description": "페이지 번호",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 20,
+                        "description": "페이지당 개수",
+                        "name": "limit",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/menus/categories": {
+            "get": {
+                "description": "사용 가능한 메뉴 카테고리 목록을 조회합니다.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "menu"
+                ],
+                "summary": "카테고리 목록 조회",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/menus/{id}": {
+            "get": {
+                "description": "메뉴 ID로 상세 정보를 조회합니다.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "menu"
+                ],
+                "summary": "메뉴 상세 조회",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "메뉴 ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/sketch/analyze": {
+            "post": {
+                "description": "스케치 이미지를 분석하여 감정/분위기를 파악하고 어울리는 메뉴를 추천합니다",
+                "consumes": [
+                    "multipart/form-data"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "sketch"
+                ],
+                "summary": "스케치 분석 및 메뉴 추천",
+                "parameters": [
+                    {
+                        "type": "file",
+                        "description": "스케치 이미지 (PNG/JPEG, max 5MB)",
+                        "name": "image",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "추가 텍스트 입력",
+                        "name": "text",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "description": "디바이스 식별자",
+                        "name": "device_id",
+                        "in": "formData",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/sketch/history": {
+            "get": {
+                "description": "디바이스별 스케치 분석 히스토리를 조회합니다",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "sketch"
+                ],
+                "summary": "스케치 히스토리 조회",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "디바이스 식별자",
+                        "name": "device_id",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "default": 1,
+                        "description": "페이지 번호",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 10,
+                        "description": "페이지당 개수",
+                        "name": "limit",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/sketch/{id}": {
+            "get": {
+                "description": "스케치 ID로 상세 정보를 조회합니다",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "sketch"
+                ],
+                "summary": "스케치 상세 조회",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "스케치 UUID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "definitions": {
+        "internal_handler.DatabaseStatus": {
+            "description": "데이터베이스 연결 상태",
+            "type": "object",
+            "properties": {
+                "connected": {
+                    "type": "boolean",
+                    "example": true
+                },
+                "latency_ms": {
+                    "type": "integer",
+                    "example": 5
+                },
+                "message": {
+                    "type": "string",
+                    "example": "Database connection successful"
+                }
+            }
+        },
+        "internal_handler.HealthResponse": {
+            "description": "서버 헬스체크 응답",
+            "type": "object",
+            "properties": {
+                "database": {
+                    "$ref": "#/definitions/internal_handler.DatabaseStatus"
+                },
+                "service": {
+                    "type": "string",
+                    "example": "ojeomneo-api"
+                },
+                "status": {
+                    "type": "string",
+                    "example": "ok"
+                },
+                "version": {
+                    "type": "string",
+                    "example": "1.0.0"
+                }
+            }
+        },
+        "internal_handler.LivenessResponse": {
+            "description": "Kubernetes liveness/startup probe용 간단한 응답",
+            "type": "object",
+            "properties": {
+                "service": {
+                    "type": "string",
+                    "example": "ojeomneo-api"
+                },
+                "status": {
+                    "type": "string",
+                    "example": "ok"
+                }
+            }
+        },
+        "internal_handler.ReadinessResponse": {
+            "description": "Kubernetes readiness probe용 응답",
+            "type": "object",
+            "properties": {
+                "database": {
+                    "type": "boolean",
+                    "example": true
+                },
+                "ready": {
+                    "type": "boolean",
+                    "example": true
+                },
+                "status": {
+                    "type": "string",
+                    "example": "ok"
+                }
+            }
+        }
+    }
+}`
+
+// SwaggerInfo holds exported Swagger Info so clients can modify it
+var SwaggerInfo = &amp;swag.Spec{
+        Version:          "1.0.0",
+        Host:             "api.woohalabs.com",
+        BasePath:         "/ojeomneo/v1",
+        Schemes:          []string{"https", "http"},
+        Title:            "Ojeomneo API",
+        Description:      "Go Fiber v2 기반 REST API 서버 - 스케치 기반 메뉴 추천",
+        InfoInstanceName: "swagger",
+        SwaggerTemplate:  docTemplate,
+        LeftDelim:        "{{",
+        RightDelim:       "}}",
+}
+
+func init() <span class="cov0" title="0">{
+        swag.Register(SwaggerInfo.InstanceName(), SwaggerInfo)
+}</span>
+</pre>
+		
+		<pre class="file" id="file2" style="display: none">package config
+
+import (
+        "os"
+)
+
+// Config 애플리케이션 설정
+type Config struct {
+        AppEnv  string
+        AppPort string
+
+        DBHost     string
+        DBPort     string
+        DBName     string
+        DBUser     string
+        DBPassword string
+
+        RedisHost     string
+        RedisPort     string
+        RedisPassword string
+
+        // Gemini 설정
+        GeminiAPIKey string
+        GeminiModel  string
+}
+
+// Load 환경변수에서 설정 로드
+// Kubernetes Secret 키 이름에 맞춰 POSTGRES_*, REDIS_* 형식 사용
+func Load() *Config <span class="cov0" title="0">{
+        return &amp;Config{
+                AppEnv:  getEnv("APP_ENV", "development"),
+                AppPort: getEnv("APP_PORT", "3000"),
+
+                DBHost:     getEnv("POSTGRES_SERVER", "localhost"),
+                DBPort:     getEnv("POSTGRES_PORT", "5432"),
+                DBName:     getEnv("POSTGRES_DB", "ojeomneo"),
+                DBUser:     getEnv("POSTGRES_USER", "ojeomneo"),
+                DBPassword: getEnv("POSTGRES_PASSWORD", ""),
+
+                RedisHost:     getEnv("REDIS_HOST", "localhost"),
+                RedisPort:     getEnv("REDIS_PORT", "6379"),
+                RedisPassword: getEnv("REDIS_PASSWORD", ""),
+
+                GeminiAPIKey: getEnv("GEMINI_API_KEY", ""),
+                GeminiModel:  getEnv("GEMINI_MODEL", "gemini-1.5-flash"),
+        }
+}</span>
+
+// getEnv 환경변수 조회 (기본값 지원)
+func getEnv(key, defaultValue string) string <span class="cov0" title="0">{
+        if value := os.Getenv(key); value != "" </span><span class="cov0" title="0">{
+                return value
+        }</span>
+        <span class="cov0" title="0">return defaultValue</span>
+}
+</pre>
+		
+		<pre class="file" id="file3" style="display: none">package config
+
+import (
+        "fmt"
+
+        "github.com/ggorockee/ojeomneo/server/internal/model"
+        "gorm.io/driver/postgres"
+        "gorm.io/gorm"
+        "gorm.io/gorm/logger"
+)
+
+// ConnectDB PostgreSQL 데이터베이스 연결
+func ConnectDB(cfg *Config) (*gorm.DB, error) <span class="cov0" title="0">{
+        dsn := fmt.Sprintf(
+                "host=%s port=%s user=%s password=%s dbname=%s sslmode=disable TimeZone=Asia/Seoul",
+                cfg.DBHost,
+                cfg.DBPort,
+                cfg.DBUser,
+                cfg.DBPassword,
+                cfg.DBName,
+        )
+
+        db, err := gorm.Open(postgres.Open(dsn), &amp;gorm.Config{
+                Logger: logger.Default.LogMode(logger.Info),
+        })
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, fmt.Errorf("failed to connect to database: %w", err)
+        }</span>
+
+        // 연결 풀 설정
+        <span class="cov0" title="0">sqlDB, err := db.DB()
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, fmt.Errorf("failed to get underlying sql.DB: %w", err)
+        }</span>
+
+        <span class="cov0" title="0">sqlDB.SetMaxIdleConns(10)
+        sqlDB.SetMaxOpenConns(100)
+
+        // AutoMigrate - 테이블 자동 생성/업데이트
+        if err := db.AutoMigrate(&amp;model.User{}); err != nil </span><span class="cov0" title="0">{
+                return nil, fmt.Errorf("failed to auto migrate: %w", err)
+        }</span>
+
+        // email + login_method 복합 unique constraint 추가
+        // GORM에서 복합 unique index는 수동으로 추가
+        <span class="cov0" title="0">if err := db.Exec(`
+                CREATE UNIQUE INDEX IF NOT EXISTS idx_unique_email_login_method
+                ON users (email, login_method)
+        `).Error; err != nil </span><span class="cov0" title="0">{
+                return nil, fmt.Errorf("failed to create unique index: %w", err)
+        }</span>
+
+        <span class="cov0" title="0">return db, nil</span>
+}
+</pre>
+		
+		<pre class="file" id="file4" style="display: none">package config
+
+import (
+        "context"
+        "fmt"
+        "time"
+
+        "github.com/redis/go-redis/v9"
+)
+
+// ConnectRedis Redis 클라이언트 연결
+func ConnectRedis(cfg *Config) (*redis.Client, error) <span class="cov0" title="0">{
+        client := redis.NewClient(&amp;redis.Options{
+                Addr:     fmt.Sprintf("%s:%s", cfg.RedisHost, cfg.RedisPort),
+                Password: cfg.RedisPassword,
+                DB:       0,
+
+                // 연결 풀 설정
+                PoolSize:     10,
+                MinIdleConns: 5,
+                PoolTimeout:  30 * time.Second,
+
+                // 타임아웃 설정
+                DialTimeout:  5 * time.Second,
+                ReadTimeout:  3 * time.Second,
+                WriteTimeout: 3 * time.Second,
+        })
+
+        // 연결 테스트
+        ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+        defer cancel()
+
+        if err := client.Ping(ctx).Err(); err != nil </span><span class="cov0" title="0">{
+                return nil, fmt.Errorf("failed to connect to redis: %w", err)
+        }</span>
+
+        <span class="cov0" title="0">return client, nil</span>
+}
+</pre>
+		
+		<pre class="file" id="file5" style="display: none">package handler
+
+import (
+        "os"
+
+        "github.com/gofiber/fiber/v2"
+)
+
+// ErrorResponse 에러 응답 구조체 (Naver 스타일)
+type ErrorResponse struct {
+        Success bool      `json:"success"`
+        Error   ErrorInfo `json:"error"`
+}
+
+// ErrorInfo 에러 상세 정보
+// message: 사용자용 (한글, 친절하게)
+// detail: 개발자용 (디버깅 정보, production에서는 숨김)
+type ErrorInfo struct {
+        Code    string `json:"code"`
+        Message string `json:"message"`
+        Detail  string `json:"detail,omitempty"`
+}
+
+// 에러 코드별 사용자 메시지 (Naver 스타일)
+var userMessages = map[string]string{
+        "INVALID_INPUT":      "입력 정보를 다시 확인해 주세요.",
+        "NOT_FOUND":          "요청하신 정보를 찾을 수 없습니다.",
+        "UNAUTHORIZED":       "로그인이 필요한 서비스입니다.",
+        "FORBIDDEN":          "접근 권한이 없습니다.",
+        "METHOD_NOT_ALLOWED": "지원하지 않는 요청 방식입니다.",
+        "INTERNAL_ERROR":     "일시적인 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.",
+        "DB_ERROR":           "서비스 연결에 문제가 발생했습니다.",
+        "RATE_LIMIT":         "요청이 너무 많습니다. 잠시 후 다시 시도해 주세요.",
+        "BAD_REQUEST":        "요청 형식이 올바르지 않습니다.",
+        "CONFLICT":           "이미 존재하는 정보입니다.",
+        "VALIDATION_ERROR":   "입력값이 올바르지 않습니다.",
+}
+
+// getUserMessage 에러 코드에 해당하는 사용자 메시지 반환
+func getUserMessage(code string) string <span class="cov0" title="0">{
+        if msg, ok := userMessages[code]; ok </span><span class="cov0" title="0">{
+                return msg
+        }</span>
+        <span class="cov0" title="0">return "일시적인 오류가 발생했습니다. 잠시 후 다시 시도해 주세요."</span>
+}
+
+// isProduction 운영 환경인지 확인
+func isProduction() bool <span class="cov0" title="0">{
+        return os.Getenv("APP_ENV") == "production"
+}</span>
+
+// CustomErrorHandler Fiber 커스텀 에러 핸들러
+func CustomErrorHandler(c *fiber.Ctx, err error) error <span class="cov0" title="0">{
+        code := fiber.StatusInternalServerError
+        errorCode := "INTERNAL_ERROR"
+        detail := err.Error()
+
+        // Fiber 에러인 경우 상태 코드 추출
+        if e, ok := err.(*fiber.Error); ok </span><span class="cov0" title="0">{
+                code = e.Code
+                detail = e.Message
+
+                switch code </span>{
+                case fiber.StatusNotFound:<span class="cov0" title="0">
+                        errorCode = "NOT_FOUND"</span>
+                case fiber.StatusBadRequest:<span class="cov0" title="0">
+                        errorCode = "BAD_REQUEST"</span>
+                case fiber.StatusUnauthorized:<span class="cov0" title="0">
+                        errorCode = "UNAUTHORIZED"</span>
+                case fiber.StatusForbidden:<span class="cov0" title="0">
+                        errorCode = "FORBIDDEN"</span>
+                case fiber.StatusMethodNotAllowed:<span class="cov0" title="0">
+                        errorCode = "METHOD_NOT_ALLOWED"</span>
+                case fiber.StatusConflict:<span class="cov0" title="0">
+                        errorCode = "CONFLICT"</span>
+                case fiber.StatusTooManyRequests:<span class="cov0" title="0">
+                        errorCode = "RATE_LIMIT"</span>
+                }
+        }
+
+        <span class="cov0" title="0">response := ErrorResponse{
+                Success: false,
+                Error: ErrorInfo{
+                        Code:    errorCode,
+                        Message: getUserMessage(errorCode),
+                },
+        }
+
+        // 개발 환경에서만 detail 포함
+        if !isProduction() </span><span class="cov0" title="0">{
+                response.Error.Detail = detail
+        }</span>
+
+        <span class="cov0" title="0">return c.Status(code).JSON(response)</span>
+}
+
+// NewError 에러 응답 생성 헬퍼
+func NewError(c *fiber.Ctx, status int, code, detail string) error <span class="cov0" title="0">{
+        response := ErrorResponse{
+                Success: false,
+                Error: ErrorInfo{
+                        Code:    code,
+                        Message: getUserMessage(code),
+                },
+        }
+
+        // 개발 환경에서만 detail 포함
+        if !isProduction() </span><span class="cov0" title="0">{
+                response.Error.Detail = detail
+        }</span>
+
+        <span class="cov0" title="0">return c.Status(status).JSON(response)</span>
+}
+
+// NewValidationError 검증 에러 응답 생성
+func NewValidationError(c *fiber.Ctx, field, reason string) error <span class="cov0" title="0">{
+        detail := field + " 필드가 유효하지 않습니다: " + reason
+        return NewError(c, fiber.StatusBadRequest, "VALIDATION_ERROR", detail)
+}</span>
+
+// NewNotFoundError 리소스 없음 에러 응답 생성
+func NewNotFoundError(c *fiber.Ctx, resource, id string) error <span class="cov0" title="0">{
+        detail := resource + " ID " + id + "를 찾을 수 없습니다."
+        return NewError(c, fiber.StatusNotFound, "NOT_FOUND", detail)
+}</span>
+
+// NewUnauthorizedError 인증 에러 응답 생성
+func NewUnauthorizedError(c *fiber.Ctx, reason string) error <span class="cov0" title="0">{
+        return NewError(c, fiber.StatusUnauthorized, "UNAUTHORIZED", reason)
+}</span>
+
+// NewForbiddenError 권한 에러 응답 생성
+func NewForbiddenError(c *fiber.Ctx, reason string) error <span class="cov0" title="0">{
+        return NewError(c, fiber.StatusForbidden, "FORBIDDEN", reason)
+}</span>
+
+// NewInternalError 내부 에러 응답 생성
+func NewInternalError(c *fiber.Ctx, detail string) error <span class="cov0" title="0">{
+        return NewError(c, fiber.StatusInternalServerError, "INTERNAL_ERROR", detail)
+}</span>
+
+// NewDBError 데이터베이스 에러 응답 생성
+func NewDBError(c *fiber.Ctx, detail string) error <span class="cov0" title="0">{
+        return NewError(c, fiber.StatusInternalServerError, "DB_ERROR", "데이터베이스 쿼리 실패: "+detail)
+}</span>
+</pre>
+		
+		<pre class="file" id="file6" style="display: none">package handler
+
+import (
+        "time"
+
+        "github.com/gofiber/fiber/v2"
+        "gorm.io/gorm"
+)
+
+// HealthHandler 헬스체크 핸들러
+type HealthHandler struct {
+        db *gorm.DB
+}
+
+// NewHealthHandler HealthHandler 생성자
+func NewHealthHandler(db *gorm.DB) *HealthHandler <span class="cov0" title="0">{
+        return &amp;HealthHandler{db: db}
+}</span>
+
+// HealthResponse 헬스체크 응답 구조체
+// @Description 서버 헬스체크 응답
+type HealthResponse struct {
+        Status   string         `json:"status" example:"ok"`
+        Service  string         `json:"service" example:"ojeomneo-api"`
+        Version  string         `json:"version" example:"1.0.0"`
+        Database DatabaseStatus `json:"database"`
+}
+
+// LivenessResponse Liveness 체크 응답
+// @Description Kubernetes liveness/startup probe용 간단한 응답
+type LivenessResponse struct {
+        Status  string `json:"status" example:"ok"`
+        Service string `json:"service" example:"ojeomneo-api"`
+}
+
+// ReadinessResponse Readiness 체크 응답
+// @Description Kubernetes readiness probe용 응답
+type ReadinessResponse struct {
+        Status   string `json:"status" example:"ok"`
+        Ready    bool   `json:"ready" example:"true"`
+        Database bool   `json:"database" example:"true"`
+}
+
+// DatabaseStatus 데이터베이스 상태
+// @Description 데이터베이스 연결 상태
+type DatabaseStatus struct {
+        Connected bool   `json:"connected" example:"true"`
+        LatencyMs int64  `json:"latency_ms" example:"5"`
+        Message   string `json:"message,omitempty" example:"Database connection successful"`
+}
+
+// LivenessCheck godoc
+// @Summary Liveness 체크 (Kubernetes startup/liveness probe용)
+// @Description 서버가 살아있는지 확인 (DB 연결 무관)
+// @Tags Health
+// @Accept json
+// @Produce json
+// @Success 200 {object} LivenessResponse "서버 정상 가동 중"
+// @Router /healthcheck/live [get]
+func (h *HealthHandler) LivenessCheck(c *fiber.Ctx) error <span class="cov0" title="0">{
+        return c.JSON(LivenessResponse{
+                Status:  "ok",
+                Service: "ojeomneo-api",
+        })
+}</span>
+
+// ReadinessCheck godoc
+// @Summary Readiness 체크 (Kubernetes readiness probe용)
+// @Description 서버가 트래픽을 받을 준비가 됐는지 확인 (DB 연결 포함)
+// @Tags Health
+// @Accept json
+// @Produce json
+// @Success 200 {object} ReadinessResponse "트래픽 수신 준비 완료"
+// @Failure 503 {object} ReadinessResponse "트래픽 수신 불가 (DB 연결 실패)"
+// @Router /healthcheck/ready [get]
+func (h *HealthHandler) ReadinessCheck(c *fiber.Ctx) error <span class="cov0" title="0">{
+        response := ReadinessResponse{
+                Status: "ok",
+                Ready:  true,
+        }
+
+        // DB 연결 체크
+        if h.db == nil </span><span class="cov0" title="0">{
+                response.Status = "not_ready"
+                response.Ready = false
+                response.Database = false
+                return c.Status(fiber.StatusServiceUnavailable).JSON(response)
+        }</span>
+
+        <span class="cov0" title="0">sqlDB, err := h.db.DB()
+        if err != nil </span><span class="cov0" title="0">{
+                response.Status = "not_ready"
+                response.Ready = false
+                response.Database = false
+                return c.Status(fiber.StatusServiceUnavailable).JSON(response)
+        }</span>
+
+        <span class="cov0" title="0">if err = sqlDB.Ping(); err != nil </span><span class="cov0" title="0">{
+                response.Status = "not_ready"
+                response.Ready = false
+                response.Database = false
+                return c.Status(fiber.StatusServiceUnavailable).JSON(response)
+        }</span>
+
+        <span class="cov0" title="0">response.Database = true
+        return c.JSON(response)</span>
+}
+
+// HealthCheck godoc
+// @Summary 서버 상세 헬스체크
+// @Description 서버 및 데이터베이스 상태 상세 확인 (모니터링/디버깅용)
+// @Tags Health
+// @Accept json
+// @Produce json
+// @Success 200 {object} HealthResponse "상태 정보 반환 (DB 연결 실패해도 200)"
+// @Router /healthcheck [get]
+func (h *HealthHandler) HealthCheck(c *fiber.Ctx) error <span class="cov0" title="0">{
+        response := HealthResponse{
+                Service: "ojeomneo-api",
+                Version: "1.0.0",
+        }
+
+        // DB가 nil인 경우 (연결 실패 상태로 시작된 경우)
+        if h.db == nil </span><span class="cov0" title="0">{
+                response.Status = "degraded"
+                response.Database = DatabaseStatus{
+                        Connected: false,
+                        LatencyMs: 0,
+                        Message:   "Database not configured",
+                }
+                // 모니터링용이므로 항상 200 반환 (상태 정보만 제공)
+                return c.JSON(response)
+        }</span>
+
+        // DB 연결 체크 및 레이턴시 측정
+        <span class="cov0" title="0">start := time.Now()
+        sqlDB, err := h.db.DB()
+
+        if err != nil </span><span class="cov0" title="0">{
+                response.Status = "degraded"
+                response.Database = DatabaseStatus{
+                        Connected: false,
+                        LatencyMs: 0,
+                        Message:   "Failed to get database connection",
+                }
+                return c.JSON(response)
+        }</span>
+
+        // Ping 테스트
+        <span class="cov0" title="0">err = sqlDB.Ping()
+        latency := time.Since(start).Milliseconds()
+
+        if err != nil </span><span class="cov0" title="0">{
+                response.Status = "degraded"
+                response.Database = DatabaseStatus{
+                        Connected: false,
+                        LatencyMs: latency,
+                        Message:   "Database ping failed: " + err.Error(),
+                }
+                return c.JSON(response)
+        }</span>
+
+        // 정상 응답
+        <span class="cov0" title="0">response.Status = "ok"
+        response.Database = DatabaseStatus{
+                Connected: true,
+                LatencyMs: latency,
+                Message:   "Database connection successful",
+        }
+
+        return c.JSON(response)</span>
+}
+</pre>
+		
+		<pre class="file" id="file7" style="display: none">package handler
+
+import (
+        "github.com/gofiber/fiber/v2"
+
+        "github.com/ggorockee/ojeomneo/server/internal/service"
+)
+
+// MenuHandler 메뉴 핸들러
+type MenuHandler struct {
+        menuService *service.MenuService
+}
+
+// NewMenuHandler 새 메뉴 핸들러 생성
+func NewMenuHandler(menuService *service.MenuService) *MenuHandler <span class="cov8" title="1">{
+        return &amp;MenuHandler{
+                menuService: menuService,
+        }
+}</span>
+
+// List godoc
+// @Summary 메뉴 목록 조회
+// @Description 메뉴 목록을 조회합니다. 카테고리와 태그로 필터링할 수 있습니다.
+// @Tags menu
+// @Accept json
+// @Produce json
+// @Param category query string false "카테고리 필터 (korean, chinese, japanese, western, asian, snack, cafe, other)"
+// @Param tag query string false "태그 필터"
+// @Param page query int false "페이지 번호" default(1)
+// @Param limit query int false "페이지당 개수" default(20)
+// @Success 200 {object} map[string]interface{}
+// @Router /menus [get]
+func (h *MenuHandler) List(c *fiber.Ctx) error <span class="cov8" title="1">{
+        category := c.Query("category")
+        tag := c.Query("tag")
+        page := c.QueryInt("page", 1)
+        limit := c.QueryInt("limit", 20)
+
+        if page &lt; 1 </span><span class="cov0" title="0">{
+                page = 1
+        }</span>
+        <span class="cov8" title="1">if limit &lt; 1 || limit &gt; 100 </span><span class="cov0" title="0">{
+                limit = 20
+        }</span>
+
+        <span class="cov8" title="1">menus, total, err := h.menuService.List(c.Context(), category, tag, page, limit)
+        if err != nil </span><span class="cov0" title="0">{
+                return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+                        "success": false,
+                        "error":   err.Error(),
+                })
+        }</span>
+
+        // 응답 변환
+        <span class="cov8" title="1">items := make([]map[string]interface{}, len(menus))
+        for i, menu := range menus </span><span class="cov8" title="1">{
+                items[i] = map[string]interface{}{
+                        "id":             menu.ID,
+                        "name":           menu.Name,
+                        "category":       menu.Category,
+                        "category_label": menu.Category.Label(),
+                        "image_url":      menu.ImageURL,
+                        "emotion_tags":   menu.EmotionTags,
+                        "situation_tags": menu.SituationTags,
+                        "attribute_tags": menu.AttributeTags,
+                }
+        }</span>
+
+        <span class="cov8" title="1">return c.JSON(fiber.Map{
+                "success": true,
+                "data": fiber.Map{
+                        "items": items,
+                        "pagination": fiber.Map{
+                                "page":       page,
+                                "limit":      limit,
+                                "total":      total,
+                                "total_page": (total + int64(limit) - 1) / int64(limit),
+                        },
+                },
+        })</span>
+}
+
+// GetByID godoc
+// @Summary 메뉴 상세 조회
+// @Description 메뉴 ID로 상세 정보를 조회합니다.
+// @Tags menu
+// @Accept json
+// @Produce json
+// @Param id path int true "메뉴 ID"
+// @Success 200 {object} map[string]interface{}
+// @Failure 404 {object} map[string]interface{}
+// @Router /menus/{id} [get]
+func (h *MenuHandler) GetByID(c *fiber.Ctx) error <span class="cov8" title="1">{
+        id, err := c.ParamsInt("id")
+        if err != nil </span><span class="cov8" title="1">{
+                return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+                        "success": false,
+                        "error":   "invalid menu id",
+                })
+        }</span>
+
+        <span class="cov8" title="1">menu, err := h.menuService.GetByID(c.Context(), uint(id))
+        if err != nil </span><span class="cov8" title="1">{
+                return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
+                        "success": false,
+                        "error":   "menu not found",
+                })
+        }</span>
+
+        <span class="cov8" title="1">return c.JSON(fiber.Map{
+                "success": true,
+                "data":    menu.ToResponse(),
+        })</span>
+}
+
+// GetCategories godoc
+// @Summary 카테고리 목록 조회
+// @Description 사용 가능한 메뉴 카테고리 목록을 조회합니다.
+// @Tags menu
+// @Accept json
+// @Produce json
+// @Success 200 {object} map[string]interface{}
+// @Router /menus/categories [get]
+func (h *MenuHandler) GetCategories(c *fiber.Ctx) error <span class="cov8" title="1">{
+        categories := h.menuService.GetCategories()
+
+        return c.JSON(fiber.Map{
+                "success": true,
+                "data":    categories,
+        })
+}</span>
+</pre>
+		
+		<pre class="file" id="file8" style="display: none">package handler
+
+import (
+        "github.com/gofiber/fiber/v2"
+        "github.com/google/uuid"
+
+        "github.com/ggorockee/ojeomneo/server/internal/service"
+)
+
+// SketchHandler 스케치 핸들러
+type SketchHandler struct {
+        sketchService *service.SketchService
+}
+
+// NewSketchHandler 새 스케치 핸들러 생성
+func NewSketchHandler(sketchService *service.SketchService) *SketchHandler <span class="cov8" title="1">{
+        return &amp;SketchHandler{
+                sketchService: sketchService,
+        }
+}</span>
+
+// AnalyzeRequest 스케치 분석 요청 DTO
+type AnalyzeRequest struct {
+        Text     string `form:"text"`
+        DeviceID string `form:"device_id"`
+}
+
+// Analyze godoc
+// @Summary 스케치 분석 및 메뉴 추천
+// @Description 스케치 이미지를 분석하여 감정/분위기를 파악하고 어울리는 메뉴를 추천합니다
+// @Tags sketch
+// @Accept multipart/form-data
+// @Produce json
+// @Param image formData file true "스케치 이미지 (PNG/JPEG, max 5MB)"
+// @Param text formData string false "추가 텍스트 입력"
+// @Param device_id formData string true "디바이스 식별자"
+// @Success 200 {object} map[string]interface{}
+// @Failure 400 {object} map[string]interface{}
+// @Failure 500 {object} map[string]interface{}
+// @Router /sketch/analyze [post]
+func (h *SketchHandler) Analyze(c *fiber.Ctx) error <span class="cov8" title="1">{
+        // 디바이스 ID 확인
+        deviceID := c.FormValue("device_id")
+        if deviceID == "" </span><span class="cov8" title="1">{
+                return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+                        "success": false,
+                        "error":   "device_id is required",
+                })
+        }</span>
+
+        // 이미지 파일 확인
+        <span class="cov8" title="1">file, err := c.FormFile("image")
+        if err != nil </span><span class="cov8" title="1">{
+                return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+                        "success": false,
+                        "error":   "image file is required",
+                })
+        }</span>
+
+        // 파일 크기 확인 (5MB)
+        <span class="cov8" title="1">if file.Size &gt; 5*1024*1024 </span><span class="cov0" title="0">{
+                return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+                        "success": false,
+                        "error":   "image file too large (max 5MB)",
+                })
+        }</span>
+
+        // 파일 열기
+        <span class="cov8" title="1">f, err := file.Open()
+        if err != nil </span><span class="cov0" title="0">{
+                return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+                        "success": false,
+                        "error":   "failed to read image file",
+                })
+        }</span>
+        <span class="cov8" title="1">defer f.Close()
+
+        // 이미지 데이터 읽기
+        imageData := make([]byte, file.Size)
+        if _, err := f.Read(imageData); err != nil </span><span class="cov0" title="0">{
+                return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+                        "success": false,
+                        "error":   "failed to read image data",
+                })
+        }</span>
+
+        // 분석 요청
+        <span class="cov8" title="1">req := &amp;service.AnalyzeRequest{
+                ImageData: imageData,
+                InputText: c.FormValue("text"),
+                DeviceID:  deviceID,
+        }
+
+        result, err := h.sketchService.Analyze(c.Context(), req)
+        if err != nil </span><span class="cov8" title="1">{
+                return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+                        "success": false,
+                        "error":   err.Error(),
+                })
+        }</span>
+
+        <span class="cov0" title="0">return c.JSON(fiber.Map{
+                "success": true,
+                "data":    result,
+        })</span>
+}
+
+// HistoryQuery 히스토리 조회 쿼리 파라미터
+type HistoryQuery struct {
+        Page  int `query:"page"`
+        Limit int `query:"limit"`
+}
+
+// GetHistory godoc
+// @Summary 스케치 히스토리 조회
+// @Description 디바이스별 스케치 분석 히스토리를 조회합니다
+// @Tags sketch
+// @Accept json
+// @Produce json
+// @Param device_id query string true "디바이스 식별자"
+// @Param page query int false "페이지 번호" default(1)
+// @Param limit query int false "페이지당 개수" default(10)
+// @Success 200 {object} map[string]interface{}
+// @Failure 400 {object} map[string]interface{}
+// @Router /sketch/history [get]
+func (h *SketchHandler) GetHistory(c *fiber.Ctx) error <span class="cov8" title="1">{
+        deviceID := c.Query("device_id")
+        if deviceID == "" </span><span class="cov8" title="1">{
+                return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+                        "success": false,
+                        "error":   "device_id is required",
+                })
+        }</span>
+
+        <span class="cov8" title="1">page := c.QueryInt("page", 1)
+        limit := c.QueryInt("limit", 10)
+
+        if page &lt; 1 </span><span class="cov0" title="0">{
+                page = 1
+        }</span>
+        <span class="cov8" title="1">if limit &lt; 1 || limit &gt; 50 </span><span class="cov0" title="0">{
+                limit = 10
+        }</span>
+
+        <span class="cov8" title="1">sketches, total, err := h.sketchService.GetHistory(c.Context(), deviceID, page, limit)
+        if err != nil </span><span class="cov0" title="0">{
+                return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+                        "success": false,
+                        "error":   err.Error(),
+                })
+        }</span>
+
+        <span class="cov8" title="1">return c.JSON(fiber.Map{
+                "success": true,
+                "data": fiber.Map{
+                        "items": sketches,
+                        "pagination": fiber.Map{
+                                "page":       page,
+                                "limit":      limit,
+                                "total":      total,
+                                "total_page": (total + int64(limit) - 1) / int64(limit),
+                        },
+                },
+        })</span>
+}
+
+// GetByID godoc
+// @Summary 스케치 상세 조회
+// @Description 스케치 ID로 상세 정보를 조회합니다
+// @Tags sketch
+// @Accept json
+// @Produce json
+// @Param id path string true "스케치 UUID"
+// @Success 200 {object} map[string]interface{}
+// @Failure 400 {object} map[string]interface{}
+// @Failure 404 {object} map[string]interface{}
+// @Router /sketch/{id} [get]
+func (h *SketchHandler) GetByID(c *fiber.Ctx) error <span class="cov8" title="1">{
+        idStr := c.Params("id")
+        id, err := uuid.Parse(idStr)
+        if err != nil </span><span class="cov8" title="1">{
+                return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+                        "success": false,
+                        "error":   "invalid sketch id",
+                })
+        }</span>
+
+        <span class="cov8" title="1">sketch, err := h.sketchService.GetByID(c.Context(), id)
+        if err != nil </span><span class="cov8" title="1">{
+                return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
+                        "success": false,
+                        "error":   "sketch not found",
+                })
+        }</span>
+
+        <span class="cov8" title="1">return c.JSON(fiber.Map{
+                "success": true,
+                "data":    sketch,
+        })</span>
+}
+</pre>
+		
+		<pre class="file" id="file9" style="display: none">package middleware
+
+import (
+        "context"
+        "crypto/sha256"
+        "encoding/hex"
+        "encoding/json"
+        "fmt"
+        "strings"
+        "time"
+
+        "github.com/gofiber/fiber/v2"
+        "github.com/prometheus/client_golang/prometheus"
+        "github.com/prometheus/client_golang/prometheus/promauto"
+        "github.com/redis/go-redis/v9"
+)
+
+var (
+        // 캐시 메트릭
+        cacheHits = promauto.NewCounterVec(
+                prometheus.CounterOpts{
+                        Name: "ojeomneo_cache_hits_total",
+                        Help: "Total number of cache hits",
+                },
+                []string{"path"},
+        )
+
+        cacheMisses = promauto.NewCounterVec(
+                prometheus.CounterOpts{
+                        Name: "ojeomneo_cache_misses_total",
+                        Help: "Total number of cache misses",
+                },
+                []string{"path"},
+        )
+
+        cacheLatency = promauto.NewHistogramVec(
+                prometheus.HistogramOpts{
+                        Name:    "ojeomneo_cache_operation_duration_seconds",
+                        Help:    "Cache operation latency in seconds",
+                        Buckets: []float64{.001, .005, .01, .025, .05, .1},
+                },
+                []string{"operation"}, // get, set
+        )
+)
+
+// CacheConfig 캐시 설정
+type CacheConfig struct {
+        // 기본 TTL (기본: 5분)
+        DefaultTTL time.Duration
+        // 경로별 TTL 설정
+        PathTTL map[string]time.Duration
+        // 캐시 제외 경로
+        SkipPaths []string
+        // 캐시 가능한 HTTP 메서드 (기본: GET만)
+        Methods []string
+        // Redis 클라이언트
+        RedisClient *redis.Client
+        // 캐시 키 prefix
+        KeyPrefix string
+}
+
+// CachedResponse 캐시된 응답
+type CachedResponse struct {
+        StatusCode  int               `json:"statusCode"`
+        Body        []byte            `json:"body"`
+        ContentType string            `json:"contentType"`
+        Headers     map[string]string `json:"headers"`
+        CachedAt    int64             `json:"cachedAt"`
+}
+
+// DefaultCacheConfig 기본 설정
+func DefaultCacheConfig() CacheConfig <span class="cov0" title="0">{
+        return CacheConfig{
+                DefaultTTL: 5 * time.Minute,
+                PathTTL: map[string]time.Duration{
+                        "/ojeomneo/v1/config":   30 * time.Minute, // 설정은 오래 캐시
+                        "/ojeomneo/v1/menu":     10 * time.Minute, // 메뉴 데이터
+                        "/ojeomneo/v1/category": 15 * time.Minute, // 카테고리
+                },
+                SkipPaths: []string{
+                        "/ojeomneo/v1/healthcheck",
+                        "/ojeomneo/v1/docs",
+                        "/ojeomneo/metrics",
+                },
+                Methods:   []string{"GET"},
+                KeyPrefix: "cache:api",
+        }
+}</span>
+
+// Cache Redis 기반 API 캐싱 미들웨어
+func Cache(config ...CacheConfig) fiber.Handler <span class="cov0" title="0">{
+        cfg := DefaultCacheConfig()
+        if len(config) &gt; 0 </span><span class="cov0" title="0">{
+                cfg = config[0]
+        }</span>
+
+        <span class="cov0" title="0">return func(c *fiber.Ctx) error </span><span class="cov0" title="0">{
+                // Redis 클라이언트가 없으면 통과
+                if cfg.RedisClient == nil </span><span class="cov0" title="0">{
+                        return c.Next()
+                }</span>
+
+                // 캐시 가능한 메서드인지 확인
+                <span class="cov0" title="0">method := c.Method()
+                methodAllowed := false
+                for _, m := range cfg.Methods </span><span class="cov0" title="0">{
+                        if m == method </span><span class="cov0" title="0">{
+                                methodAllowed = true
+                                break</span>
+                        }
+                }
+                <span class="cov0" title="0">if !methodAllowed </span><span class="cov0" title="0">{
+                        return c.Next()
+                }</span>
+
+                // 제외 경로 체크
+                <span class="cov0" title="0">path := c.Path()
+                for _, skipPath := range cfg.SkipPaths </span><span class="cov0" title="0">{
+                        if strings.HasPrefix(path, skipPath) </span><span class="cov0" title="0">{
+                                return c.Next()
+                        }</span>
+                }
+
+                // Cache-Control: no-cache 헤더 체크
+                <span class="cov0" title="0">if c.Get("Cache-Control") == "no-cache" </span><span class="cov0" title="0">{
+                        return c.Next()
+                }</span>
+
+                // 캐시 키 생성 (경로 + 쿼리스트링)
+                <span class="cov0" title="0">cacheKey := generateCacheKey(cfg.KeyPrefix, path, c.Request().URI().QueryString())
+
+                ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+                defer cancel()
+
+                // 캐시 조회
+                start := time.Now()
+                cached, err := cfg.RedisClient.Get(ctx, cacheKey).Bytes()
+                cacheLatency.WithLabelValues("get").Observe(time.Since(start).Seconds())
+
+                if err == nil &amp;&amp; len(cached) &gt; 0 </span><span class="cov0" title="0">{
+                        // 캐시 히트
+                        var response CachedResponse
+                        if err := json.Unmarshal(cached, &amp;response); err == nil </span><span class="cov0" title="0">{
+                                cacheHits.WithLabelValues(path).Inc()
+
+                                // 캐시된 헤더 설정
+                                for key, value := range response.Headers </span><span class="cov0" title="0">{
+                                        c.Set(key, value)
+                                }</span>
+                                <span class="cov0" title="0">c.Set("X-Cache", "HIT")
+                                c.Set("X-Cache-Age", fmt.Sprintf("%d", time.Now().Unix()-response.CachedAt))
+                                c.Set("Content-Type", response.ContentType)
+
+                                return c.Status(response.StatusCode).Send(response.Body)</span>
+                        }
+                }
+
+                // 캐시 미스 - 다음 핸들러 실행
+                <span class="cov0" title="0">cacheMisses.WithLabelValues(path).Inc()
+
+                err = c.Next()
+                if err != nil </span><span class="cov0" title="0">{
+                        return err
+                }</span>
+
+                // 성공 응답만 캐시 (2xx)
+                <span class="cov0" title="0">statusCode := c.Response().StatusCode()
+                if statusCode &lt; 200 || statusCode &gt;= 300 </span><span class="cov0" title="0">{
+                        return nil
+                }</span>
+
+                // 응답 캐시
+                <span class="cov0" title="0">ttl := cfg.DefaultTTL
+                for pathPrefix, pathTTL := range cfg.PathTTL </span><span class="cov0" title="0">{
+                        if strings.HasPrefix(path, pathPrefix) </span><span class="cov0" title="0">{
+                                ttl = pathTTL
+                                break</span>
+                        }
+                }
+
+                <span class="cov0" title="0">response := CachedResponse{
+                        StatusCode:  statusCode,
+                        Body:        c.Response().Body(),
+                        ContentType: string(c.Response().Header.ContentType()),
+                        Headers:     make(map[string]string),
+                        CachedAt:    time.Now().Unix(),
+                }
+
+                // 캐시할 헤더 복사
+                headersToCache := []string{"Content-Encoding", "Vary"}
+                for _, h := range headersToCache </span><span class="cov0" title="0">{
+                        if v := string(c.Response().Header.Peek(h)); v != "" </span><span class="cov0" title="0">{
+                                response.Headers[h] = v
+                        }</span>
+                }
+
+                // 캐시 저장
+                <span class="cov0" title="0">if data, err := json.Marshal(response); err == nil </span><span class="cov0" title="0">{
+                        start := time.Now()
+                        cfg.RedisClient.Set(ctx, cacheKey, data, ttl)
+                        cacheLatency.WithLabelValues("set").Observe(time.Since(start).Seconds())
+                }</span>
+
+                <span class="cov0" title="0">c.Set("X-Cache", "MISS")
+
+                return nil</span>
+        }
+}
+
+// generateCacheKey 캐시 키 생성
+func generateCacheKey(prefix, path string, query []byte) string <span class="cov0" title="0">{
+        hash := sha256.New()
+        hash.Write([]byte(path))
+        hash.Write(query)
+        return fmt.Sprintf("%s:%s", prefix, hex.EncodeToString(hash.Sum(nil))[:16])
+}</span>
+
+// CacheInvalidator 캐시 무효화 헬퍼
+type CacheInvalidator struct {
+        client    *redis.Client
+        keyPrefix string
+}
+
+// NewCacheInvalidator 캐시 무효화 헬퍼 생성
+func NewCacheInvalidator(client *redis.Client, keyPrefix string) *CacheInvalidator <span class="cov0" title="0">{
+        return &amp;CacheInvalidator{
+                client:    client,
+                keyPrefix: keyPrefix,
+        }
+}</span>
+
+// InvalidatePattern 패턴 기반 캐시 무효화
+func (ci *CacheInvalidator) InvalidatePattern(ctx context.Context, pattern string) error <span class="cov0" title="0">{
+        if ci.client == nil </span><span class="cov0" title="0">{
+                return nil
+        }</span>
+
+        <span class="cov0" title="0">fullPattern := fmt.Sprintf("%s:%s*", ci.keyPrefix, pattern)
+        iter := ci.client.Scan(ctx, 0, fullPattern, 100).Iterator()
+
+        var keys []string
+        for iter.Next(ctx) </span><span class="cov0" title="0">{
+                keys = append(keys, iter.Val())
+        }</span>
+
+        <span class="cov0" title="0">if len(keys) &gt; 0 </span><span class="cov0" title="0">{
+                return ci.client.Del(ctx, keys...).Err()
+        }</span>
+
+        <span class="cov0" title="0">return iter.Err()</span>
+}
+</pre>
+		
+		<pre class="file" id="file10" style="display: none">package middleware
+
+import (
+        "net"
+        "strconv"
+        "strings"
+        "time"
+
+        "github.com/gofiber/fiber/v2"
+        "github.com/gofiber/fiber/v2/middleware/adaptor"
+        "github.com/prometheus/client_golang/prometheus"
+        "github.com/prometheus/client_golang/prometheus/promauto"
+        "github.com/prometheus/client_golang/prometheus/promhttp"
+)
+
+var (
+        // HTTP 요청 수
+        httpRequestsTotal = promauto.NewCounterVec(
+                prometheus.CounterOpts{
+                        Name: "ojeomneo_http_requests_total",
+                        Help: "Total number of HTTP requests",
+                },
+                []string{"method", "path", "status"},
+        )
+
+        // HTTP 요청 지연시간 (히스토그램)
+        httpRequestDuration = promauto.NewHistogramVec(
+                prometheus.HistogramOpts{
+                        Name:    "ojeomneo_http_request_duration_seconds",
+                        Help:    "HTTP request latency in seconds",
+                        Buckets: []float64{.005, .01, .025, .05, .1, .25, .5, 1, 2.5, 5, 10},
+                },
+                []string{"method", "path"},
+        )
+
+        // 활성 연결 수
+        httpActiveConnections = promauto.NewGauge(
+                prometheus.GaugeOpts{
+                        Name: "ojeomneo_http_active_connections",
+                        Help: "Number of active HTTP connections",
+                },
+        )
+
+        // 요청 크기 (Summary)
+        httpRequestSize = promauto.NewSummaryVec(
+                prometheus.SummaryOpts{
+                        Name:       "ojeomneo_http_request_size_bytes",
+                        Help:       "HTTP request size in bytes",
+                        Objectives: map[float64]float64{0.5: 0.05, 0.9: 0.01, 0.99: 0.001},
+                },
+                []string{"method", "path"},
+        )
+
+        // 응답 크기 (Summary)
+        httpResponseSize = promauto.NewSummaryVec(
+                prometheus.SummaryOpts{
+                        Name:       "ojeomneo_http_response_size_bytes",
+                        Help:       "HTTP response size in bytes",
+                        Objectives: map[float64]float64{0.5: 0.05, 0.9: 0.01, 0.99: 0.001},
+                },
+                []string{"method", "path"},
+        )
+)
+
+// PrometheusMiddleware Prometheus 메트릭 수집 미들웨어
+func PrometheusMiddleware() fiber.Handler <span class="cov0" title="0">{
+        return func(c *fiber.Ctx) error </span><span class="cov0" title="0">{
+                // /docs, /metrics 경로는 제외
+                path := c.Path()
+                if strings.Contains(path, "/docs") || strings.Contains(path, "/metrics") </span><span class="cov0" title="0">{
+                        return c.Next()
+                }</span>
+
+                <span class="cov0" title="0">start := time.Now()
+
+                httpActiveConnections.Inc()
+                defer httpActiveConnections.Dec()
+
+                // 요청 크기 기록
+                reqSize := float64(len(c.Body()))
+
+                // 다음 핸들러 실행
+                err := c.Next()
+
+                // 메트릭 기록
+                duration := time.Since(start).Seconds()
+                status := strconv.Itoa(c.Response().StatusCode())
+                method := c.Method()
+                routePath := c.Route().Path
+                if routePath == "" </span><span class="cov0" title="0">{
+                        routePath = path
+                }</span>
+
+                // 응답 크기
+                <span class="cov0" title="0">respSize := float64(len(c.Response().Body()))
+
+                httpRequestsTotal.WithLabelValues(method, routePath, status).Inc()
+                httpRequestDuration.WithLabelValues(method, routePath).Observe(duration)
+                httpRequestSize.WithLabelValues(method, routePath).Observe(reqSize)
+                httpResponseSize.WithLabelValues(method, routePath).Observe(respSize)
+
+                return err</span>
+        }
+}
+
+// PrometheusHandler Prometheus 메트릭 핸들러
+func PrometheusHandler() fiber.Handler <span class="cov0" title="0">{
+        return adaptor.HTTPHandler(promhttp.Handler())
+}</span>
+
+// InternalOnly 내부망 접근 제한 미들웨어
+// 보안을 위해 /metrics 경로는 내부망에서만 접근 가능
+func InternalOnly() fiber.Handler <span class="cov0" title="0">{
+        // 허용된 내부 IP 대역
+        allowedCIDRs := []string{
+                "127.0.0.0/8",     // localhost
+                "10.0.0.0/8",      // Private Class A
+                "172.16.0.0/12",   // Private Class B
+                "192.168.0.0/16",  // Private Class C
+                "::1/128",         // IPv6 localhost
+                "fc00::/7",        // IPv6 private
+        }
+
+        var allowedNets []*net.IPNet
+        for _, cidr := range allowedCIDRs </span><span class="cov0" title="0">{
+                _, ipNet, err := net.ParseCIDR(cidr)
+                if err == nil </span><span class="cov0" title="0">{
+                        allowedNets = append(allowedNets, ipNet)
+                }</span>
+        }
+
+        <span class="cov0" title="0">return func(c *fiber.Ctx) error </span><span class="cov0" title="0">{
+                // X-Forwarded-For 헤더 또는 직접 IP 확인
+                clientIP := c.IP()
+
+                // X-Real-IP 헤더 확인 (프록시 뒤에 있는 경우)
+                if realIP := c.Get("X-Real-IP"); realIP != "" </span><span class="cov0" title="0">{
+                        clientIP = realIP
+                }</span>
+
+                <span class="cov0" title="0">ip := net.ParseIP(clientIP)
+                if ip == nil </span><span class="cov0" title="0">{
+                        return c.Status(fiber.StatusForbidden).JSON(fiber.Map{
+                                "success": false,
+                                "error": fiber.Map{
+                                        "code":    "FORBIDDEN",
+                                        "message": "Invalid IP address",
+                                },
+                        })
+                }</span>
+
+                // 내부망 IP 체크
+                <span class="cov0" title="0">for _, ipNet := range allowedNets </span><span class="cov0" title="0">{
+                        if ipNet.Contains(ip) </span><span class="cov0" title="0">{
+                                return c.Next()
+                        }</span>
+                }
+
+                // 개발 환경에서는 모든 접근 허용 (환경변수로 제어)
+                // APP_ENV가 development인 경우 허용
+                // 프로덕션에서는 내부망만 허용
+                <span class="cov0" title="0">return c.Status(fiber.StatusForbidden).JSON(fiber.Map{
+                        "success": false,
+                        "error": fiber.Map{
+                                "code":    "FORBIDDEN",
+                                "message": "Access denied. Internal network only.",
+                        },
+                })</span>
+        }
+}
+</pre>
+		
+		<pre class="file" id="file11" style="display: none">package middleware
+
+import (
+        "context"
+        "fmt"
+        "strconv"
+        "time"
+
+        "github.com/gofiber/fiber/v2"
+        "github.com/prometheus/client_golang/prometheus"
+        "github.com/prometheus/client_golang/prometheus/promauto"
+        "github.com/redis/go-redis/v9"
+)
+
+var (
+        // Rate Limit 메트릭
+        rateLimitTotal = promauto.NewCounterVec(
+                prometheus.CounterOpts{
+                        Name: "ojeomneo_ratelimit_requests_total",
+                        Help: "Total number of rate limited requests",
+                },
+                []string{"status"}, // allowed, limited
+        )
+
+        rateLimitRemaining = promauto.NewGaugeVec(
+                prometheus.GaugeOpts{
+                        Name: "ojeomneo_ratelimit_remaining",
+                        Help: "Remaining requests in current window",
+                },
+                []string{"ip"},
+        )
+)
+
+// RateLimitConfig Rate Limiting 설정
+type RateLimitConfig struct {
+        // 윈도우 시간 (기본: 1분)
+        Window time.Duration
+        // 윈도우 내 최대 요청 수 (기본: 100)
+        Max int
+        // Rate Limit 초과 시 응답 메시지
+        Message string
+        // 제외할 경로 (healthcheck 등)
+        SkipPaths []string
+        // Redis 클라이언트
+        RedisClient *redis.Client
+}
+
+// DefaultRateLimitConfig 기본 설정
+func DefaultRateLimitConfig() RateLimitConfig <span class="cov0" title="0">{
+        return RateLimitConfig{
+                Window:  1 * time.Minute,
+                Max:     100,
+                Message: "Too many requests. Please try again later.",
+                SkipPaths: []string{
+                        "/ojeomneo/v1/healthcheck",
+                        "/ojeomneo/v1/healthcheck/live",
+                        "/ojeomneo/v1/healthcheck/ready",
+                        "/ojeomneo/v1/docs",
+                        "/ojeomneo/metrics",
+                },
+        }
+}</span>
+
+// RateLimiter Redis 기반 Rate Limiting 미들웨어
+// Sliding Window Log 알고리즘 사용
+func RateLimiter(config ...RateLimitConfig) fiber.Handler <span class="cov0" title="0">{
+        cfg := DefaultRateLimitConfig()
+        if len(config) &gt; 0 </span><span class="cov0" title="0">{
+                cfg = config[0]
+        }</span>
+
+        <span class="cov0" title="0">return func(c *fiber.Ctx) error </span><span class="cov0" title="0">{
+                // Redis 클라이언트가 없으면 통과
+                if cfg.RedisClient == nil </span><span class="cov0" title="0">{
+                        return c.Next()
+                }</span>
+
+                // 제외 경로 체크
+                <span class="cov0" title="0">path := c.Path()
+                for _, skipPath := range cfg.SkipPaths </span><span class="cov0" title="0">{
+                        if len(path) &gt;= len(skipPath) &amp;&amp; path[:len(skipPath)] == skipPath </span><span class="cov0" title="0">{
+                                return c.Next()
+                        }</span>
+                }
+
+                // 클라이언트 IP 추출
+                <span class="cov0" title="0">clientIP := c.IP()
+                if realIP := c.Get("X-Real-IP"); realIP != "" </span><span class="cov0" title="0">{
+                        clientIP = realIP
+                }</span>
+                <span class="cov0" title="0">if forwardedFor := c.Get("X-Forwarded-For"); forwardedFor != "" </span><span class="cov0" title="0">{
+                        clientIP = forwardedFor
+                }</span>
+
+                // Rate Limit 키
+                <span class="cov0" title="0">key := fmt.Sprintf("ratelimit:api:%s", clientIP)
+                now := time.Now()
+                windowStart := now.Add(-cfg.Window)
+
+                ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+                defer cancel()
+
+                // Sliding Window Log 알고리즘
+                // 1. 윈도우 밖의 오래된 요청 제거
+                // 2. 현재 요청 추가
+                // 3. 윈도우 내 요청 수 확인
+                pipe := cfg.RedisClient.Pipeline()
+
+                // 윈도우 밖 요청 제거
+                pipe.ZRemRangeByScore(ctx, key, "0", strconv.FormatInt(windowStart.UnixNano(), 10))
+
+                // 현재 요청 추가
+                pipe.ZAdd(ctx, key, redis.Z{
+                        Score:  float64(now.UnixNano()),
+                        Member: fmt.Sprintf("%d", now.UnixNano()),
+                })
+
+                // 현재 윈도우 내 요청 수 조회
+                countCmd := pipe.ZCard(ctx, key)
+
+                // TTL 설정 (윈도우 시간 + 여유)
+                pipe.Expire(ctx, key, cfg.Window+time.Minute)
+
+                // 파이프라인 실행
+                _, err := pipe.Exec(ctx)
+                if err != nil </span><span class="cov0" title="0">{
+                        // Redis 오류 시 통과 (fail-open)
+                        return c.Next()
+                }</span>
+
+                <span class="cov0" title="0">count := countCmd.Val()
+                remaining := int64(cfg.Max) - count
+
+                // Rate Limit 헤더 설정
+                c.Set("X-RateLimit-Limit", strconv.Itoa(cfg.Max))
+                c.Set("X-RateLimit-Remaining", strconv.FormatInt(max(0, remaining), 10))
+                c.Set("X-RateLimit-Reset", strconv.FormatInt(now.Add(cfg.Window).Unix(), 10))
+
+                // 메트릭 업데이트
+                rateLimitRemaining.WithLabelValues(clientIP).Set(float64(max(0, remaining)))
+
+                // Rate Limit 초과 체크
+                if count &gt; int64(cfg.Max) </span><span class="cov0" title="0">{
+                        rateLimitTotal.WithLabelValues("limited").Inc()
+
+                        retryAfter := int(cfg.Window.Seconds())
+                        c.Set("Retry-After", strconv.Itoa(retryAfter))
+
+                        return c.Status(fiber.StatusTooManyRequests).JSON(fiber.Map{
+                                "success": false,
+                                "error": fiber.Map{
+                                        "code":       "RATE_LIMIT_EXCEEDED",
+                                        "message":    cfg.Message,
+                                        "retryAfter": retryAfter,
+                                },
+                        })
+                }</span>
+
+                <span class="cov0" title="0">rateLimitTotal.WithLabelValues("allowed").Inc()
+                return c.Next()</span>
+        }
+}
+</pre>
+		
+		<pre class="file" id="file12" style="display: none">package model
+
+import (
+        "database/sql/driver"
+        "encoding/json"
+        "errors"
+        "time"
+
+        "gorm.io/gorm"
+)
+
+// MenuCategory 메뉴 카테고리
+type MenuCategory string
+
+const (
+        MenuCategoryKorean   MenuCategory = "korean"   // 한식
+        MenuCategoryChinese  MenuCategory = "chinese"  // 중식
+        MenuCategoryJapanese MenuCategory = "japanese" // 일식
+        MenuCategoryWestern  MenuCategory = "western"  // 양식
+        MenuCategoryAsian    MenuCategory = "asian"    // 아시안
+        MenuCategorySnack    MenuCategory = "snack"    // 분식
+        MenuCategoryCafe     MenuCategory = "cafe"     // 카페/디저트
+        MenuCategoryOther    MenuCategory = "other"    // 기타
+)
+
+// StringArray PostgreSQL text[] 타입을 위한 커스텀 타입
+type StringArray []string
+
+// Scan implements sql.Scanner
+func (a *StringArray) Scan(value interface{}) error <span class="cov8" title="1">{
+        if value == nil </span><span class="cov0" title="0">{
+                *a = nil
+                return nil
+        }</span>
+
+        <span class="cov8" title="1">switch v := value.(type) </span>{
+        case []byte:<span class="cov8" title="1">
+                return json.Unmarshal(v, a)</span>
+        case string:<span class="cov0" title="0">
+                return json.Unmarshal([]byte(v), a)</span>
+        default:<span class="cov0" title="0">
+                return errors.New("invalid type for StringArray")</span>
+        }
+}
+
+// Value implements driver.Valuer
+func (a StringArray) Value() (driver.Value, error) <span class="cov8" title="1">{
+        if a == nil </span><span class="cov8" title="1">{
+                return nil, nil
+        }</span>
+        <span class="cov8" title="1">return json.Marshal(a)</span>
+}
+
+// Menu 메뉴 모델
+type Menu struct {
+        ID        uint           `gorm:"primaryKey" json:"id"`
+        Name      string         `gorm:"size:100;not null;uniqueIndex" json:"name"`
+        Category  MenuCategory   `gorm:"size:50;not null;index" json:"category"`
+        ImageURL  string         `gorm:"type:text" json:"image_url,omitempty"`
+        CreatedAt time.Time      `gorm:"autoCreateTime" json:"created_at"`
+        UpdatedAt time.Time      `gorm:"autoUpdateTime" json:"updated_at"`
+        DeletedAt gorm.DeletedAt `gorm:"index" json:"deleted_at,omitempty"`
+
+        // 태그 (JSONB로 저장)
+        EmotionTags   StringArray `gorm:"type:jsonb;default:'[]'" json:"emotion_tags"`
+        SituationTags StringArray `gorm:"type:jsonb;default:'[]'" json:"situation_tags"`
+        AttributeTags StringArray `gorm:"type:jsonb;default:'[]'" json:"attribute_tags"`
+
+        IsActive bool `gorm:"default:true;not null" json:"is_active"`
+
+        // 관계
+        Recommendations []Recommendation `gorm:"foreignKey:MenuID" json:"recommendations,omitempty"`
+}
+
+// TableName GORM 테이블명 지정
+func (Menu) TableName() string <span class="cov8" title="1">{
+        return "menus"
+}</span>
+
+// GetAllTags 모든 태그를 하나의 슬라이스로 반환
+func (m *Menu) GetAllTags() []string <span class="cov0" title="0">{
+        tags := make([]string, 0, len(m.EmotionTags)+len(m.SituationTags)+len(m.AttributeTags))
+        tags = append(tags, m.EmotionTags...)
+        tags = append(tags, m.SituationTags...)
+        tags = append(tags, m.AttributeTags...)
+        return tags
+}</span>
+
+// MenuResponse API 응답용 구조체
+type MenuResponse struct {
+        ID            uint         `json:"id"`
+        Name          string       `json:"name"`
+        Category      MenuCategory `json:"category"`
+        CategoryLabel string       `json:"category_label"`
+        ImageURL      string       `json:"image_url,omitempty"`
+        EmotionTags   []string     `json:"emotion_tags"`
+        SituationTags []string     `json:"situation_tags"`
+        AttributeTags []string     `json:"attribute_tags"`
+}
+
+// ToResponse Menu를 API 응답용 구조체로 변환
+func (m *Menu) ToResponse() MenuResponse <span class="cov8" title="1">{
+        return MenuResponse{
+                ID:            m.ID,
+                Name:          m.Name,
+                Category:      m.Category,
+                CategoryLabel: m.Category.Label(),
+                ImageURL:      m.ImageURL,
+                EmotionTags:   m.EmotionTags,
+                SituationTags: m.SituationTags,
+                AttributeTags: m.AttributeTags,
+        }
+}</span>
+
+// Label 카테고리 한글 라벨 반환
+func (c MenuCategory) Label() string <span class="cov8" title="1">{
+        labels := map[MenuCategory]string{
+                MenuCategoryKorean:   "한식",
+                MenuCategoryChinese:  "중식",
+                MenuCategoryJapanese: "일식",
+                MenuCategoryWestern:  "양식",
+                MenuCategoryAsian:    "아시안",
+                MenuCategorySnack:    "분식",
+                MenuCategoryCafe:     "카페/디저트",
+                MenuCategoryOther:    "기타",
+        }
+        if label, ok := labels[c]; ok </span><span class="cov8" title="1">{
+                return label
+        }</span>
+        <span class="cov0" title="0">return string(c)</span>
+}
+</pre>
+		
+		<pre class="file" id="file13" style="display: none">package model
+
+import (
+        "time"
+
+        "github.com/google/uuid"
+)
+
+// Recommendation 추천 모델
+type Recommendation struct {
+        ID        uint      `gorm:"primaryKey" json:"id"`
+        SketchID  uuid.UUID `gorm:"type:uuid;not null;index" json:"sketch_id"`
+        MenuID    uint      `gorm:"not null;index" json:"menu_id"`
+        Reason    string    `gorm:"type:text;not null" json:"reason"`
+        Rank      int       `gorm:"not null;default:1" json:"rank"`
+        CreatedAt time.Time `gorm:"autoCreateTime" json:"created_at"`
+
+        // 관계
+        Sketch *Sketch `gorm:"foreignKey:SketchID" json:"sketch,omitempty"`
+        Menu   *Menu   `gorm:"foreignKey:MenuID" json:"menu,omitempty"`
+}
+
+// TableName GORM 테이블명 지정
+func (Recommendation) TableName() string <span class="cov8" title="1">{
+        return "recommendations"
+}</span>
+
+// RecommendationResponse API 응답용 구조체
+type RecommendationResponse struct {
+        ID       uint   `json:"id"`
+        MenuID   uint   `json:"menu_id"`
+        MenuName string `json:"menu_name"`
+        Reason   string `json:"reason"`
+        Rank     int    `json:"rank"`
+}
+
+// ToResponse Recommendation을 API 응답용 구조체로 변환
+func (r *Recommendation) ToResponse() RecommendationResponse <span class="cov0" title="0">{
+        resp := RecommendationResponse{
+                ID:     r.ID,
+                MenuID: r.MenuID,
+                Reason: r.Reason,
+                Rank:   r.Rank,
+        }
+        if r.Menu != nil </span><span class="cov0" title="0">{
+                resp.MenuName = r.Menu.Name
+        }</span>
+        <span class="cov0" title="0">return resp</span>
+}
+</pre>
+		
+		<pre class="file" id="file14" style="display: none">package model
+
+import (
+        "time"
+
+        "github.com/google/uuid"
+        "gorm.io/datatypes"
+        "gorm.io/gorm"
+)
+
+// AnalysisMood 분석된 분위기
+type AnalysisMood string
+
+const (
+        MoodBright AnalysisMood = "bright" // 밝음
+        MoodCalm   AnalysisMood = "calm"   // 차분함
+        MoodDark   AnalysisMood = "dark"   // 어두움
+)
+
+// Sketch 스케치 모델
+type Sketch struct {
+        ID        uuid.UUID      `gorm:"type:uuid;primaryKey;default:gen_random_uuid()" json:"id"`
+        DeviceID  string         `gorm:"size:255;not null;index" json:"device_id"`
+        UserID    *uint          `gorm:"index" json:"user_id,omitempty"`
+        ImagePath string         `gorm:"type:text;not null" json:"image_path"`
+        InputText string         `gorm:"type:text" json:"input_text,omitempty"`
+        CreatedAt time.Time      `gorm:"autoCreateTime" json:"created_at"`
+        DeletedAt gorm.DeletedAt `gorm:"index" json:"deleted_at,omitempty"`
+
+        // LLM 분석 결과 (JSONB)
+        AnalysisResult datatypes.JSON `gorm:"type:jsonb" json:"analysis_result,omitempty"`
+
+        // 관계
+        User            *User            `gorm:"foreignKey:UserID" json:"user,omitempty"`
+        Recommendations []Recommendation `gorm:"foreignKey:SketchID" json:"recommendations,omitempty"`
+}
+
+// TableName GORM 테이블명 지정
+func (Sketch) TableName() string <span class="cov8" title="1">{
+        return "sketches"
+}</span>
+
+// BeforeCreate UUID 자동 생성
+func (s *Sketch) BeforeCreate(tx *gorm.DB) error <span class="cov8" title="1">{
+        if s.ID == uuid.Nil </span><span class="cov8" title="1">{
+                s.ID = uuid.New()
+        }</span>
+        <span class="cov8" title="1">return nil</span>
+}
+
+// AnalysisResultData 분석 결과 구조체
+type AnalysisResultData struct {
+        Emotion  string       `json:"emotion"`
+        Keywords []string     `json:"keywords"`
+        Mood     AnalysisMood `json:"mood"`
+}
+
+// GetAnalysisResult JSON을 구조체로 파싱
+func (s *Sketch) GetAnalysisResult() (*AnalysisResultData, error) <span class="cov0" title="0">{
+        if s.AnalysisResult == nil </span><span class="cov0" title="0">{
+                return nil, nil
+        }</span>
+
+        <span class="cov0" title="0">var result AnalysisResultData
+        if err := s.AnalysisResult.UnmarshalJSON([]byte(s.AnalysisResult)); err != nil </span><span class="cov0" title="0">{
+                return nil, err
+        }</span>
+        <span class="cov0" title="0">return &amp;result, nil</span>
+}
+
+// SketchResponse API 응답용 구조체
+type SketchResponse struct {
+        ID             uuid.UUID           `json:"sketch_id"`
+        Analysis       *AnalysisResultData `json:"analysis,omitempty"`
+        Recommendation *RecommendationSet  `json:"recommendation,omitempty"`
+        CreatedAt      time.Time           `json:"created_at"`
+}
+
+// RecommendationSet 추천 결과 세트
+type RecommendationSet struct {
+        Primary      *MenuRecommendation  `json:"primary"`
+        Alternatives []MenuRecommendation `json:"alternatives,omitempty"`
+}
+
+// MenuRecommendation 개별 메뉴 추천
+type MenuRecommendation struct {
+        MenuID   uint         `json:"menu_id"`
+        Name     string       `json:"name"`
+        Category MenuCategory `json:"category"`
+        ImageURL string       `json:"image_url,omitempty"`
+        Reason   string       `json:"reason"`
+        Tags     []string     `json:"tags,omitempty"`
+}
+</pre>
+		
+		<pre class="file" id="file15" style="display: none">package model
+
+import (
+        "time"
+
+        "gorm.io/gorm"
+)
+
+// LoginMethod 로그인 방식
+type LoginMethod string
+
+const (
+        LoginMethodEmail  LoginMethod = "email"
+        LoginMethodKakao  LoginMethod = "kakao"
+        LoginMethodGoogle LoginMethod = "google"
+        LoginMethodApple  LoginMethod = "apple"
+)
+
+// User 사용자 모델
+// Django AbstractUser와 호환되는 필드 구조
+type User struct {
+        ID          uint           `gorm:"primaryKey" json:"id"`
+        Password    string         `gorm:"size:128;not null" json:"-"`
+        LastLogin   *time.Time     `gorm:"" json:"last_login,omitempty"`
+        IsSuperuser bool           `gorm:"default:false;not null" json:"is_superuser"`
+        Username    string         `gorm:"size:150;uniqueIndex;not null" json:"username"`
+        FirstName   string         `gorm:"size:150;not null;default:''" json:"first_name"`
+        LastName    string         `gorm:"size:150;not null;default:''" json:"last_name"`
+        Email       string         `gorm:"size:254;not null;index:idx_email_login_method" json:"email"`
+        IsStaff     bool           `gorm:"default:false;not null" json:"is_staff"`
+        IsActive    bool           `gorm:"default:true;not null" json:"is_active"`
+        DateJoined  time.Time      `gorm:"autoCreateTime;not null" json:"date_joined"`
+        CreatedAt   time.Time      `gorm:"autoCreateTime" json:"created_at"`
+        UpdatedAt   time.Time      `gorm:"autoUpdateTime" json:"updated_at"`
+        DeletedAt   gorm.DeletedAt `gorm:"index" json:"deleted_at,omitempty"`
+
+        // SNS 로그인 지원 필드
+        LoginMethod LoginMethod `gorm:"size:20;not null;default:'email';index:idx_email_login_method" json:"login_method"`
+        SocialID    string      `gorm:"size:255;not null;default:''" json:"social_id,omitempty"`
+}
+
+// TableName GORM 테이블명 지정
+func (User) TableName() string <span class="cov8" title="1">{
+        return "users"
+}</span>
+
+// BeforeCreate 생성 전 훅
+func (u *User) BeforeCreate(tx *gorm.DB) error <span class="cov0" title="0">{
+        if u.LoginMethod == "" </span><span class="cov0" title="0">{
+                u.LoginMethod = LoginMethodEmail
+        }</span>
+        <span class="cov0" title="0">return nil</span>
+}
+
+// IsSocialUser SNS 로그인 사용자 여부
+func (u *User) IsSocialUser() bool <span class="cov0" title="0">{
+        return u.LoginMethod != LoginMethodEmail
+}</span>
+</pre>
+		
+		<pre class="file" id="file16" style="display: none">package seed
+
+import (
+        "log"
+
+        "github.com/ggorockee/ojeomneo/server/internal/model"
+        "gorm.io/gorm"
+)
+
+// MenuSeed 메뉴 시드 데이터
+var MenuSeed = []model.Menu{
+        // ========== 한식 (Korean) ==========
+        {
+                Name:          "된장찌개",
+                Category:      model.MenuCategoryKorean,
+                EmotionTags:   model.StringArray{"위로", "평온"},
+                SituationTags: model.StringArray{"혼밥", "집밥"},
+                AttributeTags: model.StringArray{"따뜻한", "국물", "든든한"},
+        },
+        {
+                Name:          "김치찌개",
+                Category:      model.MenuCategoryKorean,
+                EmotionTags:   model.StringArray{"활력", "스트레스해소"},
+                SituationTags: model.StringArray{"혼밥", "회식"},
+                AttributeTags: model.StringArray{"따뜻한", "매운", "국물"},
+        },
+        {
+                Name:          "삼겹살",
+                Category:      model.MenuCategoryKorean,
+                EmotionTags:   model.StringArray{"보상", "활력", "행복"},
+                SituationTags: model.StringArray{"회식", "데이트"},
+                AttributeTags: model.StringArray{"고기", "든든한", "구이"},
+        },
+        {
+                Name:          "불고기",
+                Category:      model.MenuCategoryKorean,
+                EmotionTags:   model.StringArray{"행복", "보상"},
+                SituationTags: model.StringArray{"데이트", "가족"},
+                AttributeTags: model.StringArray{"고기", "달콤한", "구이"},
+        },
+        {
+                Name:          "비빔밥",
+                Category:      model.MenuCategoryKorean,
+                EmotionTags:   model.StringArray{"건강", "활력"},
+                SituationTags: model.StringArray{"혼밥", "점심"},
+                AttributeTags: model.StringArray{"밥", "야채", "건강한"},
+        },
+        {
+                Name:          "칼국수",
+                Category:      model.MenuCategoryKorean,
+                EmotionTags:   model.StringArray{"위로", "평온"},
+                SituationTags: model.StringArray{"혼밥", "점심"},
+                AttributeTags: model.StringArray{"따뜻한", "면류", "국물"},
+        },
+        {
+                Name:          "순두부찌개",
+                Category:      model.MenuCategoryKorean,
+                EmotionTags:   model.StringArray{"위로", "활력"},
+                SituationTags: model.StringArray{"혼밥", "해장"},
+                AttributeTags: model.StringArray{"따뜻한", "매운", "국물"},
+        },
+        {
+                Name:          "제육볶음",
+                Category:      model.MenuCategoryKorean,
+                EmotionTags:   model.StringArray{"활력", "스트레스해소"},
+                SituationTags: model.StringArray{"혼밥", "점심"},
+                AttributeTags: model.StringArray{"매운", "고기", "밥"},
+        },
+        {
+                Name:          "닭볶음탕",
+                Category:      model.MenuCategoryKorean,
+                EmotionTags:   model.StringArray{"활력", "보상"},
+                SituationTags: model.StringArray{"회식", "가족"},
+                AttributeTags: model.StringArray{"매운", "고기", "국물"},
+        },
+        {
+                Name:          "갈비찜",
+                Category:      model.MenuCategoryKorean,
+                EmotionTags:   model.StringArray{"보상", "특별한"},
+                SituationTags: model.StringArray{"가족", "명절"},
+                AttributeTags: model.StringArray{"고기", "달콤한", "특별한"},
+        },
+        {
+                Name:          "해장국",
+                Category:      model.MenuCategoryKorean,
+                EmotionTags:   model.StringArray{"위로", "회복"},
+                SituationTags: model.StringArray{"해장", "혼밥"},
+                AttributeTags: model.StringArray{"따뜻한", "국물", "든든한"},
+        },
+        {
+                Name:          "육회",
+                Category:      model.MenuCategoryKorean,
+                EmotionTags:   model.StringArray{"보상", "특별한"},
+                SituationTags: model.StringArray{"회식", "데이트"},
+                AttributeTags: model.StringArray{"고기", "신선한", "특별한"},
+        },
+
+        // ========== 중식 (Chinese) ==========
+        {
+                Name:          "짜장면",
+                Category:      model.MenuCategoryChinese,
+                EmotionTags:   model.StringArray{"위로", "향수"},
+                SituationTags: model.StringArray{"혼밥", "배달"},
+                AttributeTags: model.StringArray{"면류", "달콤한", "든든한"},
+        },
+        {
+                Name:          "짬뽕",
+                Category:      model.MenuCategoryChinese,
+                EmotionTags:   model.StringArray{"활력", "스트레스해소"},
+                SituationTags: model.StringArray{"혼밥", "배달"},
+                AttributeTags: model.StringArray{"면류", "매운", "국물"},
+        },
+        {
+                Name:          "탕수육",
+                Category:      model.MenuCategoryChinese,
+                EmotionTags:   model.StringArray{"행복", "보상"},
+                SituationTags: model.StringArray{"회식", "가족"},
+                AttributeTags: model.StringArray{"고기", "달콤한", "바삭한"},
+        },
+        {
+                Name:          "마파두부",
+                Category:      model.MenuCategoryChinese,
+                EmotionTags:   model.StringArray{"활력", "스트레스해소"},
+                SituationTags: model.StringArray{"혼밥", "점심"},
+                AttributeTags: model.StringArray{"매운", "두부", "밥"},
+        },
+        {
+                Name:          "깐풍기",
+                Category:      model.MenuCategoryChinese,
+                EmotionTags:   model.StringArray{"활력", "보상"},
+                SituationTags: model.StringArray{"회식", "야식"},
+                AttributeTags: model.StringArray{"고기", "매운", "바삭한"},
+        },
+        {
+                Name:          "볶음밥",
+                Category:      model.MenuCategoryChinese,
+                EmotionTags:   model.StringArray{"편안", "향수"},
+                SituationTags: model.StringArray{"혼밥", "야식"},
+                AttributeTags: model.StringArray{"밥", "든든한", "간편한"},
+        },
+
+        // ========== 일식 (Japanese) ==========
+        {
+                Name:          "초밥",
+                Category:      model.MenuCategoryJapanese,
+                EmotionTags:   model.StringArray{"보상", "특별한", "행복"},
+                SituationTags: model.StringArray{"데이트", "특별한날"},
+                AttributeTags: model.StringArray{"해산물", "신선한", "고급"},
+        },
+        {
+                Name:          "라멘",
+                Category:      model.MenuCategoryJapanese,
+                EmotionTags:   model.StringArray{"위로", "활력"},
+                SituationTags: model.StringArray{"혼밥", "야식"},
+                AttributeTags: model.StringArray{"면류", "국물", "따뜻한"},
+        },
+        {
+                Name:          "돈카츠",
+                Category:      model.MenuCategoryJapanese,
+                EmotionTags:   model.StringArray{"보상", "행복"},
+                SituationTags: model.StringArray{"혼밥", "점심"},
+                AttributeTags: model.StringArray{"고기", "바삭한", "든든한"},
+        },
+        {
+                Name:          "우동",
+                Category:      model.MenuCategoryJapanese,
+                EmotionTags:   model.StringArray{"위로", "평온"},
+                SituationTags: model.StringArray{"혼밥", "간식"},
+                AttributeTags: model.StringArray{"면류", "국물", "따뜻한"},
+        },
+        {
+                Name:          "규동",
+                Category:      model.MenuCategoryJapanese,
+                EmotionTags:   model.StringArray{"편안", "든든"},
+                SituationTags: model.StringArray{"혼밥", "점심"},
+                AttributeTags: model.StringArray{"고기", "밥", "간편한"},
+        },
+        {
+                Name:          "사시미",
+                Category:      model.MenuCategoryJapanese,
+                EmotionTags:   model.StringArray{"보상", "특별한"},
+                SituationTags: model.StringArray{"데이트", "회식"},
+                AttributeTags: model.StringArray{"해산물", "신선한", "고급"},
+        },
+        {
+                Name:          "오코노미야끼",
+                Category:      model.MenuCategoryJapanese,
+                EmotionTags:   model.StringArray{"재미", "행복"},
+                SituationTags: model.StringArray{"데이트", "친구"},
+                AttributeTags: model.StringArray{"야채", "달콤한", "독특한"},
+        },
+
+        // ========== 양식 (Western) ==========
+        {
+                Name:          "스테이크",
+                Category:      model.MenuCategoryWestern,
+                EmotionTags:   model.StringArray{"보상", "특별한", "성취"},
+                SituationTags: model.StringArray{"데이트", "특별한날"},
+                AttributeTags: model.StringArray{"고기", "고급", "든든한"},
+        },
+        {
+                Name:          "파스타",
+                Category:      model.MenuCategoryWestern,
+                EmotionTags:   model.StringArray{"행복", "로맨틱"},
+                SituationTags: model.StringArray{"데이트", "점심"},
+                AttributeTags: model.StringArray{"면류", "크림", "토마토"},
+        },
+        {
+                Name:          "피자",
+                Category:      model.MenuCategoryWestern,
+                EmotionTags:   model.StringArray{"행복", "편안"},
+                SituationTags: model.StringArray{"배달", "파티"},
+                AttributeTags: model.StringArray{"치즈", "든든한", "나눔"},
+        },
+        {
+                Name:          "햄버거",
+                Category:      model.MenuCategoryWestern,
+                EmotionTags:   model.StringArray{"편안", "만족"},
+                SituationTags: model.StringArray{"혼밥", "간식"},
+                AttributeTags: model.StringArray{"고기", "빵", "간편한"},
+        },
+        {
+                Name:          "리조또",
+                Category:      model.MenuCategoryWestern,
+                EmotionTags:   model.StringArray{"위로", "로맨틱"},
+                SituationTags: model.StringArray{"데이트", "점심"},
+                AttributeTags: model.StringArray{"밥", "크림", "부드러운"},
+        },
+        {
+                Name:          "샐러드",
+                Category:      model.MenuCategoryWestern,
+                EmotionTags:   model.StringArray{"건강", "가벼움"},
+                SituationTags: model.StringArray{"다이어트", "점심"},
+                AttributeTags: model.StringArray{"야채", "가벼운", "건강한"},
+        },
+        {
+                Name:          "수프",
+                Category:      model.MenuCategoryWestern,
+                EmotionTags:   model.StringArray{"위로", "따뜻함"},
+                SituationTags: model.StringArray{"간식", "아침"},
+                AttributeTags: model.StringArray{"국물", "따뜻한", "가벼운"},
+        },
+
+        // ========== 아시안 (Asian) ==========
+        {
+                Name:          "쌀국수",
+                Category:      model.MenuCategoryAsian,
+                EmotionTags:   model.StringArray{"청량", "이국적"},
+                SituationTags: model.StringArray{"혼밥", "점심"},
+                AttributeTags: model.StringArray{"면류", "국물", "가벼운"},
+        },
+        {
+                Name:          "팟타이",
+                Category:      model.MenuCategoryAsian,
+                EmotionTags:   model.StringArray{"활력", "이국적"},
+                SituationTags: model.StringArray{"혼밥", "데이트"},
+                AttributeTags: model.StringArray{"면류", "달콤한", "새콤한"},
+        },
+        {
+                Name:          "똠양꿍",
+                Category:      model.MenuCategoryAsian,
+                EmotionTags:   model.StringArray{"활력", "스트레스해소"},
+                SituationTags: model.StringArray{"회식", "점심"},
+                AttributeTags: model.StringArray{"국물", "매운", "새콤한"},
+        },
+        {
+                Name:          "카레",
+                Category:      model.MenuCategoryAsian,
+                EmotionTags:   model.StringArray{"위로", "향수"},
+                SituationTags: model.StringArray{"혼밥", "점심"},
+                AttributeTags: model.StringArray{"밥", "매운", "든든한"},
+        },
+        {
+                Name:          "분짜",
+                Category:      model.MenuCategoryAsian,
+                EmotionTags:   model.StringArray{"청량", "건강"},
+                SituationTags: model.StringArray{"점심", "데이트"},
+                AttributeTags: model.StringArray{"면류", "고기", "신선한"},
+        },
+        {
+                Name:          "반미",
+                Category:      model.MenuCategoryAsian,
+                EmotionTags:   model.StringArray{"활력", "이국적"},
+                SituationTags: model.StringArray{"간식", "점심"},
+                AttributeTags: model.StringArray{"빵", "고기", "신선한"},
+        },
+
+        // ========== 분식 (Snack) ==========
+        {
+                Name:          "떡볶이",
+                Category:      model.MenuCategorySnack,
+                EmotionTags:   model.StringArray{"활력", "스트레스해소", "향수"},
+                SituationTags: model.StringArray{"간식", "야식"},
+                AttributeTags: model.StringArray{"매운", "떡", "달콤한"},
+        },
+        {
+                Name:          "김밥",
+                Category:      model.MenuCategorySnack,
+                EmotionTags:   model.StringArray{"편안", "향수"},
+                SituationTags: model.StringArray{"간식", "소풍"},
+                AttributeTags: model.StringArray{"밥", "간편한", "가벼운"},
+        },
+        {
+                Name:          "라면",
+                Category:      model.MenuCategorySnack,
+                EmotionTags:   model.StringArray{"위로", "향수"},
+                SituationTags: model.StringArray{"야식", "혼밥"},
+                AttributeTags: model.StringArray{"면류", "매운", "국물"},
+        },
+        {
+                Name:          "순대",
+                Category:      model.MenuCategorySnack,
+                EmotionTags:   model.StringArray{"향수", "편안"},
+                SituationTags: model.StringArray{"간식", "야식"},
+                AttributeTags: model.StringArray{"고기", "독특한", "든든한"},
+        },
+        {
+                Name:          "튀김",
+                Category:      model.MenuCategorySnack,
+                EmotionTags:   model.StringArray{"행복", "편안"},
+                SituationTags: model.StringArray{"간식", "야식"},
+                AttributeTags: model.StringArray{"바삭한", "간편한", "다양한"},
+        },
+        {
+                Name:          "냉면",
+                Category:      model.MenuCategorySnack,
+                EmotionTags:   model.StringArray{"청량", "시원함"},
+                SituationTags: model.StringArray{"여름", "점심"},
+                AttributeTags: model.StringArray{"면류", "시원한", "새콤한"},
+        },
+        {
+                Name:          "만두",
+                Category:      model.MenuCategorySnack,
+                EmotionTags:   model.StringArray{"위로", "편안"},
+                SituationTags: model.StringArray{"간식", "야식"},
+                AttributeTags: model.StringArray{"고기", "따뜻한", "간편한"},
+        },
+
+        // ========== 카페/디저트 (Cafe) ==========
+        {
+                Name:          "케이크",
+                Category:      model.MenuCategoryCafe,
+                EmotionTags:   model.StringArray{"보상", "행복", "특별한"},
+                SituationTags: model.StringArray{"디저트", "생일"},
+                AttributeTags: model.StringArray{"달콤한", "부드러운", "특별한"},
+        },
+        {
+                Name:          "아이스크림",
+                Category:      model.MenuCategoryCafe,
+                EmotionTags:   model.StringArray{"행복", "청량"},
+                SituationTags: model.StringArray{"디저트", "여름"},
+                AttributeTags: model.StringArray{"달콤한", "시원한", "부드러운"},
+        },
+        {
+                Name:          "커피",
+                Category:      model.MenuCategoryCafe,
+                EmotionTags:   model.StringArray{"각성", "휴식"},
+                SituationTags: model.StringArray{"아침", "휴식"},
+                AttributeTags: model.StringArray{"카페인", "향긋한", "쓴"},
+        },
+        {
+                Name:          "빙수",
+                Category:      model.MenuCategoryCafe,
+                EmotionTags:   model.StringArray{"청량", "행복"},
+                SituationTags: model.StringArray{"여름", "디저트"},
+                AttributeTags: model.StringArray{"시원한", "달콤한", "얼음"},
+        },
+        {
+                Name:          "마카롱",
+                Category:      model.MenuCategoryCafe,
+                EmotionTags:   model.StringArray{"보상", "귀여움"},
+                SituationTags: model.StringArray{"디저트", "선물"},
+                AttributeTags: model.StringArray{"달콤한", "바삭한", "예쁜"},
+        },
+        {
+                Name:          "와플",
+                Category:      model.MenuCategoryCafe,
+                EmotionTags:   model.StringArray{"행복", "달콤"},
+                SituationTags: model.StringArray{"브런치", "디저트"},
+                AttributeTags: model.StringArray{"달콤한", "바삭한", "부드러운"},
+        },
+
+        // ========== 기타 (Other) ==========
+        {
+                Name:          "치킨",
+                Category:      model.MenuCategoryOther,
+                EmotionTags:   model.StringArray{"행복", "보상", "활력"},
+                SituationTags: model.StringArray{"야식", "배달", "파티"},
+                AttributeTags: model.StringArray{"고기", "바삭한", "든든한"},
+        },
+        {
+                Name:          "족발",
+                Category:      model.MenuCategoryOther,
+                EmotionTags:   model.StringArray{"보상", "활력"},
+                SituationTags: model.StringArray{"야식", "회식"},
+                AttributeTags: model.StringArray{"고기", "쫄깃한", "든든한"},
+        },
+        {
+                Name:          "보쌈",
+                Category:      model.MenuCategoryOther,
+                EmotionTags:   model.StringArray{"보상", "건강"},
+                SituationTags: model.StringArray{"회식", "가족"},
+                AttributeTags: model.StringArray{"고기", "건강한", "든든한"},
+        },
+        {
+                Name:          "곱창",
+                Category:      model.MenuCategoryOther,
+                EmotionTags:   model.StringArray{"활력", "스트레스해소"},
+                SituationTags: model.StringArray{"회식", "야식"},
+                AttributeTags: model.StringArray{"고기", "매운", "구이"},
+        },
+        {
+                Name:          "양꼬치",
+                Category:      model.MenuCategoryOther,
+                EmotionTags:   model.StringArray{"이국적", "활력"},
+                SituationTags: model.StringArray{"회식", "야식"},
+                AttributeTags: model.StringArray{"고기", "향신료", "구이"},
+        },
+}
+
+// SeedMenus 메뉴 시드 데이터 삽입
+func SeedMenus(db *gorm.DB) error <span class="cov0" title="0">{
+        for _, menu := range MenuSeed </span><span class="cov0" title="0">{
+                // 이미 존재하는지 확인
+                var existing model.Menu
+                result := db.Where("name = ?", menu.Name).First(&amp;existing)
+
+                if result.Error == gorm.ErrRecordNotFound </span><span class="cov0" title="0">{
+                        // 새로 생성
+                        menu.IsActive = true
+                        if err := db.Create(&amp;menu).Error; err != nil </span><span class="cov0" title="0">{
+                                log.Printf("Failed to seed menu %s: %v", menu.Name, err)
+                                return err
+                        }</span>
+                        <span class="cov0" title="0">log.Printf("Seeded menu: %s", menu.Name)</span>
+                }
+        }
+
+        <span class="cov0" title="0">log.Printf("Menu seeding completed. Total: %d menus", len(MenuSeed))
+        return nil</span>
+}
+</pre>
+		
+		<pre class="file" id="file17" style="display: none">package llm
+
+import (
+        "bytes"
+        "context"
+        "encoding/base64"
+        "encoding/json"
+        "fmt"
+        "io"
+        "net/http"
+        "time"
+)
+
+// Client Gemini API 클라이언트
+type Client struct {
+        apiKey     string
+        model      string
+        httpClient *http.Client
+        baseURL    string
+}
+
+// NewClient 새 Gemini 클라이언트 생성
+func NewClient(apiKey, model string) *Client <span class="cov8" title="1">{
+        return &amp;Client{
+                apiKey: apiKey,
+                model:  model,
+                httpClient: &amp;http.Client{
+                        Timeout: 30 * time.Second,
+                },
+                baseURL: "https://generativelanguage.googleapis.com/v1beta",
+        }
+}</span>
+
+// AnalysisResult 스케치 분석 결과
+type AnalysisResult struct {
+        Emotion  string   `json:"emotion"`
+        Keywords []string `json:"keywords"`
+        Mood     string   `json:"mood"`
+}
+
+// AnalyzeSketch 스케치 이미지를 분석하여 감정/키워드/분위기 추출
+func (c *Client) AnalyzeSketch(ctx context.Context, imageData []byte, inputText string) (*AnalysisResult, error) <span class="cov8" title="1">{
+        if c.apiKey == "" </span><span class="cov8" title="1">{
+                return c.mockAnalysis(inputText), nil
+        }</span>
+
+        <span class="cov0" title="0">base64Image := base64.StdEncoding.EncodeToString(imageData)
+
+        systemPrompt := `당신은 감성적인 음식 추천가입니다. 사용자가 그린 그림이나 낙서를 보고
+그 순간의 기분, 감정, 분위기를 따뜻하게 읽어주세요.
+
+정확한 분석보다는 공감과 위로를 담은 해석을 해주세요.`
+
+        userPrompt := `이 그림을 보고 다음을 분석해주세요:
+
+1. 그림에서 느껴지는 감정 (한 문장, 예: "피곤하고 위로받고 싶은")
+2. 연상되는 키워드 3개 (음식과 연관지을 수 있는 것들)
+3. 분위기 (bright/calm/dark 중 하나)
+
+반드시 아래 JSON 형식으로만 응답해주세요:
+{"emotion": "...", "keywords": ["...", "...", "..."], "mood": "..."}`
+
+        if inputText != "" </span><span class="cov0" title="0">{
+                userPrompt = fmt.Sprintf(`사용자가 그림과 함께 다음 메시지를 남겼습니다: "%s"
+
+%s`, inputText, userPrompt)
+        }</span>
+
+        <span class="cov0" title="0">reqBody := map[string]interface{}{
+                "system_instruction": map[string]interface{}{
+                        "parts": []map[string]string{
+                                {"text": systemPrompt},
+                        },
+                },
+                "contents": []map[string]interface{}{
+                        {
+                                "parts": []map[string]interface{}{
+                                        {"text": userPrompt},
+                                        {
+                                                "inline_data": map[string]string{
+                                                        "mime_type": "image/png",
+                                                        "data":      base64Image,
+                                                },
+                                        },
+                                },
+                        },
+                },
+                "generationConfig": map[string]interface{}{
+                        "temperature":     0.7,
+                        "maxOutputTokens": 500,
+                },
+        }
+
+        respBody, err := c.doRequest(ctx, reqBody)
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, fmt.Errorf("failed to analyze sketch: %w", err)
+        }</span>
+
+        <span class="cov0" title="0">content, err := c.extractContent(respBody)
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, err
+        }</span>
+
+        <span class="cov0" title="0">var result AnalysisResult
+        if err := json.Unmarshal([]byte(content), &amp;result); err != nil </span><span class="cov0" title="0">{
+                return nil, fmt.Errorf("failed to parse analysis result: %w", err)
+        }</span>
+
+        <span class="cov0" title="0">return &amp;result, nil</span>
+}
+
+// GenerateRecommendationReason 메뉴 추천 이유 생성
+func (c *Client) GenerateRecommendationReason(ctx context.Context, emotion string, keywords []string, menuName string) (string, error) <span class="cov8" title="1">{
+        if c.apiKey == "" </span><span class="cov8" title="1">{
+                return c.mockReason(emotion, menuName), nil
+        }</span>
+
+        <span class="cov0" title="0">prompt := fmt.Sprintf(`감정: %s
+키워드: %v
+
+위 상태의 사람에게 어울리는 음식으로 "%s"을 추천합니다.
+왜 이 음식이 어울리는지 2문장 이내로 따뜻하고 공감가는 문체로 설명해주세요.
+설명만 출력하고 다른 텍스트는 포함하지 마세요.`, emotion, keywords, menuName)
+
+        reqBody := map[string]interface{}{
+                "contents": []map[string]interface{}{
+                        {
+                                "parts": []map[string]string{
+                                        {"text": prompt},
+                                },
+                        },
+                },
+                "generationConfig": map[string]interface{}{
+                        "temperature":     0.8,
+                        "maxOutputTokens": 200,
+                },
+        }
+
+        respBody, err := c.doRequest(ctx, reqBody)
+        if err != nil </span><span class="cov0" title="0">{
+                return "", fmt.Errorf("failed to generate reason: %w", err)
+        }</span>
+
+        <span class="cov0" title="0">content, err := c.extractContent(respBody)
+        if err != nil </span><span class="cov0" title="0">{
+                return "", err
+        }</span>
+
+        <span class="cov0" title="0">return content, nil</span>
+}
+
+// doRequest HTTP 요청 실행
+func (c *Client) doRequest(ctx context.Context, body map[string]interface{}) (map[string]interface{}, error) <span class="cov0" title="0">{
+        jsonBody, err := json.Marshal(body)
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, err
+        }</span>
+
+        <span class="cov0" title="0">url := fmt.Sprintf("%s/models/%s:generateContent?key=%s", c.baseURL, c.model, c.apiKey)
+        req, err := http.NewRequestWithContext(ctx, "POST", url, bytes.NewBuffer(jsonBody))
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, err
+        }</span>
+
+        <span class="cov0" title="0">req.Header.Set("Content-Type", "application/json")
+
+        resp, err := c.httpClient.Do(req)
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, err
+        }</span>
+        <span class="cov0" title="0">defer resp.Body.Close()
+
+        respData, err := io.ReadAll(resp.Body)
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, err
+        }</span>
+
+        <span class="cov0" title="0">if resp.StatusCode != http.StatusOK </span><span class="cov0" title="0">{
+                return nil, fmt.Errorf("API error: %s - %s", resp.Status, string(respData))
+        }</span>
+
+        <span class="cov0" title="0">var result map[string]interface{}
+        if err := json.Unmarshal(respData, &amp;result); err != nil </span><span class="cov0" title="0">{
+                return nil, err
+        }</span>
+
+        <span class="cov0" title="0">return result, nil</span>
+}
+
+// extractContent Gemini 응답에서 content 추출
+func (c *Client) extractContent(resp map[string]interface{}) (string, error) <span class="cov0" title="0">{
+        candidates, ok := resp["candidates"].([]interface{})
+        if !ok || len(candidates) == 0 </span><span class="cov0" title="0">{
+                return "", fmt.Errorf("no candidates in response")
+        }</span>
+
+        <span class="cov0" title="0">candidate := candidates[0].(map[string]interface{})
+        content, ok := candidate["content"].(map[string]interface{})
+        if !ok </span><span class="cov0" title="0">{
+                return "", fmt.Errorf("no content in candidate")
+        }</span>
+
+        <span class="cov0" title="0">parts, ok := content["parts"].([]interface{})
+        if !ok || len(parts) == 0 </span><span class="cov0" title="0">{
+                return "", fmt.Errorf("no parts in content")
+        }</span>
+
+        <span class="cov0" title="0">part := parts[0].(map[string]interface{})
+        text, ok := part["text"].(string)
+        if !ok </span><span class="cov0" title="0">{
+                return "", fmt.Errorf("no text in part")
+        }</span>
+
+        <span class="cov0" title="0">return text, nil</span>
+}
+
+// mockAnalysis API 키가 없을 때 사용하는 목업 응답
+func (c *Client) mockAnalysis(inputText string) *AnalysisResult <span class="cov8" title="1">{
+        if inputText != "" </span><span class="cov8" title="1">{
+                return &amp;AnalysisResult{
+                        Emotion:  "뭔가 특별한 것을 원하는",
+                        Keywords: []string{"기대감", "설렘", "새로움"},
+                        Mood:     "bright",
+                }
+        }</span>
+
+        <span class="cov8" title="1">return &amp;AnalysisResult{
+                Emotion:  "피곤하고 위로받고 싶은",
+                Keywords: []string{"따뜻함", "포근함", "집밥"},
+                Mood:     "calm",
+        }</span>
+}
+
+// mockReason API 키가 없을 때 사용하는 목업 추천 이유
+func (c *Client) mockReason(emotion, menuName string) string <span class="cov8" title="1">{
+        reasons := map[string]string{
+                "된장찌개":  "지친 하루 끝에 따뜻한 국물 한 숟갈은 마음까지 녹여줄 거예요. 엄마가 끓여주신 것 같은 그 맛이 오늘 당신에게 필요한 위로예요.",
+                "칼국수":   "따끈한 면발이 속을 편하게 해줄 거예요. 한 그릇 비우고 나면 마음도 한결 가벼워질 거예요.",
+                "김치찌개":  "칼칼한 국물이 정신을 번쩍 들게 해줄 거예요. 밥 한 공기 뚝딱 비우고 나면 활력이 생길 거예요.",
+                "삼겹살":   "고기 한 점의 행복이 오늘 하루의 피로를 날려줄 거예요. 스스로에게 주는 작은 선물이에요.",
+                "냉면":    "시원한 육수가 복잡한 머리를 말끔하게 정리해줄 거예요. 청량한 한 그릇이 당신의 기분을 상쾌하게 바꿔줄 거예요.",
+                "default": fmt.Sprintf("%s 한 그릇이 오늘 당신에게 딱 맞는 선택이에요. 맛있게 드시고 힘내세요!", menuName),
+        }
+
+        if reason, ok := reasons[menuName]; ok </span><span class="cov8" title="1">{
+                return reason
+        }</span>
+        <span class="cov8" title="1">return reasons["default"]</span>
+}
+
+// IsAvailable API 키가 설정되어 있는지 확인
+func (c *Client) IsAvailable() bool <span class="cov8" title="1">{
+        return c.apiKey != ""
+}</span>
+</pre>
+		
+		<pre class="file" id="file18" style="display: none">package service
+
+import (
+        "context"
+        "strings"
+
+        "github.com/ggorockee/ojeomneo/server/internal/model"
+        "gorm.io/gorm"
+)
+
+// MenuService 메뉴 서비스
+type MenuService struct {
+        db *gorm.DB
+}
+
+// NewMenuService 새 메뉴 서비스 생성
+func NewMenuService(db *gorm.DB) *MenuService <span class="cov8" title="1">{
+        return &amp;MenuService{db: db}
+}</span>
+
+// GetByID ID로 메뉴 조회
+func (s *MenuService) GetByID(ctx context.Context, id uint) (*model.Menu, error) <span class="cov8" title="1">{
+        var menu model.Menu
+        if err := s.db.WithContext(ctx).First(&amp;menu, id).Error; err != nil </span><span class="cov8" title="1">{
+                return nil, err
+        }</span>
+        <span class="cov8" title="1">return &amp;menu, nil</span>
+}
+
+// List 메뉴 목록 조회
+func (s *MenuService) List(ctx context.Context, category string, tag string, page, limit int) ([]model.Menu, int64, error) <span class="cov8" title="1">{
+        var menus []model.Menu
+        var total int64
+
+        query := s.db.WithContext(ctx).Model(&amp;model.Menu{}).Where("is_active = ?", true)
+
+        // 카테고리 필터
+        if category != "" </span><span class="cov8" title="1">{
+                query = query.Where("category = ?", category)
+        }</span>
+
+        // 태그 필터 (JSONB 배열에서 검색)
+        <span class="cov8" title="1">if tag != "" </span><span class="cov0" title="0">{
+                query = query.Where(
+                        "emotion_tags @&gt; ?::jsonb OR situation_tags @&gt; ?::jsonb OR attribute_tags @&gt; ?::jsonb",
+                        `["`+tag+`"]`, `["`+tag+`"]`, `["`+tag+`"]`,
+                )
+        }</span>
+
+        // 전체 개수 조회
+        <span class="cov8" title="1">if err := query.Count(&amp;total).Error; err != nil </span><span class="cov0" title="0">{
+                return nil, 0, err
+        }</span>
+
+        // 페이지네이션
+        <span class="cov8" title="1">offset := (page - 1) * limit
+        if err := query.Offset(offset).Limit(limit).Order("name ASC").Find(&amp;menus).Error; err != nil </span><span class="cov0" title="0">{
+                return nil, 0, err
+        }</span>
+
+        <span class="cov8" title="1">return menus, total, nil</span>
+}
+
+// FindByKeywords 키워드와 매칭되는 메뉴 검색
+func (s *MenuService) FindByKeywords(ctx context.Context, keywords []string, limit int) ([]model.Menu, error) <span class="cov0" title="0">{
+        var menus []model.Menu
+
+        if len(keywords) == 0 </span><span class="cov0" title="0">{
+                // 키워드가 없으면 랜덤 메뉴 반환
+                if err := s.db.WithContext(ctx).
+                        Where("is_active = ?", true).
+                        Order("RANDOM()").
+                        Limit(limit).
+                        Find(&amp;menus).Error; err != nil </span><span class="cov0" title="0">{
+                        return nil, err
+                }</span>
+                <span class="cov0" title="0">return menus, nil</span>
+        }
+
+        // 키워드 기반 태그 매칭
+        // 유사어 매핑 적용
+        <span class="cov0" title="0">mappedTags := s.mapKeywordsToTags(keywords)
+
+        // 태그 매칭 쿼리 (OR 조건)
+        query := s.db.WithContext(ctx).Model(&amp;model.Menu{}).Where("is_active = ?", true)
+
+        var conditions []string
+        var args []interface{}
+
+        for _, tag := range mappedTags </span><span class="cov0" title="0">{
+                jsonTag := `["` + tag + `"]`
+                conditions = append(conditions, "emotion_tags @&gt; ?::jsonb OR situation_tags @&gt; ?::jsonb OR attribute_tags @&gt; ?::jsonb")
+                args = append(args, jsonTag, jsonTag, jsonTag)
+        }</span>
+
+        <span class="cov0" title="0">if len(conditions) &gt; 0 </span><span class="cov0" title="0">{
+                query = query.Where("("+strings.Join(conditions, " OR ")+")", args...)
+        }</span>
+
+        <span class="cov0" title="0">if err := query.Order("RANDOM()").Limit(limit).Find(&amp;menus).Error; err != nil </span><span class="cov0" title="0">{
+                return nil, err
+        }</span>
+
+        // 매칭된 메뉴가 없으면 랜덤 반환
+        <span class="cov0" title="0">if len(menus) == 0 </span><span class="cov0" title="0">{
+                if err := s.db.WithContext(ctx).
+                        Where("is_active = ?", true).
+                        Order("RANDOM()").
+                        Limit(limit).
+                        Find(&amp;menus).Error; err != nil </span><span class="cov0" title="0">{
+                        return nil, err
+                }</span>
+        }
+
+        <span class="cov0" title="0">return menus, nil</span>
+}
+
+// mapKeywordsToTags 키워드를 태그로 매핑
+func (s *MenuService) mapKeywordsToTags(keywords []string) []string <span class="cov8" title="1">{
+        // 키워드 → 태그 매핑 사전
+        mapping := map[string][]string{
+                // 감정/분위기 관련
+                "따뜻함":  {"위로", "따뜻한", "국물"},
+                "포근함":  {"위로", "따뜻한", "집밥"},
+                "집밥":   {"위로", "한식", "집밥"},
+                "시원함":  {"청량", "시원한", "면류"},
+                "청량":   {"청량", "시원한"},
+                "매콤함":  {"매운", "자극적"},
+                "화끈":   {"매운", "자극적", "활력"},
+                "달콤함":  {"달콤한", "보상", "디저트"},
+                "보상":   {"보상", "달콤한", "특별한"},
+                "피로":   {"위로", "따뜻한", "든든한"},
+                "스트레스": {"매운", "자극적", "활력"},
+                "행복":   {"보상", "달콤한", "특별한"},
+                "우울":   {"위로", "따뜻한", "국물"},
+                "활력":   {"활력", "든든한", "고기"},
+                "가벼움":  {"가벼운", "샐러드", "건강"},
+                "든든함":  {"든든한", "고기", "밥"},
+        }
+
+        tagSet := make(map[string]bool)
+
+        for _, keyword := range keywords </span><span class="cov8" title="1">{
+                // 직접 매핑
+                if tags, ok := mapping[keyword]; ok </span><span class="cov8" title="1">{
+                        for _, tag := range tags </span><span class="cov8" title="1">{
+                                tagSet[tag] = true
+                        }</span>
+                }
+                // 키워드 자체도 태그로 추가
+                <span class="cov8" title="1">tagSet[keyword] = true</span>
+        }
+
+        <span class="cov8" title="1">tags := make([]string, 0, len(tagSet))
+        for tag := range tagSet </span><span class="cov8" title="1">{
+                tags = append(tags, tag)
+        }</span>
+
+        <span class="cov8" title="1">return tags</span>
+}
+
+// Create 메뉴 생성
+func (s *MenuService) Create(ctx context.Context, menu *model.Menu) error <span class="cov8" title="1">{
+        return s.db.WithContext(ctx).Create(menu).Error
+}</span>
+
+// Update 메뉴 수정
+func (s *MenuService) Update(ctx context.Context, menu *model.Menu) error <span class="cov8" title="1">{
+        return s.db.WithContext(ctx).Save(menu).Error
+}</span>
+
+// Delete 메뉴 삭제 (soft delete)
+func (s *MenuService) Delete(ctx context.Context, id uint) error <span class="cov8" title="1">{
+        return s.db.WithContext(ctx).Delete(&amp;model.Menu{}, id).Error
+}</span>
+
+// GetCategories 모든 카테고리 목록 반환
+func (s *MenuService) GetCategories() []map[string]string <span class="cov8" title="1">{
+        categories := []model.MenuCategory{
+                model.MenuCategoryKorean,
+                model.MenuCategoryChinese,
+                model.MenuCategoryJapanese,
+                model.MenuCategoryWestern,
+                model.MenuCategoryAsian,
+                model.MenuCategorySnack,
+                model.MenuCategoryCafe,
+                model.MenuCategoryOther,
+        }
+
+        result := make([]map[string]string, len(categories))
+        for i, cat := range categories </span><span class="cov8" title="1">{
+                result[i] = map[string]string{
+                        "value": string(cat),
+                        "label": cat.Label(),
+                }
+        }</span>
+
+        <span class="cov8" title="1">return result</span>
+}
+</pre>
+		
+		<pre class="file" id="file19" style="display: none">package service
+
+import (
+        "context"
+        "encoding/json"
+        "fmt"
+        "os"
+        "path/filepath"
+        "time"
+
+        "github.com/google/uuid"
+        "gorm.io/datatypes"
+        "gorm.io/gorm"
+
+        "github.com/ggorockee/ojeomneo/server/internal/model"
+        "github.com/ggorockee/ojeomneo/server/internal/service/llm"
+)
+
+// SketchService 스케치 서비스
+type SketchService struct {
+        db          *gorm.DB
+        llmClient   *llm.Client
+        menuService *MenuService
+        uploadPath  string
+}
+
+// NewSketchService 새 스케치 서비스 생성
+func NewSketchService(db *gorm.DB, llmClient *llm.Client, menuService *MenuService) *SketchService <span class="cov0" title="0">{
+        uploadPath := os.Getenv("UPLOAD_PATH")
+        if uploadPath == "" </span><span class="cov0" title="0">{
+                uploadPath = "./uploads"
+        }</span>
+
+        // 업로드 디렉토리 생성
+        <span class="cov0" title="0">os.MkdirAll(filepath.Join(uploadPath, "sketches"), 0755)
+
+        return &amp;SketchService{
+                db:          db,
+                llmClient:   llmClient,
+                menuService: menuService,
+                uploadPath:  uploadPath,
+        }</span>
+}
+
+// AnalyzeRequest 스케치 분석 요청
+type AnalyzeRequest struct {
+        ImageData []byte
+        InputText string
+        DeviceID  string
+        UserID    *uint
+}
+
+// AnalyzeResponse 스케치 분석 응답
+type AnalyzeResponse struct {
+        SketchID       uuid.UUID                `json:"sketch_id"`
+        Analysis       *llm.AnalysisResult      `json:"analysis"`
+        Recommendation *model.RecommendationSet `json:"recommendation"`
+        CreatedAt      time.Time                `json:"created_at"`
+}
+
+// Analyze 스케치 분석 및 메뉴 추천
+func (s *SketchService) Analyze(ctx context.Context, req *AnalyzeRequest) (*AnalyzeResponse, error) <span class="cov0" title="0">{
+        // 1. 이미지 저장
+        imagePath, err := s.saveImage(req.ImageData, req.DeviceID)
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, fmt.Errorf("failed to save image: %w", err)
+        }</span>
+
+        // 2. LLM으로 스케치 분석
+        <span class="cov0" title="0">analysis, err := s.llmClient.AnalyzeSketch(ctx, req.ImageData, req.InputText)
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, fmt.Errorf("failed to analyze sketch: %w", err)
+        }</span>
+
+        // 3. 분석 결과를 JSON으로 변환
+        <span class="cov0" title="0">analysisJSON, err := json.Marshal(analysis)
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, fmt.Errorf("failed to marshal analysis: %w", err)
+        }</span>
+
+        // 4. 스케치 저장
+        <span class="cov0" title="0">sketch := &amp;model.Sketch{
+                DeviceID:       req.DeviceID,
+                UserID:         req.UserID,
+                ImagePath:      imagePath,
+                InputText:      req.InputText,
+                AnalysisResult: datatypes.JSON(analysisJSON),
+        }
+
+        if err := s.db.WithContext(ctx).Create(sketch).Error; err != nil </span><span class="cov0" title="0">{
+                return nil, fmt.Errorf("failed to save sketch: %w", err)
+        }</span>
+
+        // 5. 키워드 기반 메뉴 검색
+        <span class="cov0" title="0">menus, err := s.menuService.FindByKeywords(ctx, analysis.Keywords, 5)
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, fmt.Errorf("failed to find menus: %w", err)
+        }</span>
+
+        <span class="cov0" title="0">if len(menus) == 0 </span><span class="cov0" title="0">{
+                return nil, fmt.Errorf("no menus found")
+        }</span>
+
+        // 6. 추천 이유 생성 및 저장
+        <span class="cov0" title="0">recommendations, err := s.createRecommendations(ctx, sketch.ID, analysis, menus)
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, fmt.Errorf("failed to create recommendations: %w", err)
+        }</span>
+
+        // 7. 응답 구성
+        <span class="cov0" title="0">response := &amp;AnalyzeResponse{
+                SketchID:  sketch.ID,
+                Analysis:  analysis,
+                CreatedAt: sketch.CreatedAt,
+                Recommendation: &amp;model.RecommendationSet{
+                        Primary:      s.toMenuRecommendation(&amp;menus[0], recommendations[0].Reason),
+                        Alternatives: s.toAlternatives(menus[1:], recommendations[1:]),
+                },
+        }
+
+        return response, nil</span>
+}
+
+// createRecommendations 추천 생성 및 저장
+func (s *SketchService) createRecommendations(ctx context.Context, sketchID uuid.UUID, analysis *llm.AnalysisResult, menus []model.Menu) ([]model.Recommendation, error) <span class="cov0" title="0">{
+        recommendations := make([]model.Recommendation, 0, len(menus))
+
+        for i, menu := range menus </span><span class="cov0" title="0">{
+                // LLM으로 추천 이유 생성
+                reason, err := s.llmClient.GenerateRecommendationReason(ctx, analysis.Emotion, analysis.Keywords, menu.Name)
+                if err != nil </span><span class="cov0" title="0">{
+                        // 에러 시 기본 이유 사용
+                        reason = fmt.Sprintf("%s이(가) 지금 당신에게 딱 맞는 선택이에요!", menu.Name)
+                }</span>
+
+                <span class="cov0" title="0">rec := model.Recommendation{
+                        SketchID: sketchID,
+                        MenuID:   menu.ID,
+                        Reason:   reason,
+                        Rank:     i + 1,
+                }
+
+                if err := s.db.WithContext(ctx).Create(&amp;rec).Error; err != nil </span><span class="cov0" title="0">{
+                        return nil, err
+                }</span>
+
+                <span class="cov0" title="0">recommendations = append(recommendations, rec)</span>
+        }
+
+        <span class="cov0" title="0">return recommendations, nil</span>
+}
+
+// saveImage 이미지 파일 저장
+func (s *SketchService) saveImage(data []byte, deviceID string) (string, error) <span class="cov0" title="0">{
+        filename := fmt.Sprintf("%s_%d.png", deviceID, time.Now().UnixNano())
+        relativePath := filepath.Join("sketches", filename)
+        fullPath := filepath.Join(s.uploadPath, relativePath)
+
+        if err := os.WriteFile(fullPath, data, 0644); err != nil </span><span class="cov0" title="0">{
+                return "", err
+        }</span>
+
+        <span class="cov0" title="0">return relativePath, nil</span>
+}
+
+// toMenuRecommendation Menu를 MenuRecommendation으로 변환
+func (s *SketchService) toMenuRecommendation(menu *model.Menu, reason string) *model.MenuRecommendation <span class="cov0" title="0">{
+        return &amp;model.MenuRecommendation{
+                MenuID:   menu.ID,
+                Name:     menu.Name,
+                Category: menu.Category,
+                ImageURL: menu.ImageURL,
+                Reason:   reason,
+                Tags:     menu.GetAllTags(),
+        }
+}</span>
+
+// toAlternatives 대안 메뉴 목록 생성
+func (s *SketchService) toAlternatives(menus []model.Menu, recommendations []model.Recommendation) []model.MenuRecommendation <span class="cov0" title="0">{
+        if len(menus) == 0 </span><span class="cov0" title="0">{
+                return nil
+        }</span>
+
+        // 최대 2개의 대안만 반환
+        <span class="cov0" title="0">limit := 2
+        if len(menus) &lt; limit </span><span class="cov0" title="0">{
+                limit = len(menus)
+        }</span>
+
+        <span class="cov0" title="0">alternatives := make([]model.MenuRecommendation, limit)
+        for i := 0; i &lt; limit; i++ </span><span class="cov0" title="0">{
+                alternatives[i] = model.MenuRecommendation{
+                        MenuID:   menus[i].ID,
+                        Name:     menus[i].Name,
+                        Category: menus[i].Category,
+                        Reason:   recommendations[i].Reason,
+                }
+        }</span>
+
+        <span class="cov0" title="0">return alternatives</span>
+}
+
+// GetHistory 디바이스별 히스토리 조회
+func (s *SketchService) GetHistory(ctx context.Context, deviceID string, page, limit int) ([]model.Sketch, int64, error) <span class="cov0" title="0">{
+        var sketches []model.Sketch
+        var total int64
+
+        query := s.db.WithContext(ctx).Model(&amp;model.Sketch{}).
+                Where("device_id = ?", deviceID)
+
+        if err := query.Count(&amp;total).Error; err != nil </span><span class="cov0" title="0">{
+                return nil, 0, err
+        }</span>
+
+        <span class="cov0" title="0">offset := (page - 1) * limit
+        if err := query.
+                Preload("Recommendations").
+                Preload("Recommendations.Menu").
+                Order("created_at DESC").
+                Offset(offset).
+                Limit(limit).
+                Find(&amp;sketches).Error; err != nil </span><span class="cov0" title="0">{
+                return nil, 0, err
+        }</span>
+
+        <span class="cov0" title="0">return sketches, total, nil</span>
+}
+
+// GetByID ID로 스케치 조회
+func (s *SketchService) GetByID(ctx context.Context, id uuid.UUID) (*model.Sketch, error) <span class="cov0" title="0">{
+        var sketch model.Sketch
+        if err := s.db.WithContext(ctx).
+                Preload("Recommendations").
+                Preload("Recommendations.Menu").
+                First(&amp;sketch, "id = ?", id).Error; err != nil </span><span class="cov0" title="0">{
+                return nil, err
+        }</span>
+        <span class="cov0" title="0">return &amp;sketch, nil</span>
+}
+</pre>
+		
+		</div>
+	</body>
+	<script>
+	(function() {
+		var files = document.getElementById('files');
+		var visible;
+		files.addEventListener('change', onChange, false);
+		function select(part) {
+			if (visible)
+				visible.style.display = 'none';
+			visible = document.getElementById(part);
+			if (!visible)
+				return;
+			files.value = part;
+			visible.style.display = 'block';
+			location.hash = part;
+		}
+		function onChange() {
+			select(files.value);
+			window.scrollTo(0, 0);
+		}
+		if (location.hash != "") {
+			select(location.hash.substr(1));
+		}
+		if (!visible) {
+			select("file0");
+		}
+	})();
+	</script>
+</html>

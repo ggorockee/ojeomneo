@@ -142,7 +142,13 @@ func (h *SketchHandler) GetHistory(c *fiber.Ctx) error {
 		limit = 10
 	}
 
-	sketches, total, err := h.sketchService.GetHistory(c.Context(), deviceID, page, limit)
+	// TODO: 로그인 기능 구현 후 실제 userID를 헤더나 쿼리에서 가져오기
+	// 현재는 로그인 기능이 없으므로 nil로 설정 (비로그인 사용자)
+	var userID *uint = nil
+	// 예시: userIDStr := c.Get("X-User-ID")
+	// if userIDStr != "" { userID = parseUserID(userIDStr) }
+
+	sketches, total, err := h.sketchService.GetHistory(c.Context(), deviceID, userID, page, limit)
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"success": false,

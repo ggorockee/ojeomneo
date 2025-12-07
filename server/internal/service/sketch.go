@@ -256,12 +256,19 @@ func (s *SketchService) toAlternatives(menus []model.Menu, recommendations []mod
 }
 
 // GetHistory 디바이스별 히스토리 조회
-func (s *SketchService) GetHistory(ctx context.Context, deviceID string, page, limit int) ([]model.Sketch, int64, error) {
+// userID가 nil인 경우(비로그인 사용자)는 3일 이상 된 데이터는 제외
+func (s *SketchService) GetHistory(ctx context.Context, deviceID string, userID *uint, page, limit int) ([]model.Sketch, int64, error) {
 	var sketches []model.Sketch
 	var total int64
 
 	query := s.db.WithContext(ctx).Model(&model.Sketch{}).
 		Where("device_id = ?", deviceID)
+
+	// 비로그인 사용자(userID == nil)인 경우 3일 이내 데이터만 조회
+	if userID == nil {
+		threeDaysAgo := time.Now().AddDate(0, 0, -3)
+		query = query.Where("created_at >= ?", threeDaysAgo)
+	}
 
 	if err := query.Count(&total).Error; err != nil {
 		return nil, 0, err
@@ -289,6 +296,24 @@ func (s *SketchService) GetHistory(ctx context.Context, deviceID string, page, l
 	}
 
 	return sketches, total, nil
+}
+
+// CleanupOldAnonymousHistory 비로그인 사용자의 3일 이상 된 히스토리 자동 삭제
+// 이 함수는 주기적으로 실행되어야 함 (예: cron job)
+func (s *SketchService) CleanupOldAnonymousHistory(ctx context.Context) error {
+	threeDaysAgo := time.Now().AddDate(0, 0, -3)
+	
+	// user_id가 NULL이고 3일 이상 된 스케치 삭제
+	result := s.db.WithContext(ctx).
+		Where("user_id IS NULL AND created_at < ?", threeDaysAgo).
+		Delete(&model.Sketch{})
+	
+	if result.Error != nil {
+		return result.Error
+	}
+	
+	// TODO: 로그 기록 (삭제된 레코드 수: result.RowsAffected)
+	return nil
 }
 
 // GetByID ID로 스케치 조회
