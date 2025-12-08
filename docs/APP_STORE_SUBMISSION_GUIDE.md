@@ -15,7 +15,8 @@ Ojeomneo 앱의 Google Play Store 및 Apple App Store 심사 제출을 위한 �
 | **주요 기능** | 스케치 기반 메뉴 추천 |
 | **타겟 연령** | 만 4세 이상 (4+) |
 | **인증 방식** | 이메일, Google, Apple, Kakao, 익명 세션 |
-| **권한** | 카메라, 사진 라이브러리 |
+| **권한** | ~~카메라~~, 사진 라이브러리 (갤러리 선택만 사용) |
+| **개인정보 처리방침** | https://ojeomneo.com/privacy |
 
 ---
 
@@ -25,15 +26,15 @@ Ojeomneo 앱의 Google Play Store 및 Apple App Store 심사 제출을 위한 �
 
 #### 개인정보 보호정책
 
-- [ ] **개인정보 처리방침 URL** 준비
-  - Play Console 등록 필수
-  - 웹사이트 또는 GitHub Pages에 호스팅
-  - **필수 포함 내용**:
-    - 수집하는 정보 (이메일, 디바이스 ID, 스케치 이미지)
-    - 정보 사용 목적 (메뉴 추천, 사용자 인증)
-    - 제3자 공유 여부 (Google, Apple, Kakao SDK)
-    - 데이터 보관 기간 (익명: 7일, 정회원: 탈퇴 시까지)
-    - 사용자 권리 (열람, 수정, 삭제 요청)
+- [x] **개인정보 처리방침 URL** 준비 ✅
+  - **URL**: https://ojeomneo.com/privacy
+  - 웹사이트 배포 완료
+  - **포함 내용 확인**:
+    - ✅ 수집하는 정보 (이메일, 디바이스 ID, 스케치 이미지)
+    - ✅ 정보 사용 목적 (메뉴 추천, 사용자 인증)
+    - ✅ 제3자 공유 여부 (OpenAI, Firebase, Google/Apple/Kakao SDK)
+    - ✅ 데이터 보관 기간 (익명: 7일, 정회원: 탈퇴 시까지)
+    - ✅ 사용자 권리 (열람, 수정, 삭제 요청)
 
 #### 앱 콘텐츠 등급
 
@@ -59,9 +60,11 @@ Ojeomneo 앱의 Google Play Store 및 Apple App Store 심사 제출을 위한 �
 
 #### 앱 권한 설명
 
-- [ ] **카메라 권한**: "스케치 사진 촬영을 위해 사용됩니다"
+- [x] **~~카메라 권한~~**: ❌ **사용하지 않음** (카메라 직접 촬영 기능 제거)
 - [ ] **사진 라이브러리**: "갤러리에서 스케치 이미지를 선택하기 위해 사용됩니다"
 - [ ] **인터넷**: "메뉴 데이터 및 AI 추천 서비스 이용"
+
+> **중요**: 카메라 권한을 요청하지 않으므로 AndroidManifest.xml 및 Info.plist에서 카메라 관련 선언을 제거해야 합니다.
 
 ---
 
@@ -74,14 +77,14 @@ Ojeomneo 앱의 Google Play Store 및 Apple App Store 심사 제출을 위한 �
 
 **해결방안:**
 ```markdown
-✅ 개인정보 처리방침 페이지 생성
-- URL: https://woohalabs.com/ojeomneo/privacy-policy
+✅ 개인정보 처리방침 페이지 생성 완료
+- URL: https://ojeomneo.com/privacy
 - 포함 내용:
-  1. 수집 정보: 이메일, 디바이스 ID, 스케치 이미지
-  2. 사용 목적: 계정 인증, 메뉴 추천 서비스 제공
-  3. 보관 기간: 익명 7일, 정회원 탈퇴 시까지
-  4. 제3자 제공: Google/Apple/Kakao 인증 SDK
-  5. 사용자 권리: 개인정보 열람, 수정, 삭제 요청 방법
+  1. ✅ 수집 정보: 이메일, 디바이스 ID, 스케치 이미지
+  2. ✅ 사용 목적: 계정 인증, 메뉴 추천 서비스 제공
+  3. ✅ 보관 기간: 익명 7일, 정회원 탈퇴 시까지
+  4. ✅ 제3자 제공: OpenAI API, Firebase, Google/Apple/Kakao SDK
+  5. ✅ 사용자 권리: 개인정보 열람, 수정, 삭제 요청 방법
 ```
 
 #### ⚠️ 문제 2: 데이터 보안 섹션 미작성
@@ -98,35 +101,47 @@ Ojeomneo 앱의 Google Play Store 및 Apple App Store 심사 제출을 위한 �
 - 데이터 삭제 요청: 가능 (계정 삭제 기능)
 ```
 
-#### ⚠️ 문제 3: 권한 사용 이유 불명확
+#### ⚠️ 문제 3: ~~권한 사용 이유 불명확~~ → **해당 없음** ✅
 
-**거절 이유:**
-> "카메라 권한을 요청하지만 사용 이유가 명확하지 않습니다."
+**변경사항:**
+> 카메라 권한을 사용하지 않으므로 이 문제는 발생하지 않습니다.
 
-**해결방안:**
-```dart
-// AndroidManifest.xml
-<uses-permission android:name="android.permission.CAMERA" />
-<uses-feature android:name="android.hardware.camera" android:required="false" />
+**구현 상태:**
+```markdown
+✅ 카메라 권한 제거 완료
+- AndroidManifest.xml: 카메라 권한 선언 없음
+- Info.plist: NSCameraUsageDescription 없음
+- 사진 라이브러리만 사용 (갤러리에서 선택)
 
-// Info.plist
-<key>NSCameraUsageDescription</key>
-<string>스케치 사진을 촬영하여 메뉴를 추천받을 수 있습니다</string>
+⚠️ 필요 시 추가할 권한 (현재 미사용):
+// Info.plist (사진 라이브러리 선택 시에만)
 <key>NSPhotoLibraryUsageDescription</key>
 <string>갤러리에서 스케치 이미지를 선택할 수 있습니다</string>
 ```
 
-#### ⚠️ 문제 4: 익명 로그인 정책 위반
+#### ⚠️ 문제 4: 익명 로그인 정책 위반 🔄 **진행 필요**
 
 **거절 이유:**
 > "익명 로그인을 제공하지만 데이터 수집에 대한 동의를 받지 않았습니다."
 
 **해결방안:**
 ```markdown
-✅ 익명 로그인 시 약관 동의 추가
-- 앱 최초 실행 시 개인정보 처리방침 동의 화면 표시
-- "익명으로 둘러보기" 버튼에 작은 글씨로 동의 문구 추가:
-  "계속 진행하면 개인정보 처리방침에 동의하는 것으로 간주됩니다"
+🔄 익명 로그인 시 약관 동의 UI 추가 (진행 중)
+
+필수 구현 사항:
+1. [ ] 로그인 화면에 개인정보 처리방침 링크 추가
+   - 위치: 화면 하단 Footer
+   - 링크: https://ojeomneo.com/privacy
+   - 텍스트: "개인정보 처리방침"
+
+2. [ ] "익명으로 둘러보기" 버튼에 동의 문구 추가
+   - 버튼 아래 작은 글씨:
+     "계속 진행하면 개인정보 처리방침에 동의하는 것으로 간주됩니다"
+   - 링크 클릭 시 웹뷰 또는 외부 브라우저로 정책 페이지 열기
+
+3. [ ] (선택) 앱 최초 실행 시 약관 동의 팝업
+   - 체크박스: "개인정보 처리방침에 동의합니다 (필수)"
+   - "동의" / "취소" 버튼
 ```
 
 #### ⚠️ 문제 5: 테스트 계정 미제공
@@ -154,7 +169,7 @@ Ojeomneo 앱의 Google Play Store 및 Apple App Store 심사 제출을 위한 �
 - [ ] **부제목** (30자): "스케치로 찾는 메뉴 추천"
 - [ ] **카테고리**: Food & Drink (주), Lifestyle (부)
 - [ ] **연령 등급**: 4+
-- [ ] **개인정보 보호 URL**: https://woohalabs.com/ojeomneo/privacy-policy
+- [x] **개인정보 보호 URL**: https://ojeomneo.com/privacy ✅
 
 #### 스크린샷
 
@@ -437,9 +452,9 @@ android {
 
 | 항목 | 내용 |
 |------|------|
-| **지원 URL** | https://woohalabs.com/ojeomneo/support |
-| **마케팅 URL** | https://woohalabs.com/ojeomneo |
-| **개인정보 보호 URL** | https://woohalabs.com/ojeomneo/privacy-policy |
+| **지원 URL** | https://ojeomneo.com/support (준비 필요) |
+| **마케팅 URL** | https://ojeomneo.com |
+| **개인정보 보호 URL** | https://ojeomneo.com/privacy ✅ |
 | **지원 이메일** | support@woohalabs.com |
 
 ---
