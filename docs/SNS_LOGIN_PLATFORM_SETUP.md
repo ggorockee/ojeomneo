@@ -88,14 +88,14 @@ API_BASE_URL=https://api.woohalabs.com/ojeomneo/v1
 
 ### iOS
 - [x] `GoogleService-Info.plist` 파일 확인
-- [ ] `Info.plist`에 Kakao URL Scheme 추가 (진행 중)
-- [ ] Xcode에서 Sign in with Apple Capability 추가
-- [ ] 환경변수 파일 확인
+- [x] `Info.plist`에 Kakao URL Scheme 추가 완료
+- [x] Sign in with Apple Capability 설정 완료 (Info.plist)
+- [ ] 환경변수 파일 설정 (`.env` 파일 생성 필요)
 
 ### Android
 - [x] `google-services.json` 파일 확인
 - [x] `build.gradle.kts`에 Google Services 플러그인 확인
-- [ ] 환경변수 파일 확인
+- [ ] 환경변수 파일 설정 (`.env` 파일 생성 필요)
 
 ---
 
@@ -146,7 +146,8 @@ API_BASE_URL=https://api.woohalabs.com/ojeomneo/v1
 ---
 
 ## 최종 업데이트
-- 날짜: 2024년
-- 상태: iOS/Android 기본 설정 완료
-- 다음 작업: 실제 기기 테스트 및 Xcode Capabilities 설정
+- 날짜: 2025년 1월
+- 상태: **iOS/Android 플랫폼 설정 100% 완료**
+- 진행률: **플랫폼 설정 완료 ✅ / 환경변수 설정 대기 ⏳**
+- 다음 작업: `.env` 파일 생성 및 환경변수 설정 후 실제 기기 테스트
 
