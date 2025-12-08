@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'dart:io';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../config/app_theme.dart';
 import '../services/auth_service.dart';
@@ -147,6 +148,18 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
+  /// URL 열기
+  Future<void> _openUrl(String url) async {
+    final uri = Uri.parse(url);
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    } else {
+      if (mounted) {
+        _showMessage('링크를 열 수 없습니다.');
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -234,6 +247,11 @@ class _LoginScreenState extends State<LoginScreen> {
 
                       // 회원가입 링크
                       _buildSignUpLink(),
+
+                      SizedBox(height: 24.h),
+
+                      // 개인정보 처리방침 및 이용약관
+                      _buildPolicyLinks(),
 
                       SizedBox(height: 32.h),
                     ],
@@ -670,6 +688,57 @@ class _LoginScreenState extends State<LoginScreen> {
                 fontWeight: FontWeight.w600,
                 color: AppTheme.primaryColor,
                 letterSpacing: -0.12,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // 개인정보 처리방침 및 이용약관 링크
+  Widget _buildPolicyLinks() {
+    return Center(
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          GestureDetector(
+            onTap: () => _openUrl('https://ojeomneo.com/privacy'),
+            child: Text(
+              '개인정보 처리방침',
+              style: TextStyle(
+                fontSize: 11.sp,
+                fontWeight: FontWeight.w500,
+                color: const Color(0xFF6C7278),
+                letterSpacing: -0.11,
+                decoration: TextDecoration.underline,
+                decorationColor: const Color(0xFF6C7278),
+              ),
+            ),
+          ),
+          Padding(
+            padding: EdgeInsets.symmetric(horizontal: 8.w),
+            child: Text(
+              '|',
+              style: TextStyle(
+                fontSize: 11.sp,
+                fontWeight: FontWeight.w400,
+                color: const Color(0xFFEDF1F3),
+                letterSpacing: -0.11,
+              ),
+            ),
+          ),
+          GestureDetector(
+            onTap: () => _openUrl('https://ojeomneo.com/terms'),
+            child: Text(
+              '서비스 이용약관',
+              style: TextStyle(
+                fontSize: 11.sp,
+                fontWeight: FontWeight.w500,
+                color: const Color(0xFF6C7278),
+                letterSpacing: -0.11,
+                decoration: TextDecoration.underline,
+                decorationColor: const Color(0xFF6C7278),
               ),
             ),
           ),
