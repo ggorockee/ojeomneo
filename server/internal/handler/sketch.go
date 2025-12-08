@@ -132,7 +132,10 @@ func (h *SketchHandler) Analyze(c *fiber.Ctx) error {
 
 	result, err := h.sketchService.Analyze(c.Context(), req)
 	duration := time.Since(start)
-	
+
+	// Fiber context는 핸들러 종료 후 재사용되므로 goroutine에서 사용할 값들을 미리 캡처
+	clientIP := c.IP()
+
 	if err != nil {
 		// 비동기로 에러 로깅 (goroutine 사용)
 		go func() {
@@ -140,7 +143,7 @@ func (h *SketchHandler) Analyze(c *fiber.Ctx) error {
 				zap.Error(err),
 				zap.String("device_id", deviceID),
 				zap.Duration("duration", duration),
-				zap.String("ip", c.IP()),
+				zap.String("ip", clientIP),
 			)
 		}()
 		
@@ -156,7 +159,7 @@ func (h *SketchHandler) Analyze(c *fiber.Ctx) error {
 			zap.String("device_id", deviceID),
 			zap.String("sketch_id", result.SketchID.String()),
 			zap.Duration("duration", duration),
-			zap.String("ip", c.IP()),
+			zap.String("ip", clientIP),
 			zap.Int("recommendation_count", func() int {
 				if result.Recommendation != nil {
 					count := 1 // primary
