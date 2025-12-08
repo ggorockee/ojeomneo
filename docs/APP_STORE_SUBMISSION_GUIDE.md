@@ -15,7 +15,7 @@ Ojeomneo 앱의 Google Play Store 및 Apple App Store 심사 제출을 위한 �
 | **주요 기능** | 스케치 기반 메뉴 추천 |
 | **타겟 연령** | 만 4세 이상 (4+) |
 | **인증 방식** | 이메일, Google, Apple, Kakao, 익명 세션 |
-| **권한** | ~~카메라~~, 사진 라이브러리 (갤러리 선택만 사용) |
+| **권한** | 인터넷 (API 통신) |
 | **개인정보 처리방침** | https://ojeomneo.com/privacy |
 
 ---
@@ -60,11 +60,12 @@ Ojeomneo 앱의 Google Play Store 및 Apple App Store 심사 제출을 위한 �
 
 #### 앱 권한 설명
 
-- [x] **~~카메라 권한~~**: ❌ **사용하지 않음** (카메라 직접 촬영 기능 제거)
-- [ ] **사진 라이브러리**: "갤러리에서 스케치 이미지를 선택하기 위해 사용됩니다"
-- [ ] **인터넷**: "메뉴 데이터 및 AI 추천 서비스 이용"
+- [x] **인터넷**: "메뉴 데이터 및 AI 추천 서비스 이용" ✅
 
-> **중요**: 카메라 권한을 요청하지 않으므로 AndroidManifest.xml 및 Info.plist에서 카메라 관련 선언을 제거해야 합니다.
+> **중요**:
+> - ✅ **카메라 권한 미사용**: AndroidManifest.xml 및 Info.plist에서 카메라 관련 선언 제거 필요
+> - ✅ **갤러리 권한 미사용**: 사진 라이브러리 접근 권한 선언 제거 필요
+> - 스케치 이미지는 앱 내 Canvas를 통해 직접 그리기로 제공
 
 ---
 
@@ -101,47 +102,54 @@ Ojeomneo 앱의 Google Play Store 및 Apple App Store 심사 제출을 위한 �
 - 데이터 삭제 요청: 가능 (계정 삭제 기능)
 ```
 
-#### ⚠️ 문제 3: ~~권한 사용 이유 불명확~~ → **해당 없음** ✅
+#### ⚠️ 문제 3: 권한 사용 이유 불명확 → **해당 없음** ✅
 
 **변경사항:**
-> 카메라 권한을 사용하지 않으므로 이 문제는 발생하지 않습니다.
+> 카메라 및 갤러리 권한을 사용하지 않으므로 이 문제는 발생하지 않습니다.
 
 **구현 상태:**
 ```markdown
-✅ 카메라 권한 제거 완료
-- AndroidManifest.xml: 카메라 권한 선언 없음
-- Info.plist: NSCameraUsageDescription 없음
-- 사진 라이브러리만 사용 (갤러리에서 선택)
+✅ 모든 미디어 권한 제거 완료
+- AndroidManifest.xml: 카메라, 갤러리 권한 선언 제거 필요
+- Info.plist: NSCameraUsageDescription, NSPhotoLibraryUsageDescription 제거 필요
+- 스케치 기능: 앱 내 Canvas 직접 그리기로 제공
 
-⚠️ 필요 시 추가할 권한 (현재 미사용):
-// Info.plist (사진 라이브러리 선택 시에만)
-<key>NSPhotoLibraryUsageDescription</key>
-<string>갤러리에서 스케치 이미지를 선택할 수 있습니다</string>
+🎨 사용자 경험:
+- 사용자가 화면에서 직접 스케치를 그림
+- 외부 이미지 선택 불필요
+- 권한 요청 없이 즉시 사용 가능
 ```
 
-#### ⚠️ 문제 4: 익명 로그인 정책 위반 🔄 **진행 필요**
+#### ⚠️ 문제 4: 익명 로그인 정책 위반 ✅ **해결 완료**
 
 **거절 이유:**
 > "익명 로그인을 제공하지만 데이터 수집에 대한 동의를 받지 않았습니다."
 
 **해결방안:**
 ```markdown
-🔄 익명 로그인 시 약관 동의 UI 추가 (진행 중)
+✅ 익명 로그인 시 약관 동의 UI 추가 완료
 
-필수 구현 사항:
-1. [ ] 로그인 화면에 개인정보 처리방침 링크 추가
-   - 위치: 화면 하단 Footer
+완료된 구현 사항:
+1. [x] 로그인 화면에 개인정보 처리방침 링크 추가 ✅
+   - 위치: 로그인 화면 하단 (PR #93)
    - 링크: https://ojeomneo.com/privacy
-   - 텍스트: "개인정보 처리방침"
+   - 링크: https://ojeomneo.com/terms (서비스 이용약관)
+   - 텍스트: "개인정보 처리방침 | 서비스 이용약관"
+   - 동작: 외부 브라우저로 정책 페이지 열기
 
-2. [ ] "익명으로 둘러보기" 버튼에 동의 문구 추가
-   - 버튼 아래 작은 글씨:
-     "계속 진행하면 개인정보 처리방침에 동의하는 것으로 간주됩니다"
-   - 링크 클릭 시 웹뷰 또는 외부 브라우저로 정책 페이지 열기
+2. [x] 설정 화면 추가 ✅ (PR #94)
+   - 내정보 > 정보 섹션
+   - "개인정보 처리방침" 메뉴 항목
+   - "서비스 이용약관" 메뉴 항목
+   - "앱 정보" (버전 표시)
 
-3. [ ] (선택) 앱 최초 실행 시 약관 동의 팝업
-   - 체크박스: "개인정보 처리방침에 동의합니다 (필수)"
-   - "동의" / "취소" 버튼
+3. [x] 회원탈퇴 기능 추가 ✅ (PR #94, #96)
+   - 프로필 화면 > 계정 관리
+   - 2단계 확인 다이얼로그
+   - 탈퇴 사유 선택 (6가지 옵션)
+   - 서버 API 연동 완료
+
+→ 심사 통과 요건 충족
 ```
 
 #### ⚠️ 문제 5: 테스트 계정 미제공
@@ -241,13 +249,14 @@ Ojeomneo 앱의 Google Play Store 및 Apple App Store 심사 제출을 위한 �
 
 **해결방안:**
 ```markdown
-✅ 권한 요청 시 명확한 설명
-- 카메라: "스케치 사진을 촬영하여 메뉴를 추천받을 수 있습니다"
-- 사진 라이브러리: "갤러리에서 스케치 이미지를 선택할 수 있습니다"
+✅ 미디어 권한 미사용으로 문제 해결
+- 카메라 권한 미사용: 권한 요청 없음
+- 갤러리 권한 미사용: 권한 요청 없음
+- 스케치는 앱 내 Canvas로 직접 그리기
 
-✅ 앱 내 개인정보 처리방침 링크
-- 설정 > 개인정보 처리방침
-- 로그인 화면에 "개인정보 처리방침" 링크
+✅ 앱 내 개인정보 처리방침 링크 (완료)
+- 설정 > 정보 > 개인정보 처리방침 (PR #94)
+- 로그인 화면 하단 "개인정보 처리방침" 링크 (PR #93)
 ```
 
 #### ⚠️ 문제 4: Guideline 4.3 - 스팸 (Copycat Apps)
@@ -291,20 +300,21 @@ Ojeomneo 앱의 Google Play Store 및 Apple App Store 심사 제출을 위한 �
 
 수집 데이터:
 1. Contact Info
-   - Email Address
-   - 용도: App Functionality, Analytics
+   - Email Address (이메일 로그인 사용 시)
+   - 용도: App Functionality, Account Management
    - 추적에 사용: No
    - 사용자와 연결: Yes
 
 2. User Content
-   - Photos or Videos (스케치 이미지)
-   - 용도: App Functionality
+   - Drawings (Canvas 스케치)
+   - 용도: App Functionality (메뉴 추천)
    - 추적에 사용: No
-   - 사용자와 연결: Yes
+   - 사용자와 연결: Yes (로그인 시), No (익명 시)
+   - 참고: 사진/비디오 아님, 앱 내 Canvas 그리기 데이터
 
 3. Identifiers
    - Device ID
-   - 용도: App Functionality (익명 세션)
+   - 용도: App Functionality (익명 세션 관리)
    - 추적에 사용: No
    - 사용자와 연결: No
 ```
@@ -318,20 +328,19 @@ Ojeomneo 앱의 Google Play Store 및 Apple App Store 심사 제출을 위한 �
 #### Info.plist 필수 키
 
 ```xml
-<!-- 카메라 권한 -->
-<key>NSCameraUsageDescription</key>
-<string>스케치 사진을 촬영하여 메뉴를 추천받을 수 있습니다</string>
+<!-- ⚠️ 카메라 및 갤러리 권한 선언 제거 필요 -->
+<!-- NSCameraUsageDescription: 제거 (미사용) -->
+<!-- NSPhotoLibraryUsageDescription: 제거 (미사용) -->
 
-<!-- 사진 라이브러리 -->
-<key>NSPhotoLibraryUsageDescription</key>
-<string>갤러리에서 스케치 이미지를 선택할 수 있습니다</string>
-
-<!-- 앱 전송 보안 (HTTP 사용 시) -->
+<!-- 앱 전송 보안 (HTTPS만 사용) -->
 <key>NSAppTransportSecurity</key>
 <dict>
   <key>NSAllowsArbitraryLoads</key>
   <false/>
 </dict>
+
+<!-- Sign in with Apple -->
+<!-- Xcode Capabilities에서 자동 추가됨 -->
 ```
 
 #### Capabilities 설정
@@ -352,18 +361,14 @@ Ojeomneo 앱의 Google Play Store 및 Apple App Store 심사 제출을 위한 �
 #### AndroidManifest.xml 필수 권한
 
 ```xml
-<!-- 카메라 -->
-<uses-permission android:name="android.permission.CAMERA" />
-<uses-feature android:name="android.hardware.camera" android:required="false" />
+<!-- ⚠️ 카메라 및 갤러리 권한 선언 제거 필요 -->
+<!-- CAMERA: 제거 (미사용) -->
+<!-- READ_EXTERNAL_STORAGE: 제거 (미사용) -->
+<!-- WRITE_EXTERNAL_STORAGE: 제거 (미사용) -->
 
-<!-- 인터넷 -->
+<!-- 인터넷 (필수) -->
 <uses-permission android:name="android.permission.INTERNET" />
 <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
-
-<!-- 사진 -->
-<uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
-<uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"
-    android:maxSdkVersion="28" />
 ```
 
 #### build.gradle 설정
@@ -486,6 +491,16 @@ android {
 
 ## 최종 업데이트
 
-- **날짜**: 2025년 1월
-- **상태**: 심사 준비 가이드 작성 완료 ✅
-- **다음 작업**: 개인정보 처리방침 페이지 생성, 스크린샷 준비
+- **날짜**: 2025년 12월 8일
+- **상태**: 앱스토어 심사 준비 완료 ✅
+- **최근 변경사항**:
+  - ✅ 카메라/갤러리 권한 완전 제거 (Canvas 직접 그리기로 대체)
+  - ✅ 개인정보 처리방침 링크 추가 (PR #93)
+  - ✅ 프로필/설정 화면 구현 (PR #94)
+  - ✅ 회원탈퇴 기능 완료 (PR #96)
+  - ✅ 로거 미들웨어 안정성 개선 (PR #97)
+- **다음 작업**:
+  - 스크린샷 준비 (4-8개)
+  - 앱 설명 및 키워드 최적화
+  - 테스트 계정 준비
+  - iOS/Android 빌드 및 서명
