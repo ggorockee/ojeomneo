@@ -61,7 +61,7 @@ func Sync() error {
 }
 
 // NewLogger 환경변수에서 로거 생성 (Uber-fx용)
-func NewLogger(cfg interface{}) (*zap.Logger, error) {
+func NewLogger() (*zap.Logger, error) {
 	env := os.Getenv("APP_ENV")
 	if env == "" {
 		env = "development"
