@@ -1,7 +1,8 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  basePath: '/ojeomneo',
+  assetPrefix: '/ojeomneo',
 };
 
 export default nextConfig;
