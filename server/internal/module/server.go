@@ -15,6 +15,7 @@ import (
 	"github.com/ggorockee/ojeomneo/server/internal/handler"
 	"github.com/ggorockee/ojeomneo/server/internal/middleware"
 	"github.com/ggorockee/ojeomneo/server/internal/telemetry"
+	"go.opentelemetry.io/otel/metric"
 	"go.uber.org/fx"
 	"go.uber.org/zap"
 
@@ -226,46 +227,81 @@ func ServerModule() fx.Option {
 	)
 }
 
-// TelemetryModule OpenTelemetry 모듈
+// TelemetryModule OpenTelemetry 모듈 (Metrics 포함)
 func TelemetryModule() fx.Option {
 	return fx.Options(
-		fx.Invoke(
-			func(lc fx.Lifecycle, cfg *config.Config, logger *zap.Logger) {
+		// OpenTelemetry Providers 제공
+		fx.Provide(
+			func(lc fx.Lifecycle, cfg *config.Config, logger *zap.Logger) (*telemetry.Providers, error) {
 				if cfg.OTLPEndpoint == "" {
-					return
+					logger.Info("OpenTelemetry disabled (no OTLP endpoint configured)")
+					return nil, nil
 				}
 
+				providers, err := telemetry.InitTelemetry(telemetry.Config{
+					ServiceName:    "ojeomneo-server",
+					ServiceVersion: "1.0.0",
+					Environment:    cfg.AppEnv,
+					OTLPEndpoint:   cfg.OTLPEndpoint,
+				})
+				if err != nil {
+					logger.Warn("Failed to initialize OpenTelemetry",
+						zap.Error(err),
+						zap.String("endpoint", cfg.OTLPEndpoint),
+					)
+					return nil, nil // 선택적이므로 실패해도 계속 진행
+				}
+
+				// 종료 시 정리
 				lc.Append(fx.Hook{
-					OnStart: func(ctx context.Context) error {
-						shutdown, err := telemetry.InitTracer(telemetry.Config{
-							ServiceName:    "ojeomneo-server",
-							ServiceVersion: "1.0.0",
-							Environment:    cfg.AppEnv,
-							OTLPEndpoint:   cfg.OTLPEndpoint,
-						})
-						if err != nil {
-							logger.Warn("Failed to initialize OpenTelemetry",
-								zap.Error(err),
-								zap.String("endpoint", cfg.OTLPEndpoint),
-							)
-							return nil // 선택적이므로 실패해도 계속 진행
-						}
-
-						// 종료 시 정리
-						lc.Append(fx.Hook{
-							OnStop: func(ctx context.Context) error {
-								return shutdown(ctx)
-							},
-						})
-
-						logger.Info("OpenTelemetry initialized",
-							zap.String("endpoint", cfg.OTLPEndpoint),
-							zap.String("service", "ojeomneo-server"),
-						)
-
-						return nil
+					OnStop: func(ctx context.Context) error {
+						return providers.Shutdown(ctx)
 					},
 				})
+
+				logger.Info("OpenTelemetry initialized",
+					zap.String("endpoint", cfg.OTLPEndpoint),
+					zap.String("service", "ojeomneo-server"),
+				)
+
+				return providers, nil
+			},
+		),
+		// AuthMetrics 제공
+		fx.Provide(
+			func(providers *telemetry.Providers, logger *zap.Logger) (*telemetry.AuthMetrics, error) {
+				if providers == nil || providers.MeterProvider == nil {
+					return nil, nil
+				}
+
+				authMetrics, err := telemetry.RegisterAuthMetrics(providers.MeterProvider)
+				if err != nil {
+					logger.Warn("Failed to register auth metrics", zap.Error(err))
+					return nil, nil
+				}
+
+				logger.Info("Auth metrics registered")
+				return authMetrics, nil
+			},
+		),
+		// HTTP Metrics 제공
+		fx.Provide(
+			func(providers *telemetry.Providers, logger *zap.Logger) (*telemetry.HTTPMetrics, error) {
+				if providers == nil || providers.MeterProvider == nil {
+					return nil, nil
+				}
+
+				requestCounter, latencyHistogram, err := telemetry.RegisterHTTPMetrics(providers.MeterProvider)
+				if err != nil {
+					logger.Warn("Failed to register HTTP metrics", zap.Error(err))
+					return nil, nil
+				}
+
+				logger.Info("HTTP metrics registered")
+				return &telemetry.HTTPMetrics{
+					RequestCounter:   requestCounter,
+					LatencyHistogram: latencyHistogram,
+				}, nil
 			},
 		),
 	)
