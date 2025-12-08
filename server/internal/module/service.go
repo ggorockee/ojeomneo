@@ -5,6 +5,7 @@ import (
 	"github.com/ggorockee/ojeomneo/server/internal/service"
 	"github.com/ggorockee/ojeomneo/server/internal/service/cloudflare"
 	"github.com/ggorockee/ojeomneo/server/internal/service/llm"
+	"github.com/ggorockee/ojeomneo/server/internal/telemetry"
 	"go.uber.org/fx"
 	"go.uber.org/zap"
 	"gorm.io/gorm"
@@ -53,8 +54,8 @@ func ServiceModule() fx.Option {
 			func(db *gorm.DB, llmClient *llm.Client, menuService *service.MenuService, logger *zap.Logger) *service.SketchService {
 				return service.NewSketchService(db, llmClient, menuService, logger)
 			},
-			func(db *gorm.DB, cfg *config.Config, logger *zap.Logger) *service.AuthService {
-				return service.NewAuthService(db, cfg, logger)
+			func(db *gorm.DB, cfg *config.Config, logger *zap.Logger, metrics *telemetry.AuthMetrics) *service.AuthService {
+				return service.NewAuthService(db, cfg, logger, metrics)
 			},
 		),
 	)

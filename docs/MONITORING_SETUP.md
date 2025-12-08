@@ -107,6 +107,8 @@ env:
 | `auth.token.issued` | Counter | 토큰 발급 수 | `token.type` |
 | `auth.verification.sent` | Counter | 이메일 인증 발송 수 | `email.status` |
 | `auth.password_reset.sent` | Counter | 비밀번호 재설정 발송 수 | `email.status` |
+| `auth.guest.login.total` | Counter | 익명 로그인 시도 수 | `auth.status` |
+| `auth.guest.conversion.total` | Counter | 익명→정회원 전환 수 | `conversion.method` |
 
 ### 데이터베이스 메트릭 (otelgorm 자동 수집)
 | 메트릭 이름 | 타입 | 설명 | 레이블 |
@@ -156,6 +158,8 @@ env:
 | 🕐 로그인 처리 시간 | 로그인 처리 시간 (P95) |
 | 📧 이메일 인증 발송 | 이메일 인증 발송 통계 |
 | 🔑 비밀번호 재설정 이메일 | 비밀번호 재설정 발송 통계 |
+| 👤 익명 로그인 시도 | 익명 사용자 로그인 시도 횟수 |
+| 🎯 익명→정회원 전환 | 익명 사용자에서 정회원으로 전환 통계 |
 
 ---
 
@@ -187,6 +191,22 @@ sum(auth_sns_login_total) by (sns_provider)
 db_client_connections_active
 /
 db_client_connections_max
+* 100
+```
+
+### 5. 익명 로그인 성공률
+```promql
+rate(auth_guest_login_total{auth_status="success"}[5m])
+/
+rate(auth_guest_login_total[5m])
+* 100
+```
+
+### 6. 익명→정회원 전환율
+```promql
+sum(rate(auth_guest_conversion_total[1h]))
+/
+sum(rate(auth_guest_login_total{auth_status="success"}[1h]))
 * 100
 ```
 

@@ -15,18 +15,38 @@ const (
 )
 
 type Claims struct {
-	UserID uint      `json:"user_id"`
-	Type   TokenType `json:"type"`
+	UserID  uint      `json:"user_id"`
+	Type    TokenType `json:"type"`
+	IsGuest bool      `json:"is_guest"` // 익명 사용자 여부
 	jwt.RegisteredClaims
 }
 
 // GenerateAccessToken generates an access token
 func GenerateAccessToken(userID uint, secretKey string, expireMinutes int) (string, error) {
 	claims := Claims{
-		UserID: userID,
-		Type:   AccessToken,
+		UserID:  userID,
+		Type:    AccessToken,
+		IsGuest: false,
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Duration(expireMinutes) * time.Minute)),
+			IssuedAt:  jwt.NewNumericDate(time.Now()),
+		},
+	}
+
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	return token.SignedString([]byte(secretKey))
+}
+
+// GenerateGuestToken generates a guest (anonymous) access token
+// 익명 사용자는 access token만 발급 (refresh token 없음)
+// 기본 만료 시간: 7일 (10080분)
+func GenerateGuestToken(userID uint, secretKey string, expireDays int) (string, error) {
+	claims := Claims{
+		UserID:  userID,
+		Type:    AccessToken,
+		IsGuest: true,
+		RegisteredClaims: jwt.RegisteredClaims{
+			ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Duration(expireDays) * 24 * time.Hour)),
 			IssuedAt:  jwt.NewNumericDate(time.Now()),
 		},
 	}
@@ -38,8 +58,9 @@ func GenerateAccessToken(userID uint, secretKey string, expireMinutes int) (stri
 // GenerateRefreshToken generates a refresh token
 func GenerateRefreshToken(userID uint, secretKey string, expireDays int) (string, error) {
 	claims := Claims{
-		UserID: userID,
-		Type:   RefreshToken,
+		UserID:  userID,
+		Type:    RefreshToken,
+		IsGuest: false,
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Duration(expireDays) * 24 * time.Hour)),
 			IssuedAt:  jwt.NewNumericDate(time.Now()),

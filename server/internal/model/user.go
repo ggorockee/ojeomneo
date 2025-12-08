@@ -14,6 +14,7 @@ const (
 	LoginMethodKakao  LoginMethod = "kakao"
 	LoginMethodGoogle LoginMethod = "google"
 	LoginMethodApple  LoginMethod = "apple"
+	LoginMethodGuest  LoginMethod = "guest" // 익명 사용자
 )
 
 // User 사용자 모델
@@ -37,6 +38,10 @@ type User struct {
 	// SNS 로그인 지원 필드
 	LoginMethod LoginMethod `gorm:"size:20;not null;default:'email';index:idx_email_login_method" json:"login_method"`
 	SocialID    string      `gorm:"size:255;not null;default:''" json:"social_id,omitempty"`
+
+	// 익명 세션 지원 필드 (로그인하지 않고 둘러보기)
+	IsGuest  bool    `gorm:"default:false;not null" json:"is_guest"`             // 익명 사용자 여부
+	DeviceID *string `gorm:"size:255;uniqueIndex:idx_device_id" json:"device_id"` // 디바이스 고유 ID (UUID)
 }
 
 // TableName GORM 테이블명 지정
@@ -55,4 +60,9 @@ func (u *User) BeforeCreate(tx *gorm.DB) error {
 // IsSocialUser SNS 로그인 사용자 여부
 func (u *User) IsSocialUser() bool {
 	return u.LoginMethod != LoginMethodEmail
+}
+
+// IsGuestUser 익명 사용자 여부
+func (u *User) IsGuestUser() bool {
+	return u.IsGuest
 }

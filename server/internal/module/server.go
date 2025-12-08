@@ -15,7 +15,6 @@ import (
 	"github.com/ggorockee/ojeomneo/server/internal/handler"
 	"github.com/ggorockee/ojeomneo/server/internal/middleware"
 	"github.com/ggorockee/ojeomneo/server/internal/telemetry"
-	"go.opentelemetry.io/otel/metric"
 	"go.uber.org/fx"
 	"go.uber.org/zap"
 
@@ -155,6 +154,8 @@ func ServerModule() fx.Option {
 				v1.Post("/auth/google", params.AuthHandler.GoogleLogin)
 				v1.Post("/auth/apple", params.AuthHandler.AppleLogin)
 				v1.Post("/auth/kakao", params.AuthHandler.KakaoLogin)
+				// 익명 로그인
+				v1.Post("/auth/guest", params.AuthHandler.GuestLogin)
 
 				// Menu 엔드포인트
 				v1.Get("/menus", params.MenuHandler.List)
