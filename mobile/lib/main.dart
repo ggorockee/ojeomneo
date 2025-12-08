@@ -8,7 +8,7 @@ import 'package:kakao_flutter_sdk_common/kakao_flutter_sdk_common.dart';
 import 'config/app_theme.dart';
 import 'screens/splash_screen.dart';
 import 'screens/login_screen.dart';
-import 'screens/sketch_screen.dart'; 
+import 'screens/main_screen.dart';
 import 'screens/history_screen.dart';
 import 'services/sketch_provider.dart';
 import 'services/ads/ad_service.dart';
@@ -80,7 +80,7 @@ class _OjeomeoAppState extends State<OjeomeoApp> with WidgetsBindingObserver {
             routes: {
               '/': (context) => const SplashScreen(),
               '/login': (context) => const LoginScreen(),
-              '/home': (context) => const SketchScreen(),
+              '/home': (context) => const MainScreen(),
               '/history': (context) => const HistoryScreen(),
             },
           ),
