@@ -67,15 +67,22 @@ func ServerModule() fx.Option {
 					err := c.Next()
 					duration := time.Since(start)
 
+					// Fiber context는 핸들러 종료 후 재사용되므로 goroutine에서 사용할 값들을 미리 캡처
+					method := c.Method()
+					path := c.Path()
+					statusCode := c.Response().StatusCode()
+					clientIP := c.IP()
+					userAgent := c.Get("User-Agent")
+
 					// 비동기로 로깅 (goroutine 사용)
 					go func() {
 						params.Logger.Info("HTTP Request",
-							zap.String("method", c.Method()),
-							zap.String("path", c.Path()),
-							zap.Int("status", c.Response().StatusCode()),
+							zap.String("method", method),
+							zap.String("path", path),
+							zap.Int("status", statusCode),
 							zap.Duration("latency", duration),
-							zap.String("ip", c.IP()),
-							zap.String("user_agent", c.Get("User-Agent")),
+							zap.String("ip", clientIP),
+							zap.String("user_agent", userAgent),
 						)
 					}()
 
@@ -307,4 +314,3 @@ func TelemetryModule() fx.Option {
 		),
 	)
 }
-
