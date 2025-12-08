@@ -253,19 +253,19 @@ export default function Home() {
 
           <div className="grid md:grid-cols-3 gap-8 animate-fade-in-up">
             <div className="text-center">
-              <div className="w-16 h-16 bg-green-600 text-white rounded-full flex items-center justify-center text-2xl font-bold mx-auto mb-6">1</div>
-              <h3 className="text-xl font-semibold text-gray-900 mb-4">사진 촬영 또는 스케치</h3>
-              <p className="text-gray-600">음식 사진을 찍거나 화면에 간단하게 스케치를 그려주세요.</p>
+              <div className="w-16 h-16 text-white rounded-full flex items-center justify-center text-2xl font-bold mx-auto mb-6" style={{backgroundColor: '#FF9500'}}>1</div>
+              <h3 className="text-xl font-semibold text-gray-900 mb-4">스케치</h3>
+              <p className="text-gray-600">화면에 간단하게 스케치를 그려주세요.</p>
             </div>
 
             <div className="text-center">
-              <div className="w-16 h-16 bg-green-600 text-white rounded-full flex items-center justify-center text-2xl font-bold mx-auto mb-6">2</div>
+              <div className="w-16 h-16 text-white rounded-full flex items-center justify-center text-2xl font-bold mx-auto mb-6" style={{backgroundColor: '#FF9500'}}>2</div>
               <h3 className="text-xl font-semibold text-gray-900 mb-4">AI 분석 대기</h3>
               <p className="text-gray-600">인공지능이 스케치나 사진을 분석하여 메뉴를 찾습니다.</p>
             </div>
 
             <div className="text-center">
-              <div className="w-16 h-16 bg-green-600 text-white rounded-full flex items-center justify-center text-2xl font-bold mx-auto mb-6">3</div>
+              <div className="w-16 h-16 text-white rounded-full flex items-center justify-center text-2xl font-bold mx-auto mb-6" style={{backgroundColor: '#FF9500'}}>3</div>
               <h3 className="text-xl font-semibold text-gray-900 mb-4">메뉴 확인</h3>
               <p className="text-gray-600">추천된 메뉴 목록을 확인하고 원하는 메뉴를 선택하세요.</p>
             </div>
@@ -282,7 +282,7 @@ export default function Home() {
           </div>
 
           <div className="relative overflow-hidden">
-            <div 
+            <div
               ref={sliderRef}
               className="flex overflow-x-auto scrollbar-hide cursor-grab active:cursor-grabbing"
               onMouseDown={handleMouseDown}
@@ -293,10 +293,10 @@ export default function Home() {
               style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
             >
               <div className="flex space-x-8 min-w-max">
-                <div className="bg-gray-100 rounded-2xl p-4 shadow-lg card-hover">
+                <div className="relative bg-gray-100 rounded-2xl p-4 shadow-lg card-hover">
                   <Image
-                    src="/assets/images/app-screenshot-1.png"
-                    alt="오점너 앱 화면 1"
+                    src="/assets/images/hero-phone.png"
+                    alt="오점너 - Smart Family App"
                     width={300}
                     height={600}
                     className="w-full h-auto rounded-xl"
@@ -304,8 +304,8 @@ export default function Home() {
                 </div>
                 <div className="bg-gray-100 rounded-2xl p-4 shadow-lg card-hover">
                   <Image
-                    src="/assets/images/app-screenshot-2.png"
-                    alt="오점너 앱 화면 2"
+                    src="/assets/images/feature-draw-intro.png"
+                    alt="그리면 & 추천"
                     width={300}
                     height={600}
                     className="w-full h-auto rounded-xl"
@@ -313,8 +313,8 @@ export default function Home() {
                 </div>
                 <div className="bg-gray-100 rounded-2xl p-4 shadow-lg card-hover">
                   <Image
-                    src="/assets/images/app-screenshot-3.png"
-                    alt="오점너 앱 화면 3"
+                    src="/assets/images/feature-draw-input.png"
+                    alt="기분을 그려봐"
                     width={300}
                     height={600}
                     className="w-full h-auto rounded-xl"
@@ -322,8 +322,8 @@ export default function Home() {
                 </div>
                 <div className="bg-gray-100 rounded-2xl p-4 shadow-lg card-hover">
                   <Image
-                    src="/assets/images/app-screenshot-4.png"
-                    alt="오점너 앱 화면 4"
+                    src="/assets/images/feature-recommendation.png"
+                    alt="딱 맞는 & 한끼"
                     width={300}
                     height={600}
                     className="w-full h-auto rounded-xl"
@@ -331,18 +331,18 @@ export default function Home() {
                 </div>
                 <div className="bg-gray-100 rounded-2xl p-4 shadow-lg card-hover">
                   <Image
-                    src="/assets/images/app-screenshot-5.png"
-                    alt="오점너 앱 화면 5"
+                    src="/assets/images/feature-history.png"
+                    alt="나의 & 맛 기록"
                     width={300}
                     height={600}
                     className="w-full h-auto rounded-xl"
                   />
                 </div>
                 {/* 반복을 위해 다시 추가 */}
-                <div className="bg-gray-100 rounded-2xl p-4 shadow-lg card-hover">
+                <div className="relative bg-gray-100 rounded-2xl p-4 shadow-lg card-hover">
                   <Image
-                    src="/assets/images/app-screenshot-1.png"
-                    alt="오점너 앱 화면 1"
+                    src="/assets/images/hero-phone.png"
+                    alt="오점너 - Smart Family App"
                     width={300}
                     height={600}
                     className="w-full h-auto rounded-xl"
@@ -350,8 +350,8 @@ export default function Home() {
                 </div>
                 <div className="bg-gray-100 rounded-2xl p-4 shadow-lg card-hover">
                   <Image
-                    src="/assets/images/app-screenshot-2.png"
-                    alt="오점너 앱 화면 2"
+                    src="/assets/images/feature-draw-intro.png"
+                    alt="그리면 & 추천"
                     width={300}
                     height={600}
                     className="w-full h-auto rounded-xl"
@@ -359,8 +359,8 @@ export default function Home() {
                 </div>
                 <div className="bg-gray-100 rounded-2xl p-4 shadow-lg card-hover">
                   <Image
-                    src="/assets/images/app-screenshot-3.png"
-                    alt="오점너 앱 화면 3"
+                    src="/assets/images/feature-draw-input.png"
+                    alt="기분을 그려봐"
                     width={300}
                     height={600}
                     className="w-full h-auto rounded-xl"
@@ -368,8 +368,8 @@ export default function Home() {
                 </div>
                 <div className="bg-gray-100 rounded-2xl p-4 shadow-lg card-hover">
                   <Image
-                    src="/assets/images/app-screenshot-4.png"
-                    alt="오점너 앱 화면 4"
+                    src="/assets/images/feature-recommendation.png"
+                    alt="딱 맞는 & 한끼"
                     width={300}
                     height={600}
                     className="w-full h-auto rounded-xl"
@@ -377,8 +377,8 @@ export default function Home() {
                 </div>
                 <div className="bg-gray-100 rounded-2xl p-4 shadow-lg card-hover">
                   <Image
-                    src="/assets/images/app-screenshot-5.png"
-                    alt="오점너 앱 화면 5"
+                    src="/assets/images/feature-history.png"
+                    alt="나의 & 맛 기록"
                     width={300}
                     height={600}
                     className="w-full h-auto rounded-xl"
@@ -424,7 +424,7 @@ export default function Home() {
           </div>
           
           <div className="border-t border-gray-800 mt-8 pt-8 text-center">
-            <p className="text-gray-400">&copy; 2024 오점너. All rights reserved.</p>
+            <p className="text-gray-400">&copy; 2025 오점너. All rights reserved.</p>
           </div>
         </div>
       </footer>
