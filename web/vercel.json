@@ -1,0 +1,12 @@
+{
+  "rewrites": [
+    {
+      "source": "/ojeomneo",
+      "destination": "/"
+    },
+    {
+      "source": "/ojeomneo/:path*",
+      "destination": "/:path*"
+    }
+  ]
+}

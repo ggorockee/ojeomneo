@@ -1,8 +1,7 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  basePath: '/ojeomneo',
-  assetPrefix: '/ojeomneo',
+  // basePath와 assetPrefix는 Vercel Rewrites로 처리
 };
 
 export default nextConfig;
