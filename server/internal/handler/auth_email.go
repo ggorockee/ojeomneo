@@ -2,6 +2,7 @@ package handler
 
 import (
 	"strings"
+	"time"
 
 	"github.com/gofiber/fiber/v2"
 	"go.uber.org/zap"
@@ -467,14 +468,25 @@ func (h *AuthHandler) GetMe(c *fiber.Ctx) error {
 }
 
 // DeleteMe godoc
+// DeleteAccountRequest 회원탈퇴 요청 DTO
+type DeleteAccountRequest struct {
+	Reason *string `json:"reason"` // 탈퇴 사유 (선택)
+}
+
 // @Summary 회원 탈퇴
 // @Tags auth
 // @Accept json
 // @Produce json
 // @Security BearerAuth
+// @Param request body DeleteAccountRequest false "탈퇴 사유 (선택)"
 // @Success 200 {object} map[string]string
+// @Failure 400 {object} map[string]interface{}
+// @Failure 401 {object} map[string]interface{}
+// @Failure 500 {object} map[string]interface{}
 // @Router /auth/me [delete]
 func (h *AuthHandler) DeleteMe(c *fiber.Ctx) error {
+	start := time.Now()
+
 	// Authorization 헤더에서 토큰 추출
 	authHeader := c.Get("Authorization")
 	if authHeader == "" {
@@ -501,12 +513,49 @@ func (h *AuthHandler) DeleteMe(c *fiber.Ctx) error {
 		})
 	}
 
-	if err := h.authService.DeleteMe(claims.UserID); err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+	// 익명 사용자는 탈퇴 불가
+	if claims.IsGuest {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"success": false,
-			"error":   "회원 탈퇴 처리 중 오류가 발생했습니다",
+			"error":   "익명 사용자는 회원 탈퇴를 할 수 없습니다",
 		})
 	}
+
+	// 요청 바디 파싱 (탈퇴 사유는 선택사항)
+	var req DeleteAccountRequest
+	if err := c.BodyParser(&req); err != nil {
+		// 바디가 없거나 파싱 실패 시에도 진행 (사유는 선택사항)
+		h.logger.Debug("Delete account request body parse failed (optional)",
+			zap.Error(err),
+		)
+	}
+
+	// 회원 탈퇴 처리
+	if err := h.authService.DeleteMe(claims.UserID, req.Reason); err != nil {
+		duration := time.Since(start)
+		go func() {
+			h.logger.Warn("Account deletion failed",
+				zap.Error(err),
+				zap.Uint("user_id", claims.UserID),
+				zap.String("ip", c.IP()),
+				zap.Duration("duration", duration),
+			)
+		}()
+
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"success": false,
+			"error":   err.Error(),
+		})
+	}
+
+	duration := time.Since(start)
+	go func() {
+		h.logger.Info("Account deleted successfully",
+			zap.Uint("user_id", claims.UserID),
+			zap.String("ip", c.IP()),
+			zap.Duration("duration", duration),
+		)
+	}()
 
 	return c.JSON(fiber.Map{
 		"success": true,

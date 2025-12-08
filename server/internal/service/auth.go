@@ -1043,15 +1043,38 @@ func (s *AuthService) GetMe(userID uint) (*model.User, error) {
 	return &user, nil
 }
 
-// DeleteMe 회원 탈퇴 (Soft Delete)
-func (s *AuthService) DeleteMe(userID uint) error {
+// DeleteMe 회원 탈퇴 (Soft Delete) - 탈퇴 사유 선택 가능
+func (s *AuthService) DeleteMe(userID uint, reason *string) error {
+	start := time.Now()
+
+	s.logger.Info("Starting account deletion",
+		zap.Uint("user_id", userID),
+		zap.Bool("has_reason", reason != nil),
+	)
+
 	var user model.User
 	if err := s.db.First(&user, userID).Error; err != nil {
-		s.logger.Warn("DeleteMe failed: user not found",
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			s.logger.Warn("DeleteMe failed: user not found",
+				zap.Uint("user_id", userID),
+				zap.Error(err),
+			)
+			return errors.New("사용자를 찾을 수 없습니다")
+		}
+		return fmt.Errorf("사용자 조회 실패: %w", err)
+	}
+
+	// 익명 사용자는 탈퇴 불가 (자동 삭제 대상)
+	if user.IsGuest {
+		return errors.New("익명 사용자는 회원 탈퇴를 할 수 없습니다")
+	}
+
+	// 탈퇴 사유 로깅 (선택사항)
+	if reason != nil && *reason != "" {
+		s.logger.Info("Account deletion reason provided",
 			zap.Uint("user_id", userID),
-			zap.Error(err),
+			zap.String("reason", *reason),
 		)
-		return errors.New("사용자를 찾을 수 없습니다")
 	}
 
 	// Soft Delete (GORM의 DeletedAt 사용)
@@ -1066,6 +1089,8 @@ func (s *AuthService) DeleteMe(userID uint) error {
 	s.logger.Info("User deleted successfully",
 		zap.Uint("user_id", userID),
 		zap.String("email", user.Email),
+		zap.String("login_method", string(user.LoginMethod)),
+		zap.Duration("duration", time.Since(start)),
 	)
 
 	return nil
