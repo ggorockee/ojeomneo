@@ -71,7 +71,7 @@ func InitFirebase(jsonKeyValue string) error {
 func VerifyFirebaseIDToken(ctx context.Context, idToken string) (*FirebaseUserInfo, error) {
 	// Ensure Firebase is initialized
 	if firebaseAuth == nil {
-		return nil, fmt.Errorf("Firebase Admin SDK not initialized. Call InitFirebase first")
+		return nil, fmt.Errorf("firebase admin SDK not initialized, call InitFirebase first")
 	}
 
 	// Verify ID token in goroutine for non-blocking operation
