@@ -16,12 +16,14 @@ type HTTPMetrics struct {
 
 // AuthMetrics 인증 관련 메트릭
 type AuthMetrics struct {
-	LoginCounter       metric.Int64Counter   // 로그인 시도 카운터
-	LoginDuration      metric.Float64Histogram // 로그인 처리 시간
-	TokenIssued        metric.Int64Counter   // 토큰 발급 카운터
-	SNSLoginCounter    metric.Int64Counter   // SNS 로그인 카운터
-	VerificationSent   metric.Int64Counter   // 이메일 인증 발송 카운터
-	PasswordResetSent  metric.Int64Counter   // 비밀번호 재설정 발송 카운터
+	LoginCounter          metric.Int64Counter     // 로그인 시도 카운터
+	LoginDuration         metric.Float64Histogram // 로그인 처리 시간
+	TokenIssued           metric.Int64Counter     // 토큰 발급 카운터
+	SNSLoginCounter       metric.Int64Counter     // SNS 로그인 카운터
+	VerificationSent      metric.Int64Counter     // 이메일 인증 발송 카운터
+	PasswordResetSent     metric.Int64Counter     // 비밀번호 재설정 발송 카운터
+	GuestLoginCounter     metric.Int64Counter     // 익명 로그인 카운터
+	GuestToUserConversion metric.Int64Counter     // 익명 → 정회원 전환 카운터
 }
 
 // RegisterAuthMetrics 인증 메트릭 등록
@@ -90,13 +92,35 @@ func RegisterAuthMetrics(mp *sdkmetric.MeterProvider) (*AuthMetrics, error) {
 		return nil, err
 	}
 
+	// 익명 로그인 카운터
+	guestLoginCounter, err := meter.Int64Counter(
+		"auth.guest.login.total",
+		metric.WithDescription("Total number of guest (anonymous) login attempts"),
+		metric.WithUnit("{login}"),
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	// 익명 → 정회원 전환 카운터
+	guestToUserConversion, err := meter.Int64Counter(
+		"auth.guest.conversion.total",
+		metric.WithDescription("Total number of guest to registered user conversions"),
+		metric.WithUnit("{conversion}"),
+	)
+	if err != nil {
+		return nil, err
+	}
+
 	return &AuthMetrics{
-		LoginCounter:      loginCounter,
-		LoginDuration:     loginDuration,
-		TokenIssued:       tokenIssued,
-		SNSLoginCounter:   snsLoginCounter,
-		VerificationSent:  verificationSent,
-		PasswordResetSent: passwordResetSent,
+		LoginCounter:          loginCounter,
+		LoginDuration:         loginDuration,
+		TokenIssued:           tokenIssued,
+		SNSLoginCounter:       snsLoginCounter,
+		VerificationSent:      verificationSent,
+		PasswordResetSent:     passwordResetSent,
+		GuestLoginCounter:     guestLoginCounter,
+		GuestToUserConversion: guestToUserConversion,
 	}, nil
 }
 
@@ -142,6 +166,20 @@ func (m *AuthMetrics) RecordVerificationSent(ctx context.Context, status string)
 func (m *AuthMetrics) RecordPasswordResetSent(ctx context.Context, status string) {
 	m.PasswordResetSent.Add(ctx, 1, metric.WithAttributes(
 		attribute.String("email.status", status), // "success", "failed"
+	))
+}
+
+// RecordGuestLogin 익명 로그인 기록
+func (m *AuthMetrics) RecordGuestLogin(ctx context.Context, status string) {
+	m.GuestLoginCounter.Add(ctx, 1, metric.WithAttributes(
+		attribute.String("auth.status", status), // "success", "failed", "duplicate"
+	))
+}
+
+// RecordGuestToUserConversion 익명 → 정회원 전환 기록
+func (m *AuthMetrics) RecordGuestToUserConversion(ctx context.Context, conversionMethod string) {
+	m.GuestToUserConversion.Add(ctx, 1, metric.WithAttributes(
+		attribute.String("conversion.method", conversionMethod), // "email", "google", "apple", "kakao"
 	))
 }
 

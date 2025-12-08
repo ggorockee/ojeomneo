@@ -280,9 +280,41 @@
         "type": "timeseries",
         "stacking": "normal"
       }
+    },
+    {
+      "id": "guest-login-total",
+      "title": "👤 익명 로그인 시도",
+      "description": "익명 사용자 로그인 시도 횟수",
+      "type": "graph",
+      "query": {
+        "queryType": "metrics",
+        "metricName": "auth_guest_login_total",
+        "aggregateOperator": "sum",
+        "groupBy": ["auth_status"]
+      },
+      "visualization": {
+        "type": "timeseries",
+        "stacking": "normal"
+      }
+    },
+    {
+      "id": "guest-to-user-conversion",
+      "title": "🎯 익명→정회원 전환",
+      "description": "익명 사용자에서 정회원으로 전환 통계",
+      "type": "graph",
+      "query": {
+        "queryType": "metrics",
+        "metricName": "auth_guest_conversion_total",
+        "aggregateOperator": "sum",
+        "groupBy": ["conversion_method"]
+      },
+      "visualization": {
+        "type": "bar",
+        "stacking": "normal"
+      }
     }
   ],
-  "version": "1.0.0",
+  "version": "1.1.0",
   "createdAt": "2025-01-08T00:00:00Z",
   "updatedAt": "2025-01-08T00:00:00Z"
 }

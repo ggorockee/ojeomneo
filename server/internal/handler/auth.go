@@ -260,3 +260,79 @@ func (h *AuthHandler) KakaoLogin(c *fiber.Ctx) error {
 		"data":    result,
 	})
 }
+
+// GuestLoginRequest 익명 로그인 요청 DTO
+type GuestLoginRequest struct {
+	DeviceID string `json:"device_id"`
+}
+
+// GuestLogin godoc
+// @Summary 익명 로그인 (로그인하지 않고 둘러보기)
+// @Description 디바이스 ID 기반으로 익명 사용자 세션을 생성합니다
+// @Tags auth
+// @Accept json
+// @Produce json
+// @Param request body GuestLoginRequest true "익명 로그인 요청"
+// @Success 200 {object} service.AuthResponse
+// @Failure 400 {object} map[string]interface{}
+// @Failure 500 {object} map[string]interface{}
+// @Router /auth/guest [post]
+func (h *AuthHandler) GuestLogin(c *fiber.Ctx) error {
+	start := time.Now()
+
+	var req GuestLoginRequest
+	if err := c.BodyParser(&req); err != nil {
+		h.logger.Warn("Guest login request parse failed",
+			zap.Error(err),
+			zap.String("ip", c.IP()),
+			zap.String("user_agent", c.Get("User-Agent")),
+		)
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"success": false,
+			"error":   "invalid request body",
+		})
+	}
+
+	if req.DeviceID == "" {
+		h.logger.Warn("Guest login missing device_id",
+			zap.String("ip", c.IP()),
+		)
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"success": false,
+			"error":   "device_id is required",
+		})
+	}
+
+	result, err := h.authService.GuestLogin(req.DeviceID)
+	duration := time.Since(start)
+
+	if err != nil {
+		go func() {
+			h.logger.Warn("Guest login failed",
+				zap.Error(err),
+				zap.String("device_id", req.DeviceID),
+				zap.String("ip", c.IP()),
+				zap.Duration("duration", duration),
+			)
+		}()
+
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"success": false,
+			"error":   err.Error(),
+		})
+	}
+
+	go func() {
+		h.logger.Info("Guest login successful",
+			zap.Uint("user_id", result.User.ID),
+			zap.String("device_id", req.DeviceID),
+			zap.String("ip", c.IP()),
+			zap.Duration("duration", duration),
+		)
+	}()
+
+	return c.JSON(fiber.Map{
+		"success": true,
+		"data":    result,
+	})
+}

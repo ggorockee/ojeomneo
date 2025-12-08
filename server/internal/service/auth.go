@@ -73,6 +73,11 @@ type LoginRequest struct {
 	Password string `json:"password"`
 }
 
+// GuestLoginRequest 익명 로그인 요청
+type GuestLoginRequest struct {
+	DeviceID string `json:"device_id"` // 디바이스 고유 ID (UUID)
+}
+
 // GoogleLogin Google 로그인 처리 (Firebase ID Token 사용)
 func (s *AuthService) GoogleLogin(idToken string) (*AuthResponse, error) {
 	start := time.Now()
@@ -1064,4 +1069,158 @@ func (s *AuthService) DeleteMe(userID uint) error {
 	)
 
 	return nil
+}
+
+// GuestLogin 익명 로그인 처리 (디바이스 ID 기반)
+// 로그인하지 않고 둘러보기 기능 지원
+func (s *AuthService) GuestLogin(deviceID string) (*AuthResponse, error) {
+	start := time.Now()
+	ctx := context.Background()
+
+	s.logger.Debug("Starting guest login",
+		zap.String("device_id", deviceID),
+	)
+
+	// 디바이스 ID로 기존 익명 사용자 조회
+	var existingUser model.User
+	err := s.db.Where("device_id = ? AND is_guest = ?", deviceID, true).First(&existingUser).Error
+
+	if err == nil {
+		// 기존 익명 사용자 존재: 토큰만 새로 발급
+		s.logger.Debug("Existing guest user found",
+			zap.Uint("user_id", existingUser.ID),
+			zap.String("device_id", deviceID),
+		)
+
+		// 토큰 생성
+		guestToken, err := auth.GenerateGuestToken(existingUser.ID, s.cfg.JWTSecretKey, 7) // 7일 만료
+		if err != nil {
+			s.logger.Error("Failed to generate guest token",
+				zap.Error(err),
+				zap.Uint("user_id", existingUser.ID),
+			)
+			if s.metrics != nil {
+				s.metrics.RecordGuestLogin(ctx, "failed")
+			}
+			return nil, fmt.Errorf("토큰 생성에 실패했습니다: %w", err)
+		}
+
+		// 메트릭 기록
+		if s.metrics != nil {
+			s.metrics.RecordGuestLogin(ctx, "success")
+			s.metrics.RecordTokenIssued(ctx, "guest")
+		}
+
+		s.logger.Info("Guest login successful (existing user)",
+			zap.Uint("user_id", existingUser.ID),
+			zap.String("device_id", deviceID),
+			zap.Duration("duration", time.Since(start)),
+		)
+
+		return &AuthResponse{
+			AccessToken:  guestToken,
+			RefreshToken: "", // 익명 사용자는 refresh token 없음
+			TokenType:    "Bearer",
+			User: &UserResponse{
+				ID:          existingUser.ID,
+				Email:       existingUser.Email,
+				IsActive:    existingUser.IsActive,
+				DateJoined:  existingUser.DateJoined,
+				LoginMethod: string(existingUser.LoginMethod),
+			},
+		}, nil
+	}
+
+	if err != gorm.ErrRecordNotFound {
+		// DB 조회 실패 (레코드 없음 제외)
+		s.logger.Error("Failed to query guest user",
+			zap.Error(err),
+			zap.String("device_id", deviceID),
+		)
+		if s.metrics != nil {
+			s.metrics.RecordGuestLogin(ctx, "failed")
+		}
+		return nil, fmt.Errorf("사용자 조회에 실패했습니다: %w", err)
+	}
+
+	// 새 익명 사용자 생성
+	s.logger.Debug("Creating new guest user",
+		zap.String("device_id", deviceID),
+	)
+
+	// 익명 사용자용 임시 이메일 및 username 생성
+	guestEmail := fmt.Sprintf("guest_%s@ojeomneo.local", generateRandomString(8))
+	guestUsername := fmt.Sprintf("guest_%s", generateRandomString(8))
+
+	newUser := model.User{
+		Email:       guestEmail,
+		Username:    guestUsername,
+		Password:    generateRandomString(32), // 임의의 비밀번호 (로그인 불가)
+		IsGuest:     true,
+		DeviceID:    &deviceID,
+		IsActive:    true,
+		LoginMethod: "guest",
+		FirstName:   "게스트",
+		LastName:    "사용자",
+	}
+
+	// 사용자 생성
+	if err := s.db.Create(&newUser).Error; err != nil {
+		s.logger.Error("Failed to create guest user",
+			zap.Error(err),
+			zap.String("device_id", deviceID),
+		)
+		if s.metrics != nil {
+			s.metrics.RecordGuestLogin(ctx, "failed")
+		}
+		return nil, fmt.Errorf("익명 사용자 생성에 실패했습니다: %w", err)
+	}
+
+	// 토큰 생성
+	guestToken, err := auth.GenerateGuestToken(newUser.ID, s.cfg.JWTSecretKey, 7) // 7일 만료
+	if err != nil {
+		s.logger.Error("Failed to generate guest token",
+			zap.Error(err),
+			zap.Uint("user_id", newUser.ID),
+		)
+		if s.metrics != nil {
+			s.metrics.RecordGuestLogin(ctx, "failed")
+		}
+		return nil, fmt.Errorf("토큰 생성에 실패했습니다: %w", err)
+	}
+
+	// 메트릭 기록
+	if s.metrics != nil {
+		s.metrics.RecordGuestLogin(ctx, "success")
+		s.metrics.RecordTokenIssued(ctx, "guest")
+	}
+
+	s.logger.Info("Guest login successful (new user)",
+		zap.Uint("user_id", newUser.ID),
+		zap.String("device_id", deviceID),
+		zap.Duration("duration", time.Since(start)),
+	)
+
+	return &AuthResponse{
+		AccessToken:  guestToken,
+		RefreshToken: "", // 익명 사용자는 refresh token 없음
+		TokenType:    "Bearer",
+		User: &UserResponse{
+			ID:          newUser.ID,
+			Email:       newUser.Email,
+			IsActive:    newUser.IsActive,
+			DateJoined:  newUser.DateJoined,
+			LoginMethod: string(newUser.LoginMethod),
+		},
+	}, nil
+}
+
+// generateRandomString 랜덤 문자열 생성 (익명 사용자용)
+func generateRandomString(length int) string {
+	const charset = "abcdefghijklmnopqrstuvwxyz0123456789"
+	b := make([]byte, length)
+	for i := range b {
+		b[i] = charset[rand.Intn(len(charset))]
+	}
+	return string(b)
 }
