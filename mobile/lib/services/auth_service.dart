@@ -612,9 +612,9 @@ class AuthService {
   }
 
   /// 회원 탈퇴
-  Future<void> deleteAccount() async {
+  Future<void> deleteAccount({String? reason}) async {
     try {
-      debugPrint('[AuthService] 회원 탈퇴 요청');
+      debugPrint('[AuthService] 회원 탈퇴 요청${reason != null ? " (사유: $reason)" : ""}');
 
       final accessToken = await getAccessToken();
       if (accessToken == null) {
@@ -624,6 +624,9 @@ class AuthService {
       final client = http.Client();
       final uri = Uri.parse(AppConfig.meUrl);
 
+      // 탈퇴 사유를 body에 포함
+      final requestBody = reason != null ? jsonEncode({'reason': reason}) : null;
+
       final response = await client
           .delete(
             uri,
@@ -631,6 +634,7 @@ class AuthService {
               'Content-Type': 'application/json',
               'Authorization': 'Bearer $accessToken',
             },
+            body: requestBody,
           )
           .timeout(const Duration(seconds: 10));
 
