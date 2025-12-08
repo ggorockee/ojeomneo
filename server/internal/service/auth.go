@@ -10,6 +10,7 @@ import (
 
 	"github.com/ggorockee/ojeomneo/server/internal/config"
 	"github.com/ggorockee/ojeomneo/server/internal/model"
+	"github.com/ggorockee/ojeomneo/server/internal/telemetry"
 	"github.com/ggorockee/ojeomneo/server/pkg/auth"
 	"github.com/ggorockee/ojeomneo/server/pkg/sns"
 	"go.uber.org/zap"
@@ -18,17 +19,19 @@ import (
 
 // AuthService 인증 서비스
 type AuthService struct {
-	db     *gorm.DB
-	cfg    *config.Config
-	logger *zap.Logger
+	db      *gorm.DB
+	cfg     *config.Config
+	logger  *zap.Logger
+	metrics *telemetry.AuthMetrics
 }
 
 // NewAuthService 새 인증 서비스 생성
-func NewAuthService(db *gorm.DB, cfg *config.Config, logger *zap.Logger) *AuthService {
+func NewAuthService(db *gorm.DB, cfg *config.Config, logger *zap.Logger, metrics *telemetry.AuthMetrics) *AuthService {
 	return &AuthService{
-		db:     db,
-		cfg:    cfg,
-		logger: logger,
+		db:      db,
+		cfg:     cfg,
+		logger:  logger,
+		metrics: metrics,
 	}
 }
 
@@ -102,6 +105,10 @@ func (s *AuthService) GoogleLogin(idToken string) (*AuthResponse, error) {
 			zap.String("provider", "google"),
 			zap.Duration("duration", verifyDuration),
 		)
+		// 메트릭 기록: 토큰 검증 실패
+		if s.metrics != nil {
+			s.metrics.RecordSNSLogin(ctx, "google", "token_invalid", float64(time.Since(start).Milliseconds()))
+		}
 		return nil, fmt.Errorf("firebase 토큰 검증에 실패했습니다: %w", result.err)
 	}
 
@@ -135,6 +142,10 @@ func (s *AuthService) GoogleLogin(idToken string) (*AuthResponse, error) {
 			zap.String("email", firebaseUser.Email),
 			zap.Duration("total_duration", time.Since(start)),
 		)
+		// 메트릭 기록: 로그인 실패
+		if s.metrics != nil {
+			s.metrics.RecordSNSLogin(ctx, "google", "failed", float64(time.Since(start).Milliseconds()))
+		}
 		return nil, err
 	}
 
@@ -144,6 +155,13 @@ func (s *AuthService) GoogleLogin(idToken string) (*AuthResponse, error) {
 		zap.String("email", response.User.Email),
 		zap.Duration("total_duration", time.Since(start)),
 	)
+
+	// 메트릭 기록: 로그인 성공
+	if s.metrics != nil {
+		s.metrics.RecordSNSLogin(ctx, "google", "success", float64(time.Since(start).Milliseconds()))
+		s.metrics.RecordTokenIssued(ctx, "access")
+		s.metrics.RecordTokenIssued(ctx, "refresh")
+	}
 
 	return response, nil
 }
