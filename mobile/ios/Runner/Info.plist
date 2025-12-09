@@ -45,6 +45,9 @@
 	<true/>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
+	<!-- Google Sign In Client ID -->
+	<key>GIDClientID</key>
+	<string>9000418106-hchajhpehc3bfl3ju7582oav6kqdpc5p.apps.googleusercontent.com</string>
 	<!-- URL Schemes for SNS Login -->
 	<key>CFBundleURLTypes</key>
 	<array>
@@ -53,6 +56,13 @@
 			<key>CFBundleURLSchemes</key>
 			<array>
 				<string>kakao582b06a868603f324eb551a2e67815f6</string>
+			</array>
+		</dict>
+		<!-- Google Sign In URL Scheme -->
+		<dict>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>com.googleusercontent.apps.9000418106-hchajhpehc3bfl3ju7582oav6kqdpc5p</string>
 			</array>
 		</dict>
 	</array>
