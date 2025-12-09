@@ -79,6 +79,12 @@ func CustomErrorHandler(c *fiber.Ctx, err error) error {
 		}
 	}
 
+	// Fiber context는 핸들러 종료 후 재사용되므로 goroutine에서 사용할 값들을 미리 캡처
+	path := c.Path()
+	method := c.Method()
+	ip := c.IP()
+	userAgent := c.Get("User-Agent")
+
 	// 에러 로깅 (비동기 처리 - goroutine 사용)
 	go func() {
 		logger := GetLogger()
@@ -86,10 +92,10 @@ func CustomErrorHandler(c *fiber.Ctx, err error) error {
 			logger.Error("Request error",
 				zap.Int("status_code", code),
 				zap.String("error_code", errorCode),
-				zap.String("path", c.Path()),
-				zap.String("method", c.Method()),
-				zap.String("ip", c.IP()),
-				zap.String("user_agent", c.Get("User-Agent")),
+				zap.String("path", path),
+				zap.String("method", method),
+				zap.String("ip", ip),
+				zap.String("user_agent", userAgent),
 				zap.Error(err),
 			)
 		}
