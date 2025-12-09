@@ -72,14 +72,18 @@ func (h *AuthHandler) GoogleLogin(c *fiber.Ctx) error {
 	result, err := h.authService.GoogleLogin(req.IDToken)
 	duration := time.Since(start)
 
+	// Fiber context 값 미리 캡처 (goroutine에서 사용)
+	ip := c.IP()
+	userAgent := c.Get("User-Agent")
+
 	if err != nil {
 		// 비동기로 로깅 (goroutine 사용)
 		go func() {
 			h.logger.Warn("Google login failed",
 				zap.Error(err),
 				zap.String("provider", "google"),
-				zap.String("ip", c.IP()),
-				zap.String("user_agent", c.Get("User-Agent")),
+				zap.String("ip", ip),
+				zap.String("user_agent", userAgent),
 				zap.Duration("duration", duration),
 			)
 		}()
@@ -96,7 +100,7 @@ func (h *AuthHandler) GoogleLogin(c *fiber.Ctx) error {
 			zap.String("provider", "google"),
 			zap.Uint("user_id", result.User.ID),
 			zap.String("email", result.User.Email),
-			zap.String("ip", c.IP()),
+			zap.String("ip", ip),
 			zap.Duration("duration", duration),
 		)
 	}()
@@ -152,12 +156,15 @@ func (h *AuthHandler) AppleLogin(c *fiber.Ctx) error {
 	result, err := h.authService.AppleLogin(req.IdentityToken)
 	duration := time.Since(start)
 
+	// Fiber context 값 미리 캡처 (goroutine에서 사용)
+	ip := c.IP()
+
 	if err != nil {
 		go func() {
 			h.logger.Warn("Apple login failed",
 				zap.Error(err),
 				zap.String("provider", "apple"),
-				zap.String("ip", c.IP()),
+				zap.String("ip", ip),
 				zap.Duration("duration", duration),
 			)
 		}()
@@ -173,7 +180,7 @@ func (h *AuthHandler) AppleLogin(c *fiber.Ctx) error {
 			zap.String("provider", "apple"),
 			zap.Uint("user_id", result.User.ID),
 			zap.String("email", result.User.Email),
-			zap.String("ip", c.IP()),
+			zap.String("ip", ip),
 			zap.Duration("duration", duration),
 		)
 	}()
@@ -229,12 +236,15 @@ func (h *AuthHandler) KakaoLogin(c *fiber.Ctx) error {
 	result, err := h.authService.KakaoLogin(req.AccessToken)
 	duration := time.Since(start)
 
+	// Fiber context 값 미리 캡처 (goroutine에서 사용)
+	ip := c.IP()
+
 	if err != nil {
 		go func() {
 			h.logger.Warn("Kakao login failed",
 				zap.Error(err),
 				zap.String("provider", "kakao"),
-				zap.String("ip", c.IP()),
+				zap.String("ip", ip),
 				zap.Duration("duration", duration),
 			)
 		}()
@@ -250,7 +260,7 @@ func (h *AuthHandler) KakaoLogin(c *fiber.Ctx) error {
 			zap.String("provider", "kakao"),
 			zap.Uint("user_id", result.User.ID),
 			zap.String("email", result.User.Email),
-			zap.String("ip", c.IP()),
+			zap.String("ip", ip),
 			zap.Duration("duration", duration),
 		)
 	}()
