@@ -597,7 +597,14 @@ class _DeleteReasonBottomSheetState extends State<_DeleteReasonBottomSheet> {
 
           SizedBox(height: 20.h),
 
-          ..._reasons.map((reason) => _buildReasonTile(reason)),
+          // 사유 목록을 스크롤 가능하게 변경 (overflow 방지)
+          Flexible(
+            child: SingleChildScrollView(
+              child: Column(
+                children: _reasons.map((reason) => _buildReasonTile(reason)).toList(),
+              ),
+            ),
+          ),
 
           SizedBox(height: 20.h),
 
