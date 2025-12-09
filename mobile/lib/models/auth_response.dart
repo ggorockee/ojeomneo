@@ -35,6 +35,8 @@ class AuthResponse {
 class UserResponse {
   final int id;
   final String email;
+  final String? name;
+  final String? profileImage;
   final bool isActive;
   final DateTime dateJoined;
   final String loginMethod;
@@ -42,6 +44,8 @@ class UserResponse {
   UserResponse({
     required this.id,
     required this.email,
+    this.name,
+    this.profileImage,
     required this.isActive,
     required this.dateJoined,
     required this.loginMethod,
@@ -51,6 +55,8 @@ class UserResponse {
     return UserResponse(
       id: json['id'] as int,
       email: json['email'] as String,
+      name: json['name'] as String?,
+      profileImage: json['profile_image'] as String?,
       isActive: json['is_active'] as bool? ?? true,
       dateJoined: DateTime.parse(json['date_joined'] as String),
       loginMethod: json['login_method'] as String,
@@ -61,6 +67,8 @@ class UserResponse {
     return {
       'id': id,
       'email': email,
+      if (name != null) 'name': name,
+      if (profileImage != null) 'profile_image': profileImage,
       'is_active': isActive,
       'date_joined': dateJoined.toIso8601String(),
       'login_method': loginMethod,

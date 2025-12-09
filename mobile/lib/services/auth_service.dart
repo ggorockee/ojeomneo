@@ -41,6 +41,8 @@ class AuthService {
   static const String _refreshTokenKey = 'refresh_token';
   static const String _userIdKey = 'user_id';
   static const String _userEmailKey = 'user_email';
+  static const String _userNameKey = 'user_name';
+  static const String _profileImageKey = 'profile_image';
 
   /// Google 로그인 플로우
   /// 
@@ -98,8 +100,14 @@ class AuthService {
       final authResponse = AuthResponse.fromJson(responseData);
       debugPrint('[AuthService] 백엔드 인증 완료: ${authResponse.user.email}');
 
-      // 6. 토큰 저장
+      // 6. 토큰 및 사용자 정보 저장
       await _saveTokens(authResponse);
+
+      // Google 프로필 이미지 저장 (Firebase User의 photoURL 사용)
+      if (firebaseUser.photoURL != null && firebaseUser.photoURL!.isNotEmpty) {
+        await _storage.write(key: _profileImageKey, value: firebaseUser.photoURL);
+        debugPrint('[AuthService] Google 프로필 이미지 저장: ${firebaseUser.photoURL}');
+      }
 
       return authResponse;
     } catch (e, stackTrace) {
@@ -171,20 +179,21 @@ class AuthService {
     try {
       debugPrint('[AuthService] Kakao 로그인 시작');
 
-      // 1. Kakao 로그인 수행
+      // 1. Kakao 로그인 수행 (앱이 없으면 인앱 브라우저 사용)
       kakao.OAuthToken token;
-      try {
-        token = await kakao.UserApi.instance.loginWithKakaoTalk();
-        debugPrint('[AuthService] KakaoTalk 로그인 성공');
-      } catch (e) {
-        // KakaoTalk 앱이 설치되지 않았거나 로그인 실패 시 카카오계정으로 로그인 시도
+      if (await kakao.isKakaoTalkInstalled()) {
         try {
+          token = await kakao.UserApi.instance.loginWithKakaoTalk();
+          debugPrint('[AuthService] KakaoTalk 앱 로그인 성공');
+        } catch (e) {
+          debugPrint('[AuthService] KakaoTalk 앱 로그인 실패, 인앱 브라우저로 전환: $e');
           token = await kakao.UserApi.instance.loginWithKakaoAccount();
-          debugPrint('[AuthService] Kakao 계정 로그인 성공');
-        } catch (e2) {
-          debugPrint('[AuthService] Kakao 로그인 실패: $e2');
-          throw Exception('Kakao 로그인에 실패했습니다.');
+          debugPrint('[AuthService] Kakao 계정 로그인 성공 (인앱 브라우저)');
         }
+      } else {
+        // KakaoTalk이 설치되지 않은 경우 인앱 브라우저 사용
+        token = await kakao.UserApi.instance.loginWithKakaoAccount();
+        debugPrint('[AuthService] Kakao 계정 로그인 성공 (인앱 브라우저)');
       }
 
       // 2. Access Token 확인
@@ -203,8 +212,20 @@ class AuthService {
       final authResponse = AuthResponse.fromJson(responseData);
       debugPrint('[AuthService] 백엔드 인증 완료: ${authResponse.user.email}');
 
-      // 4. 토큰 저장
+      // 4. 토큰 및 사용자 정보 저장
       await _saveTokens(authResponse);
+
+      // Kakao 프로필 이미지 가져와서 저장
+      try {
+        final kakaoUser = await kakao.UserApi.instance.me();
+        if (kakaoUser.kakaoAccount?.profile?.profileImageUrl != null) {
+          final profileImageUrl = kakaoUser.kakaoAccount!.profile!.profileImageUrl!;
+          await _storage.write(key: _profileImageKey, value: profileImageUrl);
+          debugPrint('[AuthService] Kakao 프로필 이미지 저장: $profileImageUrl');
+        }
+      } catch (e) {
+        debugPrint('[AuthService] Kakao 프로필 이미지 가져오기 실패: $e');
+      }
 
       return authResponse;
     } catch (e, stackTrace) {
@@ -247,6 +268,16 @@ class AuthService {
     return await _storage.read(key: _userEmailKey);
   }
 
+  /// 사용자 이름 가져오기
+  Future<String?> getUserName() async {
+    return await _storage.read(key: _userNameKey);
+  }
+
+  /// 프로필 이미지 URL 가져오기
+  Future<String?> getProfileImageUrl() async {
+    return await _storage.read(key: _profileImageKey);
+  }
+
   /// 로그인 상태 확인
   Future<bool> isLoggedIn() async {
     final accessToken = await getAccessToken();
@@ -262,12 +293,14 @@ class AuthService {
       // Google 로그아웃
       await _googleSignIn.signOut();
 
-      // 저장된 토큰 삭제
+      // 저장된 토큰 및 사용자 정보 삭제
       await Future.wait([
         _storage.delete(key: _accessTokenKey),
         _storage.delete(key: _refreshTokenKey),
         _storage.delete(key: _userIdKey),
         _storage.delete(key: _userEmailKey),
+        _storage.delete(key: _userNameKey),
+        _storage.delete(key: _profileImageKey),
       ]);
 
       debugPrint('[AuthService] 로그아웃 완료');
