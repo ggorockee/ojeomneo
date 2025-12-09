@@ -24,6 +24,27 @@ class ProfileScreen extends StatefulWidget {
 class _ProfileScreenState extends State<ProfileScreen> {
   final _authService = AuthService();
   bool _isLoading = false;
+  String? _userEmail;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUserInfo();
+  }
+
+  /// 사용자 정보 로드
+  Future<void> _loadUserInfo() async {
+    try {
+      final email = await _authService.getUserEmail();
+      if (mounted) {
+        setState(() {
+          _userEmail = email;
+        });
+      }
+    } catch (e) {
+      debugPrint('[ProfileScreen] 사용자 정보 로드 실패: $e');
+    }
+  }
 
   /// 로그아웃 처리
   Future<void> _handleLogout() async {
@@ -218,10 +239,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
                   SizedBox(height: 24.h),
 
-                  // 설정 섹션
-                  _buildSettingsSection(),
-
-                  SizedBox(height: 24.h),
+                  // 설정 섹션 (주석 처리 - 추후 사용 예정)
+                  // _buildSettingsSection(),
+                  // SizedBox(height: 24.h),
 
                   // 정보 섹션
                   _buildInfoSection(),
@@ -275,7 +295,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  '사용자님',
+                  _userEmail != null
+                      ? _userEmail!.split('@')[0]
+                      : '사용자님',
                   style: TextStyle(
                     fontSize: 18.sp,
                     fontWeight: FontWeight.w700,
@@ -284,7 +306,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 ),
                 SizedBox(height: 4.h),
                 Text(
-                  'user@example.com',
+                  _userEmail ?? 'user@example.com',
                   style: TextStyle(
                     fontSize: 13.sp,
                     fontWeight: FontWeight.w500,
@@ -299,27 +321,27 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  /// 설정 섹션
-  Widget _buildSettingsSection() {
-    return _buildSection(
-      title: '설정',
-      children: [
-        _buildMenuItem(
-          icon: Icons.notifications_outlined,
-          title: '알림 설정',
-          isDisabled: true,
-          onTap: null, // 비활성화
-        ),
-        _buildDivider(),
-        _buildMenuItem(
-          icon: Icons.language_outlined,
-          title: '언어 설정',
-          isDisabled: true,
-          onTap: null, // 비활성화
-        ),
-      ],
-    );
-  }
+  /// 설정 섹션 (주석 처리 - 추후 사용 예정)
+  // Widget _buildSettingsSection() {
+  //   return _buildSection(
+  //     title: '설정',
+  //     children: [
+  //       _buildMenuItem(
+  //         icon: Icons.notifications_outlined,
+  //         title: '알림 설정',
+  //         isDisabled: true,
+  //         onTap: null, // 비활성화
+  //       ),
+  //       _buildDivider(),
+  //       _buildMenuItem(
+  //         icon: Icons.language_outlined,
+  //         title: '언어 설정',
+  //         isDisabled: true,
+  //         onTap: null, // 비활성화
+  //       ),
+  //     ],
+  //   );
+  // }
 
   /// 정보 섹션
   Widget _buildInfoSection() {
