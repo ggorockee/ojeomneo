@@ -7,10 +7,9 @@ import (
 	"time"
 
 	"github.com/gofiber/fiber/v2"
-	"github.com/gofiber/fiber/v2/middleware/adaptor"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
-	"github.com/prometheus/client_golang/prometheus/promhttp"
+	// adaptor와 promhttp import 제거 (PrometheusHandler 사용 안 함)
 )
 
 var (
@@ -103,12 +102,10 @@ func PrometheusMiddleware() fiber.Handler {
 	}
 }
 
-// PrometheusHandler Prometheus 메트릭 핸들러
-func PrometheusHandler() fiber.Handler {
-	return adaptor.HTTPHandler(promhttp.Handler())
-}
+// PrometheusHandler 제거 (SigNoz만 사용)
+// OpenTelemetry로 메트릭 수집 및 SigNoz 전송
 
-// InternalOnly 내부망 접근 제한 미들웨어
+// InternalOnly 내부망 접근 제한 미들웨어 (사용하지 않음)
 // 보안을 위해 /metrics 경로는 내부망에서만 접근 가능
 func InternalOnly() fiber.Handler {
 	// 허용된 내부 IP 대역
