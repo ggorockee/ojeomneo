@@ -50,14 +50,12 @@ class _LoginScreenState extends State<LoginScreen> {
         Navigator.of(context).pushReplacementNamed('/home');
       }
     } catch (e) {
-      if (mounted) {
-        _showMessage('카카오 로그인에 실패했습니다: ${e.toString()}');
-      }
-    } finally {
+      debugPrint('[LoginScreen] 카카오 로그인 에러: $e');
       if (mounted) {
         setState(() {
           _isLoading = false;
         });
+        _showMessage('카카오 로그인에 실패했습니다: ${e.toString()}');
       }
     }
   }
@@ -76,14 +74,12 @@ class _LoginScreenState extends State<LoginScreen> {
         Navigator.of(context).pushReplacementNamed('/home');
       }
     } catch (e) {
-      if (mounted) {
-        _showMessage('구글 로그인에 실패했습니다: ${e.toString()}');
-      }
-    } finally {
+      debugPrint('[LoginScreen] 구글 로그인 에러: $e');
       if (mounted) {
         setState(() {
           _isLoading = false;
         });
+        _showMessage('구글 로그인에 실패했습니다: ${e.toString()}');
       }
     }
   }
@@ -107,14 +103,12 @@ class _LoginScreenState extends State<LoginScreen> {
         Navigator.of(context).pushReplacementNamed('/home');
       }
     } catch (e) {
-      if (mounted) {
-        _showMessage('Apple 로그인에 실패했습니다: ${e.toString()}');
-      }
-    } finally {
+      debugPrint('[LoginScreen] Apple 로그인 에러: $e');
       if (mounted) {
         setState(() {
           _isLoading = false;
         });
+        _showMessage('Apple 로그인에 실패했습니다: ${e.toString()}');
       }
     }
   }
@@ -161,6 +155,7 @@ class _LoginScreenState extends State<LoginScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
+      resizeToAvoidBottomInset: true,
       body: SafeArea(
         child: LayoutBuilder(
           builder: (context, constraints) {
@@ -168,16 +163,19 @@ class _LoginScreenState extends State<LoginScreen> {
               padding: EdgeInsets.symmetric(horizontal: 24.w),
               child: ConstrainedBox(
                 constraints: BoxConstraints(minHeight: constraints.maxHeight),
-                child: IntrinsicHeight(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      SizedBox(height: 32.h),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        SizedBox(height: 24.h),
 
-                      // 헤드라인
-                      _buildHeadline(),
+                        // 헤드라인
+                        _buildHeadline(),
 
-                      SizedBox(height: 24.h),
+                        SizedBox(height: 20.h),
 
                       // 이메일 입력 필드
                       _buildInputField(
@@ -216,41 +214,45 @@ class _LoginScreenState extends State<LoginScreen> {
 
                       SizedBox(height: 16.h),
 
-                      // 로그인 버튼
-                      _buildLoginButton(),
+                        // 로그인 버튼
+                        _buildLoginButton(),
 
-                      SizedBox(height: 12.h),
+                        SizedBox(height: 12.h),
 
-                      // 비밀번호 찾기 링크
-                      _buildForgotPasswordLink(),
+                        // 비밀번호 찾기 링크
+                        _buildForgotPasswordLink(),
 
-                      SizedBox(height: 20.h),
+                        SizedBox(height: 20.h),
 
-                      // 또는 구분선
-                      _buildOrDivider(),
+                        // 또는 구분선
+                        _buildOrDivider(),
 
-                      SizedBox(height: 20.h),
+                        SizedBox(height: 20.h),
 
-                      // 소셜 로그인 버튼들
-                      _buildSocialLoginButtons(),
+                        // 소셜 로그인 버튼들
+                        _buildSocialLoginButtons(),
 
-                      // 로그인 없이 진행 버튼 (카카오 로그인 아래)
-                      SizedBox(height: 12.h),
-                      _buildContinueWithoutLoginButton(),
+                        // 로그인 없이 진행 버튼 (카카오 로그인 아래)
+                        SizedBox(height: 12.h),
+                        _buildContinueWithoutLoginButton(),
+                      ],
+                    ),
 
-                      SizedBox(height: 24.h),
+                    // 하단 영역 (화면 하단 고정)
+                    Column(
+                      children: [
+                        // 회원가입 링크
+                        _buildSignUpLink(),
 
-                      // 회원가입 링크
-                      _buildSignUpLink(),
+                        SizedBox(height: 16.h),
 
-                      SizedBox(height: 24.h),
+                        // 개인정보 처리방침 및 이용약관
+                        _buildPolicyLinks(),
 
-                      // 개인정보 처리방침 및 이용약관
-                      _buildPolicyLinks(),
-
-                      SizedBox(height: 32.h),
-                    ],
-                  ),
+                        SizedBox(height: 24.h),
+                      ],
+                    ),
+                  ],
                 ),
               ),
             );

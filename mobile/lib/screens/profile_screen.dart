@@ -25,6 +25,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   final _authService = AuthService();
   bool _isLoading = false;
   String? _userEmail;
+  String? _profileImageUrl;
 
   @override
   void initState() {
@@ -36,9 +37,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Future<void> _loadUserInfo() async {
     try {
       final email = await _authService.getUserEmail();
+      final profileImage = await _authService.getProfileImageUrl();
       if (mounted) {
         setState(() {
           _userEmail = email;
+          _profileImageUrl = profileImage;
         });
       }
     } catch (e) {
@@ -276,16 +279,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
       ),
       child: Row(
         children: [
-          // 프로필 아이콘
-          Container(
-            width: 60.w,
-            height: 60.w,
-            decoration: BoxDecoration(
-              gradient: AppTheme.primaryGradient,
-              shape: BoxShape.circle,
-            ),
-            child: Icon(Icons.person, size: 32.sp, color: Colors.white),
-          ),
+          // 프로필 이미지
+          _buildProfileImage(),
 
           SizedBox(width: 16.w),
 
@@ -498,6 +493,68 @@ class _ProfileScreenState extends State<ProfileScreen> {
     return Padding(
       padding: EdgeInsets.symmetric(horizontal: 20.w),
       child: Divider(height: 1, thickness: 1, color: const Color(0xFFEDF1F3)),
+    );
+  }
+
+  /// 프로필 이미지 위젯
+  Widget _buildProfileImage() {
+    if (_profileImageUrl != null && _profileImageUrl!.isNotEmpty) {
+      return Container(
+        width: 60.w,
+        height: 60.w,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          border: Border.all(color: const Color(0xFFEDF1F3), width: 2),
+        ),
+        child: ClipOval(
+          child: Image.network(
+            _profileImageUrl!,
+            width: 60.w,
+            height: 60.w,
+            fit: BoxFit.cover,
+            errorBuilder: (context, error, stackTrace) {
+              // 이미지 로드 실패 시 기본 아이콘 표시
+              return Container(
+                decoration: BoxDecoration(
+                  gradient: AppTheme.primaryGradient,
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(Icons.person, size: 32.sp, color: Colors.white),
+              );
+            },
+            loadingBuilder: (context, child, loadingProgress) {
+              if (loadingProgress == null) return child;
+              return Container(
+                decoration: BoxDecoration(
+                  gradient: AppTheme.primaryGradient,
+                  shape: BoxShape.circle,
+                ),
+                child: Center(
+                  child: CircularProgressIndicator(
+                    value: loadingProgress.expectedTotalBytes != null
+                        ? loadingProgress.cumulativeBytesLoaded /
+                            loadingProgress.expectedTotalBytes!
+                        : null,
+                    color: Colors.white,
+                    strokeWidth: 2,
+                  ),
+                ),
+              );
+            },
+          ),
+        ),
+      );
+    }
+
+    // 기본 프로필 아이콘
+    return Container(
+      width: 60.w,
+      height: 60.w,
+      decoration: BoxDecoration(
+        gradient: AppTheme.primaryGradient,
+        shape: BoxShape.circle,
+      ),
+      child: Icon(Icons.person, size: 32.sp, color: Colors.white),
     );
   }
 }
