@@ -104,8 +104,8 @@ func ServerModule() fx.Option {
 				// /ojeomneo 그룹
 				ojeomneo := app.Group("/ojeomneo")
 
-				// Prometheus metrics 엔드포인트 제거 (SigNoz만 사용)
-				// OpenTelemetry로 SigNoz에 메트릭 전송됨
+				// Prometheus metrics 엔드포인트 (SigNoz scrape용)
+				ojeomneo.Get("/metrics", middleware.PrometheusHandler())
 
 				// API v1 라우터
 				v1 := ojeomneo.Group("/v1")
