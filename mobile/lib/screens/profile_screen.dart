@@ -3,6 +3,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../config/app_theme.dart';
+import '../config/app_config.dart';
 import '../services/auth_service.dart';
 import 'login_screen.dart';
 
@@ -131,10 +132,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       builder: (context) => AlertDialog(
         title: Text(
           title,
-          style: TextStyle(
-            fontSize: 18.sp,
-            fontWeight: FontWeight.w700,
-          ),
+          style: TextStyle(fontSize: 18.sp, fontWeight: FontWeight.w700),
         ),
         content: Text(
           message,
@@ -187,10 +185,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   /// 메시지 표시
   void _showMessage(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        duration: const Duration(seconds: 2),
-      ),
+      SnackBar(content: Text(message), duration: const Duration(seconds: 2)),
     );
   }
 
@@ -269,11 +264,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               gradient: AppTheme.primaryGradient,
               shape: BoxShape.circle,
             ),
-            child: Icon(
-              Icons.person,
-              size: 32.sp,
-              color: Colors.white,
-            ),
+            child: Icon(Icons.person, size: 32.sp, color: Colors.white),
           ),
 
           SizedBox(width: 16.w),
@@ -316,17 +307,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
         _buildMenuItem(
           icon: Icons.notifications_outlined,
           title: '알림 설정',
-          onTap: () {
-            _showMessage('알림 설정은 준비 중입니다.');
-          },
+          isDisabled: true,
+          onTap: null, // 비활성화
         ),
         _buildDivider(),
         _buildMenuItem(
           icon: Icons.language_outlined,
           title: '언어 설정',
-          onTap: () {
-            _showMessage('언어 설정은 준비 중입니다.');
-          },
+          isDisabled: true,
+          onTap: null, // 비활성화
         ),
       ],
     );
@@ -340,20 +329,20 @@ class _ProfileScreenState extends State<ProfileScreen> {
         _buildMenuItem(
           icon: Icons.description_outlined,
           title: '서비스 이용약관',
-          onTap: () => _openUrl('https://ojeomneo.com/terms'),
+          onTap: () => _openUrl('https://woohalabs.com/privacy'),
         ),
         _buildDivider(),
         _buildMenuItem(
           icon: Icons.privacy_tip_outlined,
           title: '개인정보 처리방침',
-          onTap: () => _openUrl('https://ojeomneo.com/privacy'),
+          onTap: () => _openUrl('https://woohalabs.com/privacy#개인정보처리방침'),
         ),
         _buildDivider(),
         _buildMenuItem(
           icon: Icons.info_outline,
           title: '앱 정보',
           trailing: Text(
-            'v1.0.0',
+            'v${AppConfig.appVersion}',
             style: TextStyle(
               fontSize: 13.sp,
               fontWeight: FontWeight.w500,
@@ -361,7 +350,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ),
           ),
           onTap: () {
-            _showMessage('오점너 v1.0.0');
+            _showMessage('${AppConfig.appName} v${AppConfig.appVersion}');
           },
         ),
       ],
@@ -437,39 +426,46 @@ class _ProfileScreenState extends State<ProfileScreen> {
     Widget? trailing,
     Color? titleColor,
     VoidCallback? onTap,
+    bool isDisabled = false,
   }) {
+    final effectiveColor = isDisabled
+        ? const Color(0xFFCFD3D7)
+        : (titleColor ?? const Color(0xFF1A1C1E));
+
     return InkWell(
-      onTap: onTap,
+      onTap: isDisabled ? null : onTap,
       borderRadius: BorderRadius.circular(16.r),
-      child: Padding(
-        padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 16.h),
-        child: Row(
-          children: [
-            Icon(
-              icon,
-              size: 24.sp,
-              color: titleColor ?? const Color(0xFF1A1C1E),
-            ),
-            SizedBox(width: 16.w),
-            Expanded(
-              child: Text(
-                title,
-                style: TextStyle(
-                  fontSize: 15.sp,
-                  fontWeight: FontWeight.w500,
-                  color: titleColor ?? const Color(0xFF1A1C1E),
-                  letterSpacing: -0.15,
+      child: Opacity(
+        opacity: isDisabled ? 0.5 : 1.0,
+        child: Padding(
+          padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 16.h),
+          child: Row(
+            children: [
+              Icon(icon, size: 24.sp, color: effectiveColor),
+              SizedBox(width: 16.w),
+              Expanded(
+                child: Text(
+                  title,
+                  style: TextStyle(
+                    fontSize: 15.sp,
+                    fontWeight: FontWeight.w500,
+                    color: effectiveColor,
+                    letterSpacing: -0.15,
+                  ),
                 ),
               ),
-            ),
-            if (trailing != null) trailing
-            else
-              Icon(
-                Icons.chevron_right,
-                size: 20.sp,
-                color: const Color(0xFF6C7278),
-              ),
-          ],
+              if (trailing != null)
+                trailing
+              else
+                Icon(
+                  Icons.chevron_right,
+                  size: 20.sp,
+                  color: isDisabled
+                      ? const Color(0xFFCFD3D7)
+                      : const Color(0xFF6C7278),
+                ),
+            ],
+          ),
         ),
       ),
     );
@@ -479,11 +475,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Widget _buildDivider() {
     return Padding(
       padding: EdgeInsets.symmetric(horizontal: 20.w),
-      child: Divider(
-        height: 1,
-        thickness: 1,
-        color: const Color(0xFFEDF1F3),
-      ),
+      child: Divider(height: 1, thickness: 1, color: const Color(0xFFEDF1F3)),
     );
   }
 }
@@ -491,7 +483,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
 /// 탈퇴 사유 선택 바텀시트
 class _DeleteReasonBottomSheet extends StatefulWidget {
   @override
-  State<_DeleteReasonBottomSheet> createState() => _DeleteReasonBottomSheetState();
+  State<_DeleteReasonBottomSheet> createState() =>
+      _DeleteReasonBottomSheetState();
 }
 
 class _DeleteReasonBottomSheetState extends State<_DeleteReasonBottomSheet> {
@@ -547,10 +540,7 @@ class _DeleteReasonBottomSheetState extends State<_DeleteReasonBottomSheet> {
               ),
               child: Text(
                 '다음',
-                style: TextStyle(
-                  fontSize: 14.sp,
-                  fontWeight: FontWeight.w600,
-                ),
+                style: TextStyle(fontSize: 14.sp, fontWeight: FontWeight.w600),
               ),
             ),
           ),
@@ -568,7 +558,9 @@ class _DeleteReasonBottomSheetState extends State<_DeleteReasonBottomSheet> {
         margin: EdgeInsets.only(bottom: 12.h),
         padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
         decoration: BoxDecoration(
-          color: isSelected ? AppTheme.primaryColor.withOpacity(0.1) : Colors.white,
+          color: isSelected
+              ? AppTheme.primaryColor.withOpacity(0.1)
+              : Colors.white,
           border: Border.all(
             color: isSelected ? AppTheme.primaryColor : const Color(0xFFEDF1F3),
             width: isSelected ? 2 : 1,
@@ -578,9 +570,13 @@ class _DeleteReasonBottomSheetState extends State<_DeleteReasonBottomSheet> {
         child: Row(
           children: [
             Icon(
-              isSelected ? Icons.radio_button_checked : Icons.radio_button_unchecked,
+              isSelected
+                  ? Icons.radio_button_checked
+                  : Icons.radio_button_unchecked,
               size: 20.sp,
-              color: isSelected ? AppTheme.primaryColor : const Color(0xFF6C7278),
+              color: isSelected
+                  ? AppTheme.primaryColor
+                  : const Color(0xFF6C7278),
             ),
             SizedBox(width: 12.w),
             Expanded(
@@ -589,7 +585,9 @@ class _DeleteReasonBottomSheetState extends State<_DeleteReasonBottomSheet> {
                 style: TextStyle(
                   fontSize: 14.sp,
                   fontWeight: FontWeight.w500,
-                  color: isSelected ? AppTheme.primaryColor : const Color(0xFF1A1C1E),
+                  color: isSelected
+                      ? AppTheme.primaryColor
+                      : const Color(0xFF1A1C1E),
                 ),
               ),
             ),

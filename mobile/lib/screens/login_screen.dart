@@ -39,7 +39,7 @@ class _LoginScreenState extends State<LoginScreen> {
   /// 카카오 로그인 처리
   Future<void> _handleKakaoLogin() async {
     if (_isLoading) return;
-    
+
     setState(() {
       _isLoading = true;
     });
@@ -65,7 +65,7 @@ class _LoginScreenState extends State<LoginScreen> {
   /// 구글 로그인 처리
   Future<void> _handleGoogleLogin() async {
     if (_isLoading) return;
-    
+
     setState(() {
       _isLoading = true;
     });
@@ -91,7 +91,7 @@ class _LoginScreenState extends State<LoginScreen> {
   /// 애플 로그인 처리
   Future<void> _handleAppleLogin() async {
     if (_isLoading) return;
-    
+
     if (!Platform.isIOS) {
       _showMessage('Apple 로그인은 iOS에서만 사용할 수 있습니다.');
       return;
@@ -141,10 +141,7 @@ class _LoginScreenState extends State<LoginScreen> {
   /// 메시지 표시
   void _showMessage(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        duration: const Duration(seconds: 2),
-      ),
+      SnackBar(content: Text(message), duration: const Duration(seconds: 2)),
     );
   }
 
@@ -170,9 +167,7 @@ class _LoginScreenState extends State<LoginScreen> {
             return SingleChildScrollView(
               padding: EdgeInsets.symmetric(horizontal: 24.w),
               child: ConstrainedBox(
-                constraints: BoxConstraints(
-                  minHeight: constraints.maxHeight,
-                ),
+                constraints: BoxConstraints(minHeight: constraints.maxHeight),
                 child: IntrinsicHeight(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -183,7 +178,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       _buildHeadline(),
 
                       SizedBox(height: 24.h),
-                      
+
                       // 이메일 입력 필드
                       _buildInputField(
                         title: '이메일',
@@ -191,9 +186,9 @@ class _LoginScreenState extends State<LoginScreen> {
                         hintText: '이메일을 입력해 주세요',
                         prefixIcon: Icons.person_outline,
                       ),
-                      
+
                       SizedBox(height: 16.h),
-                      
+
                       // 비밀번호 입력 필드
                       _buildPasswordField(),
 
@@ -220,7 +215,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
 
                       SizedBox(height: 16.h),
-                      
+
                       // 로그인 버튼
                       _buildLoginButton(),
 
@@ -319,10 +314,7 @@ class _LoginScreenState extends State<LoginScreen> {
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(10.r),
-            border: Border.all(
-              color: const Color(0xFFEDF1F3),
-              width: 1,
-            ),
+            border: Border.all(color: const Color(0xFFEDF1F3), width: 1),
           ),
           child: TextField(
             controller: controller,
@@ -376,10 +368,7 @@ class _LoginScreenState extends State<LoginScreen> {
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(10.r),
-            border: Border.all(
-              color: const Color(0xFFEDF1F3),
-              width: 1,
-            ),
+            border: Border.all(color: const Color(0xFFEDF1F3), width: 1),
           ),
           child: TextField(
             controller: _passwordController,
@@ -404,9 +393,9 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
               suffixIcon: IconButton(
                 icon: Icon(
-                  _obscurePassword 
-                    ? Icons.visibility_off_outlined 
-                    : Icons.visibility_outlined,
+                  _obscurePassword
+                      ? Icons.visibility_off_outlined
+                      : Icons.visibility_outlined,
                   size: 16.sp,
                   color: const Color(0xFF6C7278),
                 ),
@@ -474,12 +463,7 @@ class _LoginScreenState extends State<LoginScreen> {
   Widget _buildOrDivider() {
     return Row(
       children: [
-        Expanded(
-          child: Container(
-            height: 1,
-            color: const Color(0xFFEDF1F3),
-          ),
-        ),
+        Expanded(child: Container(height: 1, color: const Color(0xFFEDF1F3))),
         Padding(
           padding: EdgeInsets.symmetric(horizontal: 16.w),
           child: Text(
@@ -492,12 +476,7 @@ class _LoginScreenState extends State<LoginScreen> {
             ),
           ),
         ),
-        Expanded(
-          child: Container(
-            height: 1,
-            color: const Color(0xFFEDF1F3),
-          ),
-        ),
+        Expanded(child: Container(height: 1, color: const Color(0xFFEDF1F3))),
       ],
     );
   }
@@ -550,10 +529,7 @@ class _LoginScreenState extends State<LoginScreen> {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(10.r),
-        border: Border.all(
-          color: const Color(0xFFEFF0F6),
-          width: 1,
-        ),
+        border: Border.all(color: const Color(0xFFEFF0F6), width: 1),
       ),
       child: TextButton(
         onPressed: onPressed,
@@ -603,10 +579,7 @@ class _LoginScreenState extends State<LoginScreen> {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(10.r),
-        border: Border.all(
-          color: const Color(0xFFEDF1F3),
-          width: 1,
-        ),
+        border: Border.all(color: const Color(0xFFEDF1F3), width: 1),
       ),
       child: TextButton(
         onPressed: _isLoading ? null : _handleContinueWithoutLogin,
@@ -676,9 +649,7 @@ class _LoginScreenState extends State<LoginScreen> {
             onTap: () {
               Navigator.push(
                 context,
-                MaterialPageRoute(
-                  builder: (context) => const SignUpScreen(),
-                ),
+                MaterialPageRoute(builder: (context) => const SignUpScreen()),
               );
             },
             child: Text(
@@ -703,7 +674,7 @@ class _LoginScreenState extends State<LoginScreen> {
         mainAxisSize: MainAxisSize.min,
         children: [
           GestureDetector(
-            onTap: () => _openUrl('https://ojeomneo.com/privacy'),
+            onTap: () => _openUrl('https://woohalabs.com/privacy#개인정보처리방침'),
             child: Text(
               '개인정보 처리방침',
               style: TextStyle(
@@ -729,7 +700,7 @@ class _LoginScreenState extends State<LoginScreen> {
             ),
           ),
           GestureDetector(
-            onTap: () => _openUrl('https://ojeomneo.com/terms'),
+            onTap: () => _openUrl('https://woohalabs.com/privacy'),
             child: Text(
               '서비스 이용약관',
               style: TextStyle(
@@ -747,4 +718,3 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 }
-
