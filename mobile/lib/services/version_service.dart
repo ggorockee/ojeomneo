@@ -24,20 +24,31 @@ class VersionService {
         '${AppConfig.baseUrl}/app/version?platform=$platform&current_version=$currentVersion',
       );
 
+      print('[VersionService] Checking version: $uri');
+      print('[VersionService] Current version: $currentVersion, Platform: $platform');
+
       final response = await http.get(uri).timeout(
         const Duration(seconds: 10),
       );
 
+      print('[VersionService] Response status: ${response.statusCode}');
+      print('[VersionService] Response body: ${response.body}');
+
       if (response.statusCode == 200) {
         final json = jsonDecode(response.body);
         if (json['success'] == true && json['data'] != null) {
-          return AppVersionResponse.fromJson(json['data']);
+          final versionResponse = AppVersionResponse.fromJson(json['data']);
+          print('[VersionService] Version check result: needsUpdate=${versionResponse.needsUpdate}, forceUpdate=${versionResponse.forceUpdate}');
+          return versionResponse;
         }
       }
 
+      print('[VersionService] No version info available or invalid response');
       return null;
-    } catch (e) {
+    } catch (e, stackTrace) {
       // 네트워크 오류 등의 경우 null 반환 (앱 사용 허용)
+      print('[VersionService] Error checking version: $e');
+      print('[VersionService] Stack trace: $stackTrace');
       return null;
     }
   }
