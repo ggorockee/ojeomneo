@@ -2,8 +2,10 @@ package email
 
 import (
 	"bytes"
+	"crypto/tls"
 	"fmt"
 	"html/template"
+	"net"
 	"net/smtp"
 	"strings"
 
@@ -81,11 +83,15 @@ func (s *SMTPService) SendPasswordResetCode(to, code string) error {
 
 // send 이메일 발송 (공통)
 func (s *SMTPService) send(to, subject, body string) error {
+	// From 주소는 Gmail 인증 계정과 일치해야 함
+	from := s.config.Username
+
+	// SMTP 인증 설정
 	auth := smtp.PlainAuth("", s.config.Username, s.config.Password, s.config.Host)
 
 	// MIME 헤더 설정
 	headers := make(map[string]string)
-	headers["From"] = s.config.From
+	headers["From"] = fmt.Sprintf("%s <%s>", "오점너", from) // Display name 추가
 	headers["To"] = to
 	headers["Subject"] = subject
 	headers["MIME-Version"] = "1.0"
@@ -99,13 +105,14 @@ func (s *SMTPService) send(to, subject, body string) error {
 	message.WriteString("\r\n")
 	message.WriteString(body)
 
-	// 이메일 발송
+	// 이메일 발송 (STARTTLS 사용)
 	addr := fmt.Sprintf("%s:%s", s.config.Host, s.config.Port)
-	err := smtp.SendMail(addr, auth, s.config.From, []string{to}, []byte(message.String()))
+	err := s.sendMailTLS(addr, auth, from, []string{to}, []byte(message.String()))
 	if err != nil {
 		s.logger.Error("Failed to send email",
 			zap.Error(err),
 			zap.String("to", to),
+			zap.String("from", from),
 			zap.String("host", s.config.Host),
 			zap.String("port", s.config.Port),
 		)
@@ -114,10 +121,74 @@ func (s *SMTPService) send(to, subject, body string) error {
 
 	s.logger.Info("Email sent successfully",
 		zap.String("to", to),
+		zap.String("from", from),
 		zap.String("subject", subject),
 	)
 
 	return nil
+}
+
+// sendMailTLS STARTTLS를 사용한 이메일 발송
+func (s *SMTPService) sendMailTLS(addr string, auth smtp.Auth, from string, to []string, msg []byte) error {
+	// 호스트 추출
+	host := strings.Split(addr, ":")[0]
+
+	// TCP 연결
+	conn, err := net.Dial("tcp", addr)
+	if err != nil {
+		return fmt.Errorf("failed to dial: %w", err)
+	}
+	defer conn.Close()
+
+	// SMTP 클라이언트 생성
+	client, err := smtp.NewClient(conn, host)
+	if err != nil {
+		return fmt.Errorf("failed to create SMTP client: %w", err)
+	}
+	defer client.Close()
+
+	// STARTTLS 시작
+	tlsConfig := &tls.Config{
+		ServerName: host,
+	}
+	if err = client.StartTLS(tlsConfig); err != nil {
+		return fmt.Errorf("failed to start TLS: %w", err)
+	}
+
+	// 인증
+	if auth != nil {
+		if err = client.Auth(auth); err != nil {
+			return fmt.Errorf("failed to authenticate: %w", err)
+		}
+	}
+
+	// 발신자 설정
+	if err = client.Mail(from); err != nil {
+		return fmt.Errorf("failed to set sender: %w", err)
+	}
+
+	// 수신자 설정
+	for _, addr := range to {
+		if err = client.Rcpt(addr); err != nil {
+			return fmt.Errorf("failed to set recipient: %w", err)
+		}
+	}
+
+	// 메시지 전송
+	w, err := client.Data()
+	if err != nil {
+		return fmt.Errorf("failed to get data writer: %w", err)
+	}
+
+	if _, err = w.Write(msg); err != nil {
+		return fmt.Errorf("failed to write message: %w", err)
+	}
+
+	if err = w.Close(); err != nil {
+		return fmt.Errorf("failed to close data writer: %w", err)
+	}
+
+	return client.Quit()
 }
 
 // renderTemplate HTML 템플릿 렌더링

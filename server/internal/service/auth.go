@@ -912,15 +912,14 @@ func (s *AuthService) PasswordResetRequest(email string) error {
 	// 이메일 정규화
 	email = normalizeEmail(email)
 
-	// 이메일 로그인 사용자만 확인
+	// 이메일 로그인 사용자 확인
 	var user model.User
 	if err := s.db.Where("email = ? AND login_method = ?", email, "email").
 		First(&user).Error; err != nil {
-		// 보안상 이유로 사용자가 존재하지 않아도 성공 메시지 반환
 		s.logger.Warn("Password reset requested for non-existent email",
 			zap.String("email", email),
 		)
-		return nil
+		return fmt.Errorf("등록되지 않은 이메일입니다")
 	}
 
 	// 6자리 인증코드 생성
