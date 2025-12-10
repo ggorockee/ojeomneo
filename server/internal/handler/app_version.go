@@ -80,15 +80,34 @@ func (h *AppVersionHandler) CheckVersion(c *fiber.Ctx) error {
 		})
 	}
 
-	// 버전 비교하여 강제 업데이트 여부 결정
+	// 버전 비교하여 업데이트 필요 여부 결정
+	needsUpdate := false
 	forceUpdate := false
+
+	// 현재 버전이 최신 버전보다 낮으면 업데이트 필요
+	if compareVersions(currentVersion, appVersion.LatestVersion) < 0 {
+		needsUpdate = true
+	}
+
+	// 현재 버전이 최소 버전보다 낮으면 강제 업데이트
 	if appVersion.ForceUpdate && compareVersions(currentVersion, appVersion.MinVersion) < 0 {
 		forceUpdate = true
+		needsUpdate = true
 	}
+
+	h.logger.Info("Version check completed",
+		zap.String("platform", platform),
+		zap.String("current_version", currentVersion),
+		zap.String("latest_version", appVersion.LatestVersion),
+		zap.String("min_version", appVersion.MinVersion),
+		zap.Bool("needs_update", needsUpdate),
+		zap.Bool("force_update", forceUpdate),
+	)
 
 	return c.JSON(fiber.Map{
 		"success": true,
 		"data": fiber.Map{
+			"needs_update":   needsUpdate,
 			"force_update":   forceUpdate,
 			"latest_version": appVersion.LatestVersion,
 			"min_version":    appVersion.MinVersion,

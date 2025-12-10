@@ -1,9 +1,11 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../config/app_theme.dart';
 import '../config/app_config.dart';
+import '../services/version_service.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -60,12 +62,100 @@ class _SplashScreenState extends State<SplashScreen>
       _scaleController.forward();
     });
 
-    // 화면 전환 (스플래시 후 로그인 화면으로 이동)
-    Future.delayed(const Duration(milliseconds: 2500), () {
-      if (mounted) {
-        Navigator.of(context).pushReplacementNamed('/login');
-      }
-    });
+    // 버전 체크 및 화면 전환
+    _checkVersionAndNavigate();
+  }
+
+  /// 버전 체크 후 화면 전환
+  Future<void> _checkVersionAndNavigate() async {
+    // 최소 스플래시 표시 시간 보장
+    await Future.delayed(const Duration(milliseconds: 2500));
+
+    if (!mounted) return;
+
+    // 버전 체크
+    final versionResponse = await VersionService.checkVersion();
+
+    if (!mounted) return;
+
+    // 업데이트 필요 여부 확인
+    if (versionResponse != null && versionResponse.needsUpdate) {
+      _showUpdateDialog(versionResponse);
+    } else {
+      // 업데이트 불필요 시 바로 로그인 화면으로 이동
+      Navigator.of(context).pushReplacementNamed('/login');
+    }
+  }
+
+  /// 업데이트 다이얼로그 표시
+  void _showUpdateDialog(dynamic versionResponse) {
+    showDialog(
+      context: context,
+      barrierDismissible: !versionResponse.forceUpdate, // 강제 업데이트 시 닫기 불가
+      builder: (context) => WillPopScope(
+        onWillPop: () async => !versionResponse.forceUpdate, // 강제 업데이트 시 뒤로가기 차단
+        child: AlertDialog(
+          title: Text(
+            versionResponse.forceUpdate ? '필수 업데이트' : '새로운 버전 출시',
+            style: TextStyle(
+              fontSize: 18.sp,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                versionResponse.updateMessage.isNotEmpty
+                    ? versionResponse.updateMessage
+                    : '새로운 버전(${versionResponse.latestVersion})이 출시되었습니다.\n더 나은 서비스를 위해 업데이트해 주세요.',
+                style: TextStyle(fontSize: 14.sp),
+              ),
+              SizedBox(height: 12.h),
+              Text(
+                '현재 버전: ${AppConfig.appVersion}',
+                style: TextStyle(
+                  fontSize: 12.sp,
+                  color: Colors.grey,
+                ),
+              ),
+              Text(
+                '최신 버전: ${versionResponse.latestVersion}',
+                style: TextStyle(
+                  fontSize: 12.sp,
+                  color: AppTheme.primaryColor,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            if (!versionResponse.forceUpdate)
+              TextButton(
+                onPressed: () {
+                  Navigator.of(context).pop();
+                  Navigator.of(context).pushReplacementNamed('/login');
+                },
+                child: Text('나중에', style: TextStyle(color: Colors.grey)),
+              ),
+            ElevatedButton(
+              onPressed: () async {
+                final url = Uri.parse(versionResponse.storeUrl);
+                if (await canLaunchUrl(url)) {
+                  await launchUrl(url, mode: LaunchMode.externalApplication);
+                }
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppTheme.primaryColor,
+                foregroundColor: Colors.white,
+              ),
+              child: Text('업데이트'),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   @override

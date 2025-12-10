@@ -39,11 +39,12 @@ type AppVersionRequest struct {
 
 // AppVersionResponse 버전 체크 응답
 type AppVersionResponse struct {
-	ForceUpdate   bool   `json:"force_update"`
-	LatestVersion string `json:"latest_version"`
-	MinVersion    string `json:"min_version"`
-	StoreURL      string `json:"store_url"`
-	UpdateMessage string `json:"update_message"`
+	NeedsUpdate   bool   `json:"needs_update"`   // 업데이트 필요 여부
+	ForceUpdate   bool   `json:"force_update"`   // 강제 업데이트 여부
+	LatestVersion string `json:"latest_version"` // 최신 버전
+	MinVersion    string `json:"min_version"`    // 최소 지원 버전
+	StoreURL      string `json:"store_url"`      // 앱 스토어 URL
+	UpdateMessage string `json:"update_message"` // 업데이트 메시지
 }
 
 // ToResponse AppVersion을 API 응답용 구조체로 변환
