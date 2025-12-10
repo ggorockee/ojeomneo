@@ -158,10 +158,19 @@ POSTGRES_DB=ojeomneo
 POSTGRES_USER=ojeomneo
 POSTGRES_PASSWORD=your-password
 
+# SMTP 이메일 발송 (선택)
+SMTP_HOST=smtp.gmail.com
+SMTP_PORT=587
+SMTP_USERNAME=your-email@gmail.com
+SMTP_PASSWORD=your-app-password
+SMTP_FROM=noreply@ojeomneo.com
+
 # Django
 DJANGO_SECRET_KEY=your-secret-key
 DJANGO_DEBUG=True
 ```
+
+> **📧 SMTP 설정**: [docs/SMTP_SETUP.md](../docs/SMTP_SETUP.md) 참고
 
 ## 개발 시 주의사항
 
