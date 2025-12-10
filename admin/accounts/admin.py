@@ -56,7 +56,7 @@ class UserAdmin(BaseUserAdmin, ModelAdmin):
         ("개인 정보", {"fields": ("first_name", "last_name")}),
         (
             "권한",
-            {"fields": ("is_active", "is_staff", "is_superuser", "groups", "user_permissions")},
+            {"fields": ("is_active", "is_staff", "is_superuser")},
         ),
         ("중요 일자", {"fields": ("last_login", "date_joined")}),
     )
