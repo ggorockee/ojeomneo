@@ -96,39 +96,15 @@ class _SplashScreenState extends State<SplashScreen>
         onWillPop: () async => !versionResponse.forceUpdate, // 강제 업데이트 시 뒤로가기 차단
         child: AlertDialog(
           title: Text(
-            versionResponse.forceUpdate ? '필수 업데이트' : '새로운 버전 출시',
+            '업데이트',
             style: TextStyle(
               fontSize: 18.sp,
               fontWeight: FontWeight.bold,
             ),
           ),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                versionResponse.updateMessage.isNotEmpty
-                    ? versionResponse.updateMessage
-                    : '새로운 버전(${versionResponse.latestVersion})이 출시되었습니다.\n더 나은 서비스를 위해 업데이트해 주세요.',
-                style: TextStyle(fontSize: 14.sp),
-              ),
-              SizedBox(height: 12.h),
-              Text(
-                '현재 버전: ${AppConfig.appVersion}',
-                style: TextStyle(
-                  fontSize: 12.sp,
-                  color: Colors.grey,
-                ),
-              ),
-              Text(
-                '최신 버전: ${versionResponse.latestVersion}',
-                style: TextStyle(
-                  fontSize: 12.sp,
-                  color: AppTheme.primaryColor,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ],
+          content: Text(
+            '새로운 버전이 출시되었습니다.\n더 나은 서비스를 위해 업데이트 해주세요',
+            style: TextStyle(fontSize: 14.sp),
           ),
           actions: [
             if (!versionResponse.forceUpdate)
@@ -150,7 +126,7 @@ class _SplashScreenState extends State<SplashScreen>
                 backgroundColor: AppTheme.primaryColor,
                 foregroundColor: Colors.white,
               ),
-              child: Text('업데이트'),
+              child: Text('업데이트 하러가기'),
             ),
           ],
         ),
