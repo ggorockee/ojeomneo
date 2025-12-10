@@ -10,6 +10,7 @@ import (
 
 	"github.com/ggorockee/ojeomneo/server/internal/config"
 	"github.com/ggorockee/ojeomneo/server/internal/model"
+	"github.com/ggorockee/ojeomneo/server/internal/service/email"
 	"github.com/ggorockee/ojeomneo/server/internal/telemetry"
 	"github.com/ggorockee/ojeomneo/server/pkg/auth"
 	"github.com/ggorockee/ojeomneo/server/pkg/sns"
@@ -19,19 +20,40 @@ import (
 
 // AuthService 인증 서비스
 type AuthService struct {
-	db      *gorm.DB
-	cfg     *config.Config
-	logger  *zap.Logger
-	metrics *telemetry.AuthMetrics
+	db           *gorm.DB
+	cfg          *config.Config
+	logger       *zap.Logger
+	metrics      *telemetry.AuthMetrics
+	emailService *email.SMTPService
 }
 
 // NewAuthService 새 인증 서비스 생성
 func NewAuthService(db *gorm.DB, cfg *config.Config, logger *zap.Logger, metrics *telemetry.AuthMetrics) *AuthService {
+	// SMTP 이메일 서비스 초기화
+	var emailService *email.SMTPService
+	if cfg.SMTPUsername != "" && cfg.SMTPPassword != "" {
+		smtpConfig := &email.SMTPConfig{
+			Host:     cfg.SMTPHost,
+			Port:     cfg.SMTPPort,
+			Username: cfg.SMTPUsername,
+			Password: cfg.SMTPPassword,
+			From:     cfg.SMTPFrom,
+		}
+		emailService = email.NewSMTPService(smtpConfig, logger)
+		logger.Info("SMTP email service initialized",
+			zap.String("host", cfg.SMTPHost),
+			zap.String("port", cfg.SMTPPort),
+		)
+	} else {
+		logger.Warn("SMTP email service disabled (no credentials)")
+	}
+
 	return &AuthService{
-		db:      db,
-		cfg:     cfg,
-		logger:  logger,
-		metrics: metrics,
+		db:           db,
+		cfg:          cfg,
+		logger:       logger,
+		metrics:      metrics,
+		emailService: emailService,
 	}
 }
 
@@ -546,13 +568,28 @@ func (s *AuthService) SendEmailCode(email string) error {
 		return fmt.Errorf("인증코드 생성에 실패했습니다: %w", err)
 	}
 
-	// TODO: 실제 이메일 발송 서비스 구현 필요
-	// 현재는 개발용으로 콘솔에 출력
-	s.logger.Info("Email verification code generated",
-		zap.String("email", email),
-		zap.String("code", code),
-	)
-	fmt.Printf("[개발용] 이메일 인증코드: %s -> %s\n", email, code)
+	// 실제 이메일 발송
+	if s.emailService != nil {
+		if err := s.emailService.SendVerificationCode(email, code); err != nil {
+			s.logger.Error("Failed to send verification email",
+				zap.Error(err),
+				zap.String("email", email),
+			)
+			// 이메일 발송 실패해도 코드는 저장되었으므로 성공 반환 (개발 환경 대응)
+			fmt.Printf("[개발용] 이메일 발송 실패, 인증코드: %s -> %s\n", email, code)
+		} else {
+			s.logger.Info("Email verification code sent",
+				zap.String("email", email),
+			)
+		}
+	} else {
+		// SMTP 서비스가 없으면 개발용 콘솔 출력
+		s.logger.Info("Email verification code generated (SMTP disabled)",
+			zap.String("email", email),
+			zap.String("code", code),
+		)
+		fmt.Printf("[개발용] 이메일 인증코드: %s -> %s\n", email, code)
+	}
 
 	return nil
 }
@@ -907,12 +944,28 @@ func (s *AuthService) PasswordResetRequest(email string) error {
 		return fmt.Errorf("인증코드 생성에 실패했습니다: %w", err)
 	}
 
-	// TODO: 실제 이메일 발송 서비스 구현 필요
-	s.logger.Info("Password reset code generated",
-		zap.String("email", email),
-		zap.String("code", code),
-	)
-	fmt.Printf("[개발용] 비밀번호 재설정 인증코드: %s -> %s\n", email, code)
+	// 실제 이메일 발송
+	if s.emailService != nil {
+		if err := s.emailService.SendPasswordResetCode(email, code); err != nil {
+			s.logger.Error("Failed to send password reset email",
+				zap.Error(err),
+				zap.String("email", email),
+			)
+			// 이메일 발송 실패해도 코드는 저장되었으므로 성공 반환 (개발 환경 대응)
+			fmt.Printf("[개발용] 이메일 발송 실패, 비밀번호 재설정 인증코드: %s -> %s\n", email, code)
+		} else {
+			s.logger.Info("Password reset code sent",
+				zap.String("email", email),
+			)
+		}
+	} else {
+		// SMTP 서비스가 없으면 개발용 콘솔 출력
+		s.logger.Info("Password reset code generated (SMTP disabled)",
+			zap.String("email", email),
+			zap.String("code", code),
+		)
+		fmt.Printf("[개발용] 비밀번호 재설정 인증코드: %s -> %s\n", email, code)
+	}
 
 	return nil
 }

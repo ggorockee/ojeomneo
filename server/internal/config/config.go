@@ -45,6 +45,13 @@ type Config struct {
 	AppleTeamID    string
 	AppleKeyID     string
 	KakaoRestAPIKey string
+
+	// SMTP 이메일 발송 설정
+	SMTPHost     string
+	SMTPPort     string
+	SMTPUsername string
+	SMTPPassword string
+	SMTPFrom     string
 }
 
 // Load 환경변수에서 설정 로드
@@ -83,6 +90,12 @@ func Load() *Config {
 		AppleTeamID:     getEnv("APPLE_TEAM_ID", ""),
 		AppleKeyID:      getEnv("APPLE_KEY_ID", ""),
 		KakaoRestAPIKey: getEnv("KAKAO_REST_API_KEY", ""),
+
+		SMTPHost:     getEnv("SMTP_HOST", "smtp.gmail.com"),
+		SMTPPort:     getEnv("SMTP_PORT", "587"),
+		SMTPUsername: getEnv("SMTP_USERNAME", ""),
+		SMTPPassword: getEnv("SMTP_PASSWORD", ""),
+		SMTPFrom:     getEnv("SMTP_FROM", "noreply@ojeomneo.com"),
 	}
 }
 
