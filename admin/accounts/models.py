@@ -91,6 +91,11 @@ class User(AbstractBaseUser, PermissionsMixin):
     last_login = models.DateTimeField("마지막 로그인", blank=True, null=True)
     is_superuser = models.BooleanField("슈퍼유저 여부", default=False)
     username = models.CharField("사용자명", max_length=150, unique=True)
+
+    # PermissionsMixin의 groups와 user_permissions 필드 제거
+    # Go GORM이 이런 중간 테이블을 생성하지 않으므로 Django에서도 사용하지 않음
+    groups = None
+    user_permissions = None
     first_name = models.CharField("이름", max_length=150, blank=True, default="")
     last_name = models.CharField("성", max_length=150, blank=True, default="")
     email = models.EmailField("이메일", max_length=254)
