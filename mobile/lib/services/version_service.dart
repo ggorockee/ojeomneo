@@ -2,7 +2,6 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:http/http.dart' as http;
-import 'package:package_info_plus/package_info_plus.dart';
 
 import '../config/app_config.dart';
 import '../models/app_version.dart';
@@ -12,16 +11,15 @@ class VersionService {
   /// 서버에서 버전 정보를 가져오고 강제 업데이트 필요 여부를 확인
   static Future<AppVersionResponse?> checkVersion() async {
     try {
-      // 현재 앱 버전 가져오기
-      final packageInfo = await PackageInfo.fromPlatform();
-      final currentVersion = packageInfo.version;
+      // 현재 앱 버전 - AppConfig에서 가져오기
+      final currentVersion = AppConfig.appVersion;
 
       // 플랫폼 확인
       final platform = Platform.isIOS ? 'ios' : 'android';
 
       // API 호출
       final uri = Uri.parse(
-        '${AppConfig.baseUrl}/app/version?platform=$platform&current_version=$currentVersion',
+        '${AppConfig.apiUrl}/app/version?platform=$platform&current_version=$currentVersion',
       );
 
       print('[VersionService] Checking version: $uri');
