@@ -170,12 +170,12 @@ class _LoginScreenState extends State<LoginScreen> {
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        SizedBox(height: 24.h),
+                        SizedBox(height: 16.h),
 
                         // 헤드라인
                         _buildHeadline(),
 
-                        SizedBox(height: 20.h),
+                        SizedBox(height: 16.h),
 
                       // 이메일 입력 필드
                       _buildInputField(
@@ -227,7 +227,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         // 또는 구분선
                         _buildOrDivider(),
 
-                        SizedBox(height: 20.h),
+                        SizedBox(height: 16.h),
 
                         // 소셜 로그인 버튼들
                         _buildSocialLoginButtons(),
@@ -241,6 +241,8 @@ class _LoginScreenState extends State<LoginScreen> {
                     // 하단 영역 (화면 하단 고정)
                     Column(
                       children: [
+                        SizedBox(height: 24.h),
+
                         // 회원가입 링크
                         _buildSignUpLink(),
 
@@ -264,13 +266,18 @@ class _LoginScreenState extends State<LoginScreen> {
 
   // 헤드라인 섹션
   Widget _buildHeadline() {
+    // 반응형 폰트 크기 계산 (overflow 방지)
+    final screenWidth = MediaQuery.of(context).size.width;
+    final titleFontSize = (32.sp).clamp(24.0, 36.0);
+    final subtitleFontSize = (12.sp).clamp(11.0, 14.0);
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           '로그인',
           style: TextStyle(
-            fontSize: 32.sp,
+            fontSize: titleFontSize,
             fontWeight: FontWeight.w700,
             color: const Color(0xFF1A1C1E),
             letterSpacing: -0.64,
@@ -281,7 +288,7 @@ class _LoginScreenState extends State<LoginScreen> {
         Text(
           '이메일과 비밀번호를 입력해 주세요',
           style: TextStyle(
-            fontSize: 12.sp,
+            fontSize: subtitleFontSize,
             fontWeight: FontWeight.w500,
             color: const Color(0xFF6C7278),
             letterSpacing: -0.12,
@@ -298,13 +305,17 @@ class _LoginScreenState extends State<LoginScreen> {
     required String hintText,
     required IconData prefixIcon,
   }) {
+    final labelFontSize = (12.sp).clamp(11.0, 14.0);
+    final inputFontSize = (14.sp).clamp(12.0, 16.0);
+    final iconSize = (16.sp).clamp(14.0, 18.0);
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           title,
           style: TextStyle(
-            fontSize: 12.sp,
+            fontSize: labelFontSize,
             fontWeight: FontWeight.w500,
             color: const Color(0xFF6C7278),
             letterSpacing: -0.24,
@@ -321,7 +332,7 @@ class _LoginScreenState extends State<LoginScreen> {
           child: TextField(
             controller: controller,
             style: TextStyle(
-              fontSize: 14.sp,
+              fontSize: inputFontSize,
               fontWeight: FontWeight.w500,
               color: const Color(0xFF1A1C1E),
               letterSpacing: -0.14,
@@ -329,13 +340,13 @@ class _LoginScreenState extends State<LoginScreen> {
             decoration: InputDecoration(
               hintText: hintText,
               hintStyle: TextStyle(
-                fontSize: 14.sp,
+                fontSize: inputFontSize,
                 fontWeight: FontWeight.w500,
                 color: const Color(0xFF6C7278),
               ),
               prefixIcon: Icon(
                 prefixIcon,
-                size: 16.sp,
+                size: iconSize,
                 color: const Color(0xFF6C7278),
               ),
               border: InputBorder.none,
@@ -352,13 +363,17 @@ class _LoginScreenState extends State<LoginScreen> {
 
   // 비밀번호 입력 필드
   Widget _buildPasswordField() {
+    final labelFontSize = (12.sp).clamp(11.0, 14.0);
+    final inputFontSize = (14.sp).clamp(12.0, 16.0);
+    final iconSize = (16.sp).clamp(14.0, 18.0);
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           '비밀번호',
           style: TextStyle(
-            fontSize: 12.sp,
+            fontSize: labelFontSize,
             fontWeight: FontWeight.w500,
             color: const Color(0xFF6C7278),
             letterSpacing: -0.24,
@@ -376,7 +391,7 @@ class _LoginScreenState extends State<LoginScreen> {
             controller: _passwordController,
             obscureText: _obscurePassword,
             style: TextStyle(
-              fontSize: 14.sp,
+              fontSize: inputFontSize,
               fontWeight: FontWeight.w500,
               color: const Color(0xFF1A1C1E),
               letterSpacing: -0.14,
@@ -384,13 +399,13 @@ class _LoginScreenState extends State<LoginScreen> {
             decoration: InputDecoration(
               hintText: '비밀번호를 입력해 주세요',
               hintStyle: TextStyle(
-                fontSize: 14.sp,
+                fontSize: inputFontSize,
                 fontWeight: FontWeight.w500,
                 color: const Color(0xFF6C7278),
               ),
               prefixIcon: Icon(
                 Icons.lock_outline,
-                size: 16.sp,
+                size: iconSize,
                 color: const Color(0xFF6C7278),
               ),
               suffixIcon: IconButton(
@@ -398,7 +413,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   _obscurePassword
                       ? Icons.visibility_off_outlined
                       : Icons.visibility_outlined,
-                  size: 16.sp,
+                  size: iconSize,
                   color: const Color(0xFF6C7278),
                 ),
                 onPressed: () {
