@@ -40,12 +40,17 @@ func NewAuthService(db *gorm.DB, cfg *config.Config, logger *zap.Logger, metrics
 			From:     cfg.SMTPFrom,
 		}
 		emailService = email.NewSMTPService(smtpConfig, logger)
-		logger.Info("SMTP email service initialized",
+		logger.Info("SMTP email service initialized successfully",
 			zap.String("host", cfg.SMTPHost),
 			zap.String("port", cfg.SMTPPort),
+			zap.String("username", cfg.SMTPUsername),
+			zap.String("from", cfg.SMTPFrom),
 		)
 	} else {
-		logger.Warn("SMTP email service disabled (no credentials)")
+		logger.Warn("SMTP email service disabled: missing credentials",
+			zap.Bool("has_username", cfg.SMTPUsername != ""),
+			zap.Bool("has_password", cfg.SMTPPassword != ""),
+		)
 	}
 
 	return &AuthService{
