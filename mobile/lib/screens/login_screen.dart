@@ -190,7 +190,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       // 비밀번호 입력 필드
                       _buildPasswordField(),
 
-                      SizedBox(height: 8.h),
+                      // SizedBox(height: 4.h),
 
                       // 비밀번호 찾기 (비밀번호 필드 바로 아래)
                       Align(
@@ -212,7 +212,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         ),
                       ),
 
-                      SizedBox(height: 16.h),
+                      SizedBox(height: 12.h),
 
                         // 로그인 버튼
                         _buildLoginButton(),
@@ -220,7 +220,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         SizedBox(height: 12.h),
 
                         // 비밀번호 찾기 링크
-                        _buildForgotPasswordLink(),
+                        // _buildForgotPasswordLink(),
 
                         SizedBox(height: 20.h),
 
@@ -321,7 +321,7 @@ class _LoginScreenState extends State<LoginScreen> {
             letterSpacing: -0.24,
           ),
         ),
-        SizedBox(height: 8.h),
+        SizedBox(height: 4.h),
         Container(
           height: 46.h,
           decoration: BoxDecoration(
@@ -379,7 +379,7 @@ class _LoginScreenState extends State<LoginScreen> {
             letterSpacing: -0.24,
           ),
         ),
-        SizedBox(height: 8.h),
+        SizedBox(height: 4.h),
         Container(
           height: 46.h,
           decoration: BoxDecoration(
@@ -467,7 +467,7 @@ class _LoginScreenState extends State<LoginScreen> {
             : Text(
                 '로그인',
                 style: TextStyle(
-                  fontSize: 14.sp,
+                  fontSize: 16.sp,
                   fontWeight: FontWeight.w500,
                   letterSpacing: -0.14,
                 ),

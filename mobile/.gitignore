@@ -49,3 +49,4 @@ app.*.map.json
 *.jks
 /android/key.properties
 /android/*.keystore
+my_request.txt
