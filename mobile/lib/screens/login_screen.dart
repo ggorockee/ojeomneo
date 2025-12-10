@@ -113,8 +113,10 @@ class _LoginScreenState extends State<LoginScreen> {
     }
   }
 
-  /// 이메일 로그인 처리 (임시)
+  /// 이메일 로그인 처리
   Future<void> _handleEmailLogin() async {
+    if (_isLoading) return;
+
     final email = _emailController.text.trim();
     final password = _passwordController.text.trim();
 
@@ -128,8 +130,24 @@ class _LoginScreenState extends State<LoginScreen> {
       return;
     }
 
-    // TODO: 이메일 로그인 구현 (백엔드 API 연동 필요)
-    _showMessage('이메일 로그인은 준비 중입니다.');
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      await _authService.loginWithEmail(email, password);
+      if (mounted) {
+        Navigator.of(context).pushReplacementNamed('/home');
+      }
+    } catch (e) {
+      debugPrint('[LoginScreen] 이메일 로그인 에러: $e');
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+        _showMessage('로그인에 실패했습니다: ${e.toString()}');
+      }
+    }
   }
 
   /// 메시지 표시
@@ -197,8 +215,12 @@ class _LoginScreenState extends State<LoginScreen> {
                         alignment: Alignment.centerRight,
                         child: TextButton(
                           onPressed: () {
-                            // TODO: 비밀번호 찾기 화면 구현 (ForgotPasswordScreen)
-                            _showMessage('비밀번호 찾기는 준비 중입니다.');
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => const PasswordResetScreen(),
+                              ),
+                            );
                           },
                           child: Text(
                             '비밀번호를 잊으셨나요?',
@@ -216,11 +238,6 @@ class _LoginScreenState extends State<LoginScreen> {
 
                         // 로그인 버튼
                         _buildLoginButton(),
-
-                        SizedBox(height: 12.h),
-
-                        // 비밀번호 찾기 링크
-                        // _buildForgotPasswordLink(),
 
                         SizedBox(height: 20.h),
 
@@ -267,7 +284,6 @@ class _LoginScreenState extends State<LoginScreen> {
   // 헤드라인 섹션
   Widget _buildHeadline() {
     // 반응형 폰트 크기 계산 (overflow 방지)
-    final screenWidth = MediaQuery.of(context).size.width;
     final titleFontSize = (32.sp).clamp(24.0, 36.0);
     final subtitleFontSize = (12.sp).clamp(11.0, 14.0);
 
@@ -613,33 +629,6 @@ class _LoginScreenState extends State<LoginScreen> {
             fontWeight: FontWeight.w600,
             color: AppTheme.primaryColor,
             letterSpacing: -0.14,
-          ),
-        ),
-      ),
-    );
-  }
-
-  // 비밀번호 찾기 링크
-  Widget _buildForgotPasswordLink() {
-    return Align(
-      alignment: Alignment.centerRight,
-      child: GestureDetector(
-        onTap: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => const PasswordResetScreen(),
-            ),
-          );
-        },
-        child: Text(
-          '비밀번호 찾기',
-          style: TextStyle(
-            fontSize: 12.sp,
-            fontWeight: FontWeight.w500,
-            color: const Color(0xFF6C7278),
-            letterSpacing: -0.12,
-            decoration: TextDecoration.underline,
           ),
         ),
       ),
