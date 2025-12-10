@@ -45,6 +45,9 @@ class UserAdmin(BaseUserAdmin, ModelAdmin):
     search_fields = ("email", "username", "first_name", "last_name")
     ordering = ("-date_joined",)
 
+    # BaseUserAdmin의 filter_horizontal 오버라이드 (groups, user_permissions 제거)
+    filter_horizontal = ()
+
     fieldsets = (
         (None, {"fields": ("email", "username", "password")}),
         (
