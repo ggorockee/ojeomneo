@@ -531,13 +531,16 @@ func (h *AuthHandler) DeleteMe(c *fiber.Ctx) error {
 	}
 
 	// 회원 탈퇴 처리
+	// Fiber context 값 미리 캡처 (goroutine에서 사용)
+	ip := c.IP()
+
 	if err := h.authService.DeleteMe(claims.UserID, req.Reason); err != nil {
 		duration := time.Since(start)
 		go func() {
 			h.logger.Warn("Account deletion failed",
 				zap.Error(err),
 				zap.Uint("user_id", claims.UserID),
-				zap.String("ip", c.IP()),
+				zap.String("ip", ip),
 				zap.Duration("duration", duration),
 			)
 		}()
@@ -552,7 +555,7 @@ func (h *AuthHandler) DeleteMe(c *fiber.Ctx) error {
 	go func() {
 		h.logger.Info("Account deleted successfully",
 			zap.Uint("user_id", claims.UserID),
-			zap.String("ip", c.IP()),
+			zap.String("ip", ip),
 			zap.Duration("duration", duration),
 		)
 	}()

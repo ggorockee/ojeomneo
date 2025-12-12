@@ -316,12 +316,15 @@ func (h *AuthHandler) GuestLogin(c *fiber.Ctx) error {
 	result, err := h.authService.GuestLogin(req.DeviceID)
 	duration := time.Since(start)
 
+	// Fiber context 값 미리 캡처 (goroutine에서 사용)
+	ip := c.IP()
+
 	if err != nil {
 		go func() {
 			h.logger.Warn("Guest login failed",
 				zap.Error(err),
 				zap.String("device_id", req.DeviceID),
-				zap.String("ip", c.IP()),
+				zap.String("ip", ip),
 				zap.Duration("duration", duration),
 			)
 		}()
@@ -336,7 +339,7 @@ func (h *AuthHandler) GuestLogin(c *fiber.Ctx) error {
 		h.logger.Info("Guest login successful",
 			zap.Uint("user_id", result.User.ID),
 			zap.String("device_id", req.DeviceID),
-			zap.String("ip", c.IP()),
+			zap.String("ip", ip),
 			zap.Duration("duration", duration),
 		)
 	}()
