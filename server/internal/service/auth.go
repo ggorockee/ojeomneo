@@ -573,20 +573,23 @@ func (s *AuthService) SendEmailCode(email string) error {
 		return fmt.Errorf("인증코드 생성에 실패했습니다: %w", err)
 	}
 
-	// 실제 이메일 발송
+	// 이메일 비동기 발송 (API 응답 시간 개선)
 	if s.emailService != nil {
-		if err := s.emailService.SendVerificationCode(email, code); err != nil {
-			s.logger.Error("Failed to send verification email",
-				zap.Error(err),
-				zap.String("email", email),
-			)
-			// 이메일 발송 실패해도 코드는 저장되었으므로 성공 반환 (개발 환경 대응)
-			fmt.Printf("[개발용] 이메일 발송 실패, 인증코드: %s -> %s\n", email, code)
-		} else {
-			s.logger.Info("Email verification code sent",
-				zap.String("email", email),
-			)
-		}
+		// 백그라운드에서 이메일 발송 (goroutine)
+		go func() {
+			if err := s.emailService.SendVerificationCode(email, code); err != nil {
+				s.logger.Error("Failed to send verification email",
+					zap.Error(err),
+					zap.String("email", email),
+				)
+				fmt.Printf("[이메일 발송 실패] %s -> %s (에러: %v)\n", email, code, err)
+			} else {
+				s.logger.Info("Email verification code sent successfully",
+					zap.String("email", email),
+				)
+				fmt.Printf("[이메일 발송 성공] %s\n", email)
+			}
+		}()
 	} else {
 		// SMTP 서비스가 없으면 개발용 콘솔 출력
 		s.logger.Info("Email verification code generated (SMTP disabled)",
