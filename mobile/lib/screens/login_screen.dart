@@ -55,7 +55,7 @@ class _LoginScreenState extends State<LoginScreen> {
         setState(() {
           _isLoading = false;
         });
-        _showMessage('카카오 로그인에 실패했습니다: ${e.toString()}');
+        _showFriendlyErrorMessage(e, '카카오');
       }
     }
   }
@@ -79,7 +79,7 @@ class _LoginScreenState extends State<LoginScreen> {
         setState(() {
           _isLoading = false;
         });
-        _showMessage('구글 로그인에 실패했습니다: ${e.toString()}');
+        _showFriendlyErrorMessage(e, '구글');
       }
     }
   }
@@ -108,7 +108,7 @@ class _LoginScreenState extends State<LoginScreen> {
         setState(() {
           _isLoading = false;
         });
-        _showMessage('Apple 로그인에 실패했습니다: ${e.toString()}');
+        _showFriendlyErrorMessage(e, 'Apple');
       }
     }
   }
@@ -145,9 +145,47 @@ class _LoginScreenState extends State<LoginScreen> {
         setState(() {
           _isLoading = false;
         });
-        _showMessage('로그인에 실패했습니다: ${e.toString()}');
+        _showFriendlyErrorMessage(e, '이메일');
       }
     }
+  }
+
+  /// 사용자 친화적인 에러 메시지 표시 (네이버 스타일)
+  void _showFriendlyErrorMessage(dynamic error, String loginType) {
+    final errorStr = error.toString().toLowerCase();
+
+    // 사용자가 취소한 경우 - 메시지 표시하지 않음
+    if (errorStr.contains('login_canceled') ||
+        errorStr.contains('canceled') ||
+        errorStr.contains('user canceled')) {
+      debugPrint('[LoginScreen] 사용자가 로그인을 취소함 - 메시지 표시하지 않음');
+      return;
+    }
+
+    // 네트워크 오류
+    if (errorStr.contains('network') ||
+        errorStr.contains('timeout') ||
+        errorStr.contains('connection')) {
+      _showMessage('네트워크 연결을 확인해 주세요.');
+      return;
+    }
+
+    // 인증 실패
+    if (errorStr.contains('authentication') ||
+        errorStr.contains('auth') ||
+        errorStr.contains('invalid')) {
+      _showMessage('로그인 정보를 다시 확인해 주세요.');
+      return;
+    }
+
+    // Firebase 오류
+    if (errorStr.contains('firebase')) {
+      _showMessage('일시적인 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.');
+      return;
+    }
+
+    // 기본 메시지 (플랫폼 에러 등)
+    _showMessage('$loginType 로그인 중 문제가 발생했습니다. 잠시 후 다시 시도해 주세요.');
   }
 
   /// 메시지 표시
