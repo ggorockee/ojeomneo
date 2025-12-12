@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:app_tracking_transparency/app_tracking_transparency.dart';
 
+import '../config/app_theme.dart';
 import '../services/auth_service.dart';
 
 /// ATT (App Tracking Transparency) 권한 설명 화면
@@ -65,7 +66,7 @@ class ATTExplanationScreen extends StatelessWidget {
               Icon(
                 Icons.privacy_tip_outlined,
                 size: 80.sp,
-                color: const Color(0xFFFF6B35),
+                color: AppTheme.primaryColor,
               ),
 
               SizedBox(height: 32.h),
@@ -138,7 +139,7 @@ class ATTExplanationScreen extends StatelessWidget {
                 child: ElevatedButton(
                   onPressed: () => _requestPermissionAndNavigate(context),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFFFF6B35),
+                    backgroundColor: AppTheme.primaryColor,
                     foregroundColor: Colors.white,
                     elevation: 0,
                     shape: RoundedRectangleBorder(
@@ -196,8 +197,8 @@ class ATTExplanationScreen extends StatelessWidget {
           margin: EdgeInsets.only(top: 4.h),
           width: 6.w,
           height: 6.w,
-          decoration: const BoxDecoration(
-            color: Color(0xFFFF6B35),
+          decoration: BoxDecoration(
+            color: AppTheme.primaryColor,
             shape: BoxShape.circle,
           ),
         ),
