@@ -265,26 +265,70 @@ class _SignUpScreenState extends State<SignUpScreen> {
     }
   }
 
+  /// 에러를 사용자 친화적인 메시지로 변환
   String _parseErrorMessage(Object e) {
-    String errorMessage = '오류가 발생했습니다. 잠시 후 다시 시도해 주세요.';
-    final errorText = e.toString();
+    final errorStr = e.toString().toLowerCase();
 
-    if (errorText.contains('Exception:')) {
-      final serverMessage = errorText.replaceAll('Exception:', '').trim();
+    // 네트워크 연결 오류
+    if (errorStr.contains('clientexception') ||
+        errorStr.contains('socketexception') ||
+        errorStr.contains('connection refused') ||
+        errorStr.contains('failed host lookup') ||
+        errorStr.contains('network') ||
+        errorStr.contains('errno')) {
+      return '네트워크 연결을 확인해 주세요.\n잠시 후 다시 시도해 주세요.';
+    }
 
-      if (serverMessage.contains('already exists') ||
-          serverMessage.contains('duplicate') ||
-          serverMessage.contains('이미')) {
-        errorMessage = '이미 가입된 이메일입니다.\n다른 이메일을 사용하시거나 로그인해 주세요.';
-      } else if (serverMessage.contains('network') ||
-          serverMessage.contains('timeout')) {
-        errorMessage = '네트워크 연결이 불안정합니다.\n잠시 후 다시 시도해 주세요.';
-      } else {
-        errorMessage = serverMessage;
+    // 타임아웃
+    if (errorStr.contains('timeout') || errorStr.contains('timed out')) {
+      return '요청 시간이 초과되었습니다.\n잠시 후 다시 시도해 주세요.';
+    }
+
+    // 중복 이메일
+    if (errorStr.contains('already exists') ||
+        errorStr.contains('duplicate') ||
+        errorStr.contains('이미 존재') ||
+        errorStr.contains('이미 가입')) {
+      return '이미 가입된 이메일입니다.\n다른 이메일을 사용하시거나 로그인해 주세요.';
+    }
+
+    // 잘못된 인증코드
+    if (errorStr.contains('invalid') && errorStr.contains('code')) {
+      return '인증코드가 올바르지 않습니다.\n다시 확인해 주세요.';
+    }
+
+    // 만료된 인증코드
+    if (errorStr.contains('expired')) {
+      return '인증코드가 만료되었습니다.\n새로운 코드를 발송해 주세요.';
+    }
+
+    // 인증 오류
+    if (errorStr.contains('auth') || errorStr.contains('unauthorized')) {
+      return '인증에 실패했습니다.\n다시 시도해 주세요.';
+    }
+
+    // 서버 오류
+    if (errorStr.contains('500') || errorStr.contains('server error')) {
+      return '서버에 일시적인 문제가 발생했습니다.\n잠시 후 다시 시도해 주세요.';
+    }
+
+    // 서버에서 보낸 사용자 친화적 메시지 추출
+    if (errorStr.contains('exception:')) {
+      final parts = e.toString().split('Exception:');
+      if (parts.length > 1) {
+        final serverMessage = parts[1].trim();
+        // 기술적인 용어가 없으면 서버 메시지 사용
+        if (!serverMessage.contains('http') &&
+            !serverMessage.contains('error') &&
+            !serverMessage.contains('exception') &&
+            serverMessage.length < 100) {
+          return serverMessage;
+        }
       }
     }
 
-    return errorMessage;
+    // 알 수 없는 오류는 기본 메시지
+    return '요청 처리 중 문제가 발생했습니다.\n잠시 후 다시 시도해 주세요.';
   }
 
   void _showErrorDialog(String message) {
