@@ -45,7 +45,7 @@ class AuthService {
   static const String _profileImageKey = 'profile_image';
 
   /// Google 로그인 플로우
-  /// 
+  ///
   /// 1. google_sign_in으로 Google 로그인 수행
   /// 2. Firebase Auth로 GoogleAuthProvider를 사용하여 로그인
   /// 3. Firebase ID Token 획득
@@ -58,7 +58,8 @@ class AuthService {
       // 1. Google Sign In
       final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
       if (googleUser == null) {
-        throw Exception('Google 로그인이 취소되었습니다.');
+        debugPrint('[AuthService] 사용자가 Google 로그인을 취소함');
+        throw Exception('LOGIN_CANCELED');
       }
 
       debugPrint('[AuthService] Google 계정 정보 획득: ${googleUser.email}');
@@ -170,8 +171,8 @@ class AuthService {
   }
 
   /// Kakao 로그인 플로우
-  /// 
-  /// 1. kakao_flutter_sdk로 Kakao 로그인 수행
+  ///
+  /// 1. kakao_flutter_sdk로 Kakao 로그인 수행 (앱 우선)
   /// 2. Access Token 획득
   /// 3. 백엔드 API 호출하여 JWT 토큰 획득
   /// 4. 토큰 저장
@@ -179,21 +180,36 @@ class AuthService {
     try {
       debugPrint('[AuthService] Kakao 로그인 시작');
 
-      // 1. Kakao 로그인 수행 (앱이 없으면 인앱 브라우저 사용)
+      // 1. Kakao 로그인 수행 (카카오톡 앱 우선)
       kakao.OAuthToken token;
-      if (await kakao.isKakaoTalkInstalled()) {
+
+      // 카카오톡 설치 여부 확인
+      final installed = await kakao.isKakaoTalkInstalled();
+      debugPrint('[AuthService] 카카오톡 설치 여부: $installed');
+
+      if (installed) {
+        // 카카오톡 앱으로 로그인 시도
         try {
+          debugPrint('[AuthService] 카카오톡 앱으로 로그인 시도');
           token = await kakao.UserApi.instance.loginWithKakaoTalk();
-          debugPrint('[AuthService] KakaoTalk 앱 로그인 성공');
+          debugPrint('[AuthService] 카카오톡 앱 로그인 성공');
         } catch (e) {
-          debugPrint('[AuthService] KakaoTalk 앱 로그인 실패, 인앱 브라우저로 전환: $e');
+          // 사용자가 취소한 경우 예외 전파
+          if (e.toString().contains('CANCELED') || e.toString().contains('User canceled')) {
+            debugPrint('[AuthService] 사용자가 카카오 로그인을 취소함');
+            throw Exception('LOGIN_CANCELED');
+          }
+
+          // 카카오톡 앱 로그인 실패 시 계정 로그인으로 전환
+          debugPrint('[AuthService] 카카오톡 앱 로그인 실패, 계정 로그인으로 전환: $e');
           token = await kakao.UserApi.instance.loginWithKakaoAccount();
-          debugPrint('[AuthService] Kakao 계정 로그인 성공 (인앱 브라우저)');
+          debugPrint('[AuthService] Kakao 계정 로그인 성공');
         }
       } else {
-        // KakaoTalk이 설치되지 않은 경우 인앱 브라우저 사용
+        // 카카오톡 미설치 시 계정 로그인
+        debugPrint('[AuthService] 카카오톡 미설치 - 계정 로그인 시도');
         token = await kakao.UserApi.instance.loginWithKakaoAccount();
-        debugPrint('[AuthService] Kakao 계정 로그인 성공 (인앱 브라우저)');
+        debugPrint('[AuthService] Kakao 계정 로그인 성공');
       }
 
       // 2. Access Token 확인
