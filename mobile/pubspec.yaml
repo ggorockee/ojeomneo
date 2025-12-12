@@ -67,6 +67,9 @@ dependencies:
   # AdMob
   google_mobile_ads: ^5.2.0
 
+  # App Tracking Transparency (ATT) - iOS 14.5+ 필수
+  app_tracking_transparency: ^2.0.6
+
   # Environment variables
   flutter_dotenv: ^5.2.1
 
