@@ -1,7 +1,9 @@
+import 'dart:io' show Platform;
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:app_tracking_transparency/app_tracking_transparency.dart';
 
 import '../config/app_theme.dart';
 import '../config/app_config.dart';
@@ -82,7 +84,35 @@ class _SplashScreenState extends State<SplashScreen>
     if (versionResponse != null && versionResponse.needsUpdate) {
       _showUpdateDialog(versionResponse);
     } else {
-      // 업데이트 불필요 시 바로 로그인 화면으로 이동
+      // 업데이트 불필요 시 다음 화면 결정
+      await _navigateToNextScreen();
+    }
+  }
+
+  /// ATT 상태 확인 후 적절한 화면으로 이동
+  Future<void> _navigateToNextScreen() async {
+    if (!mounted) return;
+
+    // iOS에서만 ATT 상태 확인
+    if (Platform.isIOS) {
+      try {
+        final status = await AppTrackingTransparency.trackingAuthorizationStatus;
+
+        // 아직 권한 요청을 하지 않은 경우 → ATT 설명 화면으로 이동
+        if (status == TrackingStatus.notDetermined) {
+          if (mounted) {
+            Navigator.of(context).pushReplacementNamed('/att-explanation');
+            return;
+          }
+        }
+      } catch (e) {
+        debugPrint('ATT 상태 확인 실패: $e');
+        // 오류 발생 시에도 로그인 화면으로 이동
+      }
+    }
+
+    // Android 또는 iOS에서 이미 ATT 권한을 결정한 경우 → 로그인 화면으로 이동
+    if (mounted) {
       Navigator.of(context).pushReplacementNamed('/login');
     }
   }
@@ -111,7 +141,7 @@ class _SplashScreenState extends State<SplashScreen>
               TextButton(
                 onPressed: () {
                   Navigator.of(context).pop();
-                  Navigator.of(context).pushReplacementNamed('/login');
+                  _navigateToNextScreen();
                 },
                 child: Text('나중에', style: TextStyle(color: Colors.grey)),
               ),
