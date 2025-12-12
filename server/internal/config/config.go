@@ -91,17 +91,29 @@ func Load() *Config {
 		AppleKeyID:      getEnv("APPLE_KEY_ID", ""),
 		KakaoRestAPIKey: getEnv("KAKAO_REST_API_KEY", ""),
 
-		SMTPHost:     getEnv("SMTP_HOST", "smtp.gmail.com"),
-		SMTPPort:     getEnv("SMTP_PORT", "587"),
-		SMTPUsername: getEnv("SMTP_USERNAME", ""),
-		SMTPPassword: getEnv("SMTP_PASSWORD", ""),
-		SMTPFrom:     getEnv("SMTP_FROM", "noreply@ojeomneo.com"),
+		SMTPHost:     getEnvWithFallback("EMAIL_HOST", "SMTP_HOST", "smtp.gmail.com"),
+		SMTPPort:     getEnvWithFallback("EMAIL_PORT", "SMTP_PORT", "587"),
+		SMTPUsername: getEnvWithFallback("EMAIL_HOST_USER", "SMTP_USERNAME", ""),
+		SMTPPassword: getEnvWithFallback("EMAIL_HOST_PASSWORD", "SMTP_PASSWORD", ""),
+		SMTPFrom:     getEnvWithFallback("DEFAULT_FROM_EMAIL", "SMTP_FROM", "noreply@ojeomneo.com"),
 	}
 }
 
 // getEnv 환경변수 조회 (기본값 지원)
 func getEnv(key, defaultValue string) string {
 	if value := os.Getenv(key); value != "" {
+		return value
+	}
+	return defaultValue
+}
+
+// getEnvWithFallback 환경변수 조회 (주 키 우선, 대체 키 fallback, 기본값 지원)
+// 주 키가 없으면 대체 키를 시도하고, 둘 다 없으면 기본값 반환
+func getEnvWithFallback(primaryKey, fallbackKey, defaultValue string) string {
+	if value := os.Getenv(primaryKey); value != "" {
+		return value
+	}
+	if value := os.Getenv(fallbackKey); value != "" {
 		return value
 	}
 	return defaultValue
