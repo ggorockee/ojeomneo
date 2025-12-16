@@ -63,3 +63,24 @@ my_request.txt
 # Firebase Admin SDK credentials
 **/firebase-adminsdk-*.json
 server/config/firebase/*.json
+# Next.js
+web/.next/
+web/out/
+web/node_modules/
+web/next-env.d.ts
+
+# Python/Django
+admin/__pycache__/
+admin/.pytest_cache/
+admin/staticfiles/
+admin/media/
+*.py[cod]
+*$py.class
+__pycache__/
+
+# Go
+server/tmp/
+server/coverage.txt
+
+# Claude docs
+claudedocs/
