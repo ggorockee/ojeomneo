@@ -1,3 +1,13 @@
+import java.util.Properties
+import java.io.FileInputStream
+
+val dotenv = Properties()
+// .env 파일은 mobile/ 폴더에 있음 (android/의 상위 폴더)
+val dotenvFile = rootProject.file("../.env")
+if (dotenvFile.exists()) {
+    dotenvFile.inputStream().use { dotenv.load(it) }
+}
+
 plugins {
     id("com.android.application")
     id("kotlin-android")
@@ -5,10 +15,6 @@ plugins {
     id("dev.flutter.flutter-gradle-plugin")
     id("com.google.gms.google-services")
 }
-
-// Load keystore properties
-import java.util.Properties
-import java.io.FileInputStream
 
 val keystorePropertiesFile = rootProject.file("key.properties")
 val keystoreProperties = Properties()
@@ -38,6 +44,12 @@ android {
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
+
+        manifestPlaceholders.putAll(
+            mapOf(
+                "KAKAO_NATIVE_APP_KEY" to (dotenv["KAKAO_NATIVE_APP_KEY"] ?: ""),
+            )
+        )
     }
 
     signingConfigs {
