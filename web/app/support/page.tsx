@@ -1,7 +1,66 @@
+"use client";
+
 import Link from "next/link";
 import Image from "next/image";
+import { useState } from "react";
 
 export default function Support() {
+  const [formData, setFormData] = useState({
+    name: "",
+    email: "",
+    device: "",
+    appVersion: "",
+    subject: "",
+    message: "",
+  });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitStatus, setSubmitStatus] = useState<"idle" | "success" | "error">("idle");
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    setSubmitStatus("idle");
+
+    try {
+      // 이메일로 전송 (mailto 링크 사용)
+      const subject = encodeURIComponent(`[오점너 문의] ${formData.subject}`);
+      const body = encodeURIComponent(`
+이름: ${formData.name}
+이메일: ${formData.email}
+기기: ${formData.device}
+앱 버전: ${formData.appVersion}
+
+문의 내용:
+${formData.message}
+      `);
+
+      window.location.href = `mailto:woohaen88@gmail.com?subject=${subject}&body=${body}`;
+
+      setSubmitStatus("success");
+      // 폼 초기화
+      setFormData({
+        name: "",
+        email: "",
+        device: "",
+        appVersion: "",
+        subject: "",
+        message: "",
+      });
+    } catch (error) {
+      console.error("Form submission error:", error);
+      setSubmitStatus("error");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value,
+    });
+  };
+
   return (
     <div className="min-h-screen bg-white">
       {/* Header */}
@@ -91,22 +150,138 @@ export default function Support() {
 
             <section className="mb-8">
               <h2 className="text-2xl font-semibold text-gray-900 mb-4">문의하기</h2>
-              <div className="bg-green-50 p-6 rounded-xl">
-                <p className="text-gray-700 mb-4">
-                  위에서 답변을 찾지 못하셨거나 추가 문의사항이 있으시면 아래 이메일로 연락해 주세요.
+              <div className="bg-white border-2 border-green-200 rounded-xl p-6">
+                <p className="text-gray-700 mb-6">
+                  위에서 답변을 찾지 못하셨거나 추가 문의사항이 있으시면 아래 양식을 작성해 주세요.
                 </p>
-                <div className="text-gray-700">
-                  <p><strong>이메일</strong>: <a href="mailto:woohaen88@gmail.com" className="text-blue-600 hover:underline">woohaen88@gmail.com</a></p>
-                  <p className="mt-2 text-sm text-gray-600">
-                    보내실 때는 다음 정보를 포함해 주시면 더 빠르게 도와드릴 수 있습니다:
+
+                <form onSubmit={handleSubmit} className="space-y-4">
+                  <div className="grid md:grid-cols-2 gap-4">
+                    <div>
+                      <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
+                        이름 <span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        type="text"
+                        id="name"
+                        name="name"
+                        required
+                        value={formData.name}
+                        onChange={handleChange}
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                        placeholder="홍길동"
+                      />
+                    </div>
+
+                    <div>
+                      <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
+                        이메일 <span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        type="email"
+                        id="email"
+                        name="email"
+                        required
+                        value={formData.email}
+                        onChange={handleChange}
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                        placeholder="example@email.com"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid md:grid-cols-2 gap-4">
+                    <div>
+                      <label htmlFor="device" className="block text-sm font-medium text-gray-700 mb-1">
+                        사용 기기
+                      </label>
+                      <select
+                        id="device"
+                        name="device"
+                        value={formData.device}
+                        onChange={handleChange}
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                      >
+                        <option value="">선택해 주세요</option>
+                        <option value="iPhone">iPhone</option>
+                        <option value="iPad">iPad</option>
+                        <option value="Android">Android</option>
+                        <option value="기타">기타</option>
+                      </select>
+                    </div>
+
+                    <div>
+                      <label htmlFor="appVersion" className="block text-sm font-medium text-gray-700 mb-1">
+                        앱 버전
+                      </label>
+                      <input
+                        type="text"
+                        id="appVersion"
+                        name="appVersion"
+                        value={formData.appVersion}
+                        onChange={handleChange}
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                        placeholder="1.0.0"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label htmlFor="subject" className="block text-sm font-medium text-gray-700 mb-1">
+                      문의 제목 <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      id="subject"
+                      name="subject"
+                      required
+                      value={formData.subject}
+                      onChange={handleChange}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                      placeholder="문의 제목을 입력해 주세요"
+                    />
+                  </div>
+
+                  <div>
+                    <label htmlFor="message" className="block text-sm font-medium text-gray-700 mb-1">
+                      문의 내용 <span className="text-red-500">*</span>
+                    </label>
+                    <textarea
+                      id="message"
+                      name="message"
+                      required
+                      value={formData.message}
+                      onChange={handleChange}
+                      rows={6}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent resize-none"
+                      placeholder="문의 내용을 상세히 작성해 주세요"
+                    />
+                  </div>
+
+                  {submitStatus === "success" && (
+                    <div className="bg-green-50 border border-green-200 text-green-800 px-4 py-3 rounded-lg">
+                      문의가 전송되었습니다. 빠른 시일 내에 답변드리겠습니다.
+                    </div>
+                  )}
+
+                  {submitStatus === "error" && (
+                    <div className="bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg">
+                      문의 전송 중 오류가 발생했습니다. 이메일(woohaen88@gmail.com)로 직접 연락해 주세요.
+                    </div>
+                  )}
+
+                  <button
+                    type="submit"
+                    disabled={isSubmitting}
+                    className="w-full bg-green-600 text-white font-semibold py-3 px-6 rounded-lg hover:bg-green-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
+                  >
+                    {isSubmitting ? "전송 중..." : "문의하기"}
+                  </button>
+
+                  <p className="text-sm text-gray-500 text-center">
+                    또는 <a href="mailto:woohaen88@gmail.com" className="text-green-600 hover:underline">woohaen88@gmail.com</a>으로 직접 이메일을 보내실 수 있습니다.
                   </p>
-                  <ul className="text-sm text-gray-600 space-y-1 mt-2 ml-4">
-                    <li>• 사용 중인 기기 (iPhone/Android)</li>
-                    <li>• 앱 버전</li>
-                    <li>• 문제가 발생한 상황</li>
-                    <li>• 스크린샷 (가능한 경우)</li>
-                  </ul>
-                </div>
+                </form>
               </div>
             </section>
 
