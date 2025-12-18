@@ -56,11 +56,17 @@ class ATTExplanationScreen extends StatelessWidget {
     return Scaffold(
       backgroundColor: Colors.white,
       body: SafeArea(
-        child: Padding(
-          padding: EdgeInsets.symmetric(horizontal: 24.w),
-          child: Column(
-            children: [
-              SizedBox(height: 60.h),
+        child: SingleChildScrollView(
+          child: Padding(
+            padding: EdgeInsets.symmetric(horizontal: 24.w),
+            child: ConstrainedBox(
+              constraints: BoxConstraints(
+                minHeight: MediaQuery.of(context).size.height - MediaQuery.of(context).padding.top - MediaQuery.of(context).padding.bottom,
+              ),
+              child: IntrinsicHeight(
+                child: Column(
+                  children: [
+                    SizedBox(height: 60.h),
 
               // 아이콘
               Icon(
@@ -147,7 +153,7 @@ class ATTExplanationScreen extends StatelessWidget {
                     ),
                   ),
                   child: Text(
-                    '동의하고 시작하기',
+                    '계속하기',
                     style: TextStyle(
                       fontSize: 16.sp,
                       fontWeight: FontWeight.w600,
@@ -181,7 +187,10 @@ class ATTExplanationScreen extends StatelessWidget {
               ),
 
               SizedBox(height: 24.h),
-            ],
+                  ],
+                ),
+              ),
+            ),
           ),
         ),
       ),
