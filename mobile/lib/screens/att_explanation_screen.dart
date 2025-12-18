@@ -53,6 +53,12 @@ class ATTExplanationScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // iPad 감지 (화면 너비 600 이상)
+    final isTablet = MediaQuery.of(context).size.shortestSide >= 600;
+    final fontScale = isTablet ? 0.75 : 1.0;
+    final topPadding = isTablet ? 30.h : 60.h;
+    final iconSize = isTablet ? 60.sp : 80.sp;
+
     return Scaffold(
       backgroundColor: Colors.white,
       body: SafeArea(
@@ -66,23 +72,23 @@ class ATTExplanationScreen extends StatelessWidget {
               child: IntrinsicHeight(
                 child: Column(
                   children: [
-                    SizedBox(height: 60.h),
+                    SizedBox(height: topPadding),
 
               // 아이콘
               Icon(
                 Icons.privacy_tip_outlined,
-                size: 80.sp,
+                size: iconSize,
                 color: AppTheme.primaryColor,
               ),
 
-              SizedBox(height: 32.h),
+              SizedBox(height: isTablet ? 24.h : 32.h),
 
               // 제목
               Text(
                 '더 나은 서비스를 위한\n맞춤 광고 안내',
                 textAlign: TextAlign.center,
                 style: TextStyle(
-                  fontSize: 24.sp,
+                  fontSize: 24.sp * fontScale,
                   fontWeight: FontWeight.bold,
                   color: Colors.black87,
                   height: 1.4,
@@ -108,29 +114,32 @@ class ATTExplanationScreen extends StatelessWidget {
                     _buildBulletPoint(
                       '오점너는 무료 광고 기반 서비스입니다',
                       '앱을 무료로 이용하실 수 있도록 광고를 통해 운영됩니다',
+                      fontScale,
                     ),
-                    SizedBox(height: 16.h),
+                    SizedBox(height: isTablet ? 12.h : 16.h),
                     _buildBulletPoint(
                       '맞춤 광고로 더 나은 경험을',
                       '관심사에 맞는 광고를 보여드려 불필요한 광고를 줄입니다',
+                      fontScale,
                     ),
-                    SizedBox(height: 16.h),
+                    SizedBox(height: isTablet ? 12.h : 16.h),
                     _buildBulletPoint(
                       '개인정보는 안전하게 보호됩니다',
                       '광고 식별자만 사용되며, 개인 정보는 수집하지 않습니다',
+                      fontScale,
                     ),
                   ],
                 ),
               ),
 
-              SizedBox(height: 16.h),
+              SizedBox(height: isTablet ? 12.h : 16.h),
 
               // 안내 문구
               Text(
                 '추적 허용은 언제든지 iOS 설정에서 변경하실 수 있습니다',
                 textAlign: TextAlign.center,
                 style: TextStyle(
-                  fontSize: 13.sp,
+                  fontSize: 13.sp * fontScale,
                   color: Colors.grey[600],
                   height: 1.4,
                 ),
@@ -155,7 +164,7 @@ class ATTExplanationScreen extends StatelessWidget {
                   child: Text(
                     '계속하기',
                     style: TextStyle(
-                      fontSize: 16.sp,
+                      fontSize: 16.sp * fontScale,
                       fontWeight: FontWeight.w600,
                     ),
                   ),
@@ -179,7 +188,7 @@ class ATTExplanationScreen extends StatelessWidget {
                   child: Text(
                     '나중에',
                     style: TextStyle(
-                      fontSize: 16.sp,
+                      fontSize: 16.sp * fontScale,
                       fontWeight: FontWeight.w500,
                     ),
                   ),
@@ -198,7 +207,7 @@ class ATTExplanationScreen extends StatelessWidget {
   }
 
   /// Bullet point 스타일의 설명 위젯
-  Widget _buildBulletPoint(String title, String description) {
+  Widget _buildBulletPoint(String title, String description, double fontScale) {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -219,7 +228,7 @@ class ATTExplanationScreen extends StatelessWidget {
               Text(
                 title,
                 style: TextStyle(
-                  fontSize: 15.sp,
+                  fontSize: 15.sp * fontScale,
                   fontWeight: FontWeight.w600,
                   color: Colors.black87,
                 ),
@@ -228,7 +237,7 @@ class ATTExplanationScreen extends StatelessWidget {
               Text(
                 description,
                 style: TextStyle(
-                  fontSize: 13.sp,
+                  fontSize: 13.sp * fontScale,
                   color: Colors.grey[600],
                   height: 1.4,
                 ),
