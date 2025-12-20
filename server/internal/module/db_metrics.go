@@ -11,7 +11,9 @@ import (
 )
 
 var (
-	// DB 쿼리 실행 시간
+	// DB 쿼리 실행 시간 (Histogram)
+	// Buckets: 1ms ~ 5s 범위로 쿼리 성능 분포 추적
+	// Labels: operation (CRUD 타입), table (대상 테이블), status (success/error)
 	dbQueryDuration = promauto.NewHistogramVec(
 		prometheus.HistogramOpts{
 			Name:    "ojeomneo_db_query_duration_seconds",
@@ -40,6 +42,8 @@ var (
 	)
 
 	// 느린 쿼리 횟수 (>1초)
+	// 성능 병목 지점 식별을 위한 슬로우 쿼리 카운터
+	// 임계값: 1초 이상 소요되는 쿼리를 슬로우 쿼리로 분류
 	dbSlowQueriesTotal = promauto.NewCounterVec(
 		prometheus.CounterOpts{
 			Name: "ojeomneo_db_slow_queries_total",
@@ -48,7 +52,8 @@ var (
 		[]string{"operation", "table"},
 	)
 
-	// Connection Pool 크기
+	// Connection Pool 크기 (최대 연결 수)
+	// 커넥션 풀의 최대 크기를 추적하여 리소스 제한 모니터링
 	dbConnectionPoolSize = promauto.NewGauge(
 		prometheus.GaugeOpts{
 			Name: "ojeomneo_db_connection_pool_size",
@@ -57,6 +62,7 @@ var (
 	)
 
 	// Connection Pool 유휴 연결 수
+	// 재사용 가능한 idle 연결 수를 추적하여 풀 효율성 모니터링
 	dbConnectionPoolIdle = promauto.NewGauge(
 		prometheus.GaugeOpts{
 			Name: "ojeomneo_db_connection_pool_idle",
@@ -65,6 +71,7 @@ var (
 	)
 
 	// Connection Pool 사용 중 연결 수
+	// 현재 활성화된 연결 수를 추적하여 부하 상태 모니터링
 	dbConnectionPoolInUse = promauto.NewGauge(
 		prometheus.GaugeOpts{
 			Name: "ojeomneo_db_connection_pool_in_use",
