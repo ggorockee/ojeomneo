@@ -10,7 +10,6 @@ import 'screens/splash_screen.dart';
 import 'screens/login_screen.dart';
 import 'screens/main_screen.dart';
 import 'screens/history_screen.dart';
-import 'screens/att_explanation_screen.dart';
 import 'services/sketch_provider.dart';
 import 'services/ads/ad_service.dart';
 
@@ -30,7 +29,7 @@ void main() async {
   }
 
   // AdMob SDK 초기화
-  // ATT 권한은 ATTExplanationScreen에서 처리됨
+  // ATT 권한은 SplashScreen에서 처리됨
   await AdService().initialize();
 
   runApp(const OjeomeoApp());
@@ -81,7 +80,6 @@ class _OjeomeoAppState extends State<OjeomeoApp> with WidgetsBindingObserver {
             initialRoute: '/',
             routes: {
               '/': (context) => const SplashScreen(),
-              '/att-explanation': (context) => const ATTExplanationScreen(),
               '/login': (context) => const LoginScreen(),
               '/home': (context) => const MainScreen(),
               '/history': (context) => const HistoryScreen(),
