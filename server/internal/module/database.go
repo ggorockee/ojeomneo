@@ -3,6 +3,7 @@ package module
 import (
 	"context"
 	"os"
+	"time"
 
 	"github.com/ggorockee/ojeomneo/server/internal/config"
 	"github.com/ggorockee/ojeomneo/server/internal/model"
@@ -31,6 +32,22 @@ func DatabaseModule() fx.Option {
 					zap.String("host", cfg.DBHost),
 					zap.String("database", cfg.DBName),
 				)
+
+				// Register database metrics plugin for Prometheus
+				if err := db.Use(&DBMetricsPlugin{}); err != nil {
+					logger.Warn("Failed to register database metrics plugin", zap.Error(err))
+				} else {
+					logger.Info("Database metrics plugin registered")
+				}
+
+				// Configure connection pool
+				sqlDB, err := db.DB()
+				if err == nil {
+					sqlDB.SetMaxOpenConns(25)
+					sqlDB.SetMaxIdleConns(5)
+					sqlDB.SetConnMaxLifetime(300)
+					logger.Info("Database connection pool configured")
+				}
 
 				return db, nil
 			},
@@ -71,6 +88,10 @@ func DatabaseModule() fx.Option {
 								logger.Info("Menu data seeded successfully")
 							}
 						}
+
+						// Start connection pool metrics collector (background goroutine)
+						go StartConnectionPoolMetricsCollector(ctx, db, 30*time.Second)
+						logger.Info("Database connection pool metrics collector started")
 
 						return nil
 					},
