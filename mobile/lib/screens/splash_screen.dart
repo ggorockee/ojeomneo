@@ -89,29 +89,25 @@ class _SplashScreenState extends State<SplashScreen>
     }
   }
 
-  /// ATT 상태 확인 후 적절한 화면으로 이동
+  /// ATT 권한 요청 후 로그인 화면으로 이동
   Future<void> _navigateToNextScreen() async {
     if (!mounted) return;
 
-    // iOS에서만 ATT 상태 확인
+    // iOS에서만 ATT 권한 요청
     if (Platform.isIOS) {
       try {
         final status = await AppTrackingTransparency.trackingAuthorizationStatus;
 
-        // 아직 권한 요청을 하지 않은 경우 → ATT 설명 화면으로 이동
+        // 아직 권한 요청을 하지 않은 경우 → 시스템 ATT 다이얼로그 표시
         if (status == TrackingStatus.notDetermined) {
-          if (mounted) {
-            Navigator.of(context).pushReplacementNamed('/att-explanation');
-            return;
-          }
+          await AppTrackingTransparency.requestTrackingAuthorization();
         }
       } catch (e) {
-        debugPrint('ATT 상태 확인 실패: $e');
-        // 오류 발생 시에도 로그인 화면으로 이동
+        debugPrint('ATT 권한 요청 실패: $e');
       }
     }
 
-    // Android 또는 iOS에서 이미 ATT 권한을 결정한 경우 → 로그인 화면으로 이동
+    // 로그인 화면으로 이동
     if (mounted) {
       Navigator.of(context).pushReplacementNamed('/login');
     }

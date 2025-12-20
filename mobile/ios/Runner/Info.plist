@@ -71,7 +71,7 @@
 	<string>ca-app-pub-8516861197467665~1964832674</string>
 	<!-- App Tracking Transparency (ATT) - iOS 14.5+ 필수 -->
 	<key>NSUserTrackingUsageDescription</key>
-	<string>이 앱은 더 나은 광고 경험을 제공하기 위해 광고 추적 권한을 요청합니다.</string>
+	<string>광고 목적으로 사용됩니다.</string>
 	<!-- SKAdNetwork IDs for AdMob -->
 	<key>SKAdNetworkItems</key>
 	<array>
