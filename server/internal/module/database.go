@@ -33,7 +33,9 @@ func DatabaseModule() fx.Option {
 					zap.String("database", cfg.DBName),
 				)
 
-				// Register database metrics plugin for Prometheus
+				// Register database metrics plugin for Prometheus monitoring
+				// Tracks: query duration, query count, errors, slow queries (>1s)
+				// Labels: operation (SELECT/INSERT/UPDATE/DELETE), table, status
 				if err := db.Use(&DBMetricsPlugin{}); err != nil {
 					logger.Warn("Failed to register database metrics plugin", zap.Error(err))
 				} else {
@@ -90,6 +92,8 @@ func DatabaseModule() fx.Option {
 						}
 
 						// Start connection pool metrics collector (background goroutine)
+						// Collects every 30 seconds: pool size, idle connections, in-use connections
+						// Enables real-time monitoring of database connection pool health
 						go StartConnectionPoolMetricsCollector(ctx, db, 30*time.Second)
 						logger.Info("Database connection pool metrics collector started")
 
