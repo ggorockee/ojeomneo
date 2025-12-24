@@ -115,10 +115,11 @@ func PrometheusHandler() fiber.Handler {
 		}
 
 		// Prometheus text format으로 직렬화
-		c.Set("Content-Type", string(expfmt.FmtText))
+		format := expfmt.NewFormat(expfmt.TypeTextPlain)
+		c.Set("Content-Type", string(format))
 
 		// 각 MetricFamily를 text format으로 변환하여 응답
-		encoder := expfmt.NewEncoder(c, expfmt.FmtText)
+		encoder := expfmt.NewEncoder(c, format)
 		for _, mf := range gathering {
 			if err := encoder.Encode(mf); err != nil {
 				return c.Status(fiber.StatusInternalServerError).
