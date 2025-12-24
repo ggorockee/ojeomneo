@@ -10,7 +10,7 @@ export default function Privacy() {
           <div className="flex justify-between items-center py-4">
             <Link href="/" className="flex items-center space-x-3">
               <Image
-                src="/assets/images/logo.png"
+                src="/ojeomneo/assets/images/logo.png"
                 alt="오점너 로고"
                 width={40}
                 height={40}
@@ -244,7 +244,7 @@ export default function Privacy() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <div className="flex items-center justify-center space-x-3 mb-4">
             <Image
-              src="/assets/images/logo.png"
+              src="/ojeomneo/assets/images/logo.png"
               alt="오점너 로고"
               width={32}
               height={32}

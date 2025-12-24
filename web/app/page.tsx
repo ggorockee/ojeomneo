@@ -92,7 +92,7 @@ export default function Home() {
           <div className="flex justify-between items-center py-4">
             <div className="flex items-center space-x-3">
               <Image
-                src="/assets/images/logo.png"
+                src="/ojeomneo/assets/images/logo.png"
                 alt="오점너 로고"
                 width={40}
                 height={40}
@@ -129,7 +129,7 @@ export default function Home() {
               <div className="flex gap-3 sm:hidden">
                 <a href="#" target="_blank" rel="noopener noreferrer" className="inline-block">
                   <Image
-                    src="/assets/images/google-play-badge.png"
+                    src="/ojeomneo/assets/images/google-play-badge.png"
                     alt="Google Play에서 다운로드"
                     width={200}
                     height={60}
@@ -138,7 +138,7 @@ export default function Home() {
                 </a>
                 <a href="#" target="_blank" rel="noopener noreferrer" className="inline-block">
                   <Image
-                    src="/assets/images/app-store-badge.png"
+                    src="/ojeomneo/assets/images/app-store-badge.png"
                     alt="App Store에서 다운로드"
                     width={200}
                     height={60}
@@ -149,7 +149,7 @@ export default function Home() {
               <div className="hidden sm:flex gap-4 items-center">
                 <a href="#" target="_blank" rel="noopener noreferrer" className="inline-block">
                   <Image
-                    src="/assets/images/google-play-badge.png"
+                    src="/ojeomneo/assets/images/google-play-badge.png"
                     alt="Google Play에서 다운로드"
                     width={200}
                     height={60}
@@ -158,7 +158,7 @@ export default function Home() {
                 </a>
                 <a href="#" target="_blank" rel="noopener noreferrer" className="inline-block">
                   <Image
-                    src="/assets/images/app-store-badge.png"
+                    src="/ojeomneo/assets/images/app-store-badge.png"
                     alt="App Store에서 다운로드"
                     width={200}
                     height={60}
@@ -295,7 +295,7 @@ export default function Home() {
               <div className="flex space-x-8 min-w-max">
                 <div className="relative bg-gray-100 rounded-2xl p-4 shadow-lg card-hover">
                   <Image
-                    src="/assets/images/hero-phone.png"
+                    src="/ojeomneo/assets/images/hero-phone.png"
                     alt="오점너 - Smart Family App"
                     width={300}
                     height={600}
@@ -304,7 +304,7 @@ export default function Home() {
                 </div>
                 <div className="bg-gray-100 rounded-2xl p-4 shadow-lg card-hover">
                   <Image
-                    src="/assets/images/feature-draw-intro.png"
+                    src="/ojeomneo/assets/images/feature-draw-intro.png"
                     alt="그리면 & 추천"
                     width={300}
                     height={600}
@@ -313,7 +313,7 @@ export default function Home() {
                 </div>
                 <div className="bg-gray-100 rounded-2xl p-4 shadow-lg card-hover">
                   <Image
-                    src="/assets/images/feature-draw-input.png"
+                    src="/ojeomneo/assets/images/feature-draw-input.png"
                     alt="기분을 그려봐"
                     width={300}
                     height={600}
@@ -322,7 +322,7 @@ export default function Home() {
                 </div>
                 <div className="bg-gray-100 rounded-2xl p-4 shadow-lg card-hover">
                   <Image
-                    src="/assets/images/feature-recommendation.png"
+                    src="/ojeomneo/assets/images/feature-recommendation.png"
                     alt="딱 맞는 & 한끼"
                     width={300}
                     height={600}
@@ -331,7 +331,7 @@ export default function Home() {
                 </div>
                 <div className="bg-gray-100 rounded-2xl p-4 shadow-lg card-hover">
                   <Image
-                    src="/assets/images/feature-history.png"
+                    src="/ojeomneo/assets/images/feature-history.png"
                     alt="나의 & 맛 기록"
                     width={300}
                     height={600}
@@ -341,7 +341,7 @@ export default function Home() {
                 {/* 반복을 위해 다시 추가 */}
                 <div className="relative bg-gray-100 rounded-2xl p-4 shadow-lg card-hover">
                   <Image
-                    src="/assets/images/hero-phone.png"
+                    src="/ojeomneo/assets/images/hero-phone.png"
                     alt="오점너 - Smart Family App"
                     width={300}
                     height={600}
@@ -350,7 +350,7 @@ export default function Home() {
                 </div>
                 <div className="bg-gray-100 rounded-2xl p-4 shadow-lg card-hover">
                   <Image
-                    src="/assets/images/feature-draw-intro.png"
+                    src="/ojeomneo/assets/images/feature-draw-intro.png"
                     alt="그리면 & 추천"
                     width={300}
                     height={600}
@@ -359,7 +359,7 @@ export default function Home() {
                 </div>
                 <div className="bg-gray-100 rounded-2xl p-4 shadow-lg card-hover">
                   <Image
-                    src="/assets/images/feature-draw-input.png"
+                    src="/ojeomneo/assets/images/feature-draw-input.png"
                     alt="기분을 그려봐"
                     width={300}
                     height={600}
@@ -368,7 +368,7 @@ export default function Home() {
                 </div>
                 <div className="bg-gray-100 rounded-2xl p-4 shadow-lg card-hover">
                   <Image
-                    src="/assets/images/feature-recommendation.png"
+                    src="/ojeomneo/assets/images/feature-recommendation.png"
                     alt="딱 맞는 & 한끼"
                     width={300}
                     height={600}
@@ -377,7 +377,7 @@ export default function Home() {
                 </div>
                 <div className="bg-gray-100 rounded-2xl p-4 shadow-lg card-hover">
                   <Image
-                    src="/assets/images/feature-history.png"
+                    src="/ojeomneo/assets/images/feature-history.png"
                     alt="나의 & 맛 기록"
                     width={300}
                     height={600}
@@ -397,7 +397,7 @@ export default function Home() {
             <div>
               <div className="flex items-center space-x-3 mb-4">
                 <Image
-                  src="/assets/images/logo.png"
+                  src="/ojeomneo/assets/images/logo.png"
                   alt="오점너 로고"
                   width={40}
                   height={40}
