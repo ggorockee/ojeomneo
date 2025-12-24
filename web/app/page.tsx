@@ -293,95 +293,95 @@ export default function Home() {
               style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
             >
               <div className="flex space-x-8 min-w-max">
-                <div className="relative bg-gray-100 rounded-2xl p-4 shadow-lg card-hover">
+                <div className="relative bg-gray-100 rounded-2xl p-4 shadow-lg card-hover w-[300px] flex-shrink-0">
                   <Image
                     src="/ojeomneo/assets/images/hero-phone.png"
                     alt="오점너 - Smart Family App"
                     width={300}
                     height={600}
-                    className="w-full h-auto rounded-xl"
+                    className="max-w-full h-auto rounded-xl"
                   />
                 </div>
-                <div className="bg-gray-100 rounded-2xl p-4 shadow-lg card-hover">
+                <div className="bg-gray-100 rounded-2xl p-4 shadow-lg card-hover w-[300px] flex-shrink-0">
                   <Image
                     src="/ojeomneo/assets/images/feature-draw-intro.png"
                     alt="그리면 & 추천"
                     width={300}
                     height={600}
-                    className="w-full h-auto rounded-xl"
+                    className="max-w-full h-auto rounded-xl"
                   />
                 </div>
-                <div className="bg-gray-100 rounded-2xl p-4 shadow-lg card-hover">
+                <div className="bg-gray-100 rounded-2xl p-4 shadow-lg card-hover w-[300px] flex-shrink-0">
                   <Image
                     src="/ojeomneo/assets/images/feature-draw-input.png"
                     alt="기분을 그려봐"
                     width={300}
                     height={600}
-                    className="w-full h-auto rounded-xl"
+                    className="max-w-full h-auto rounded-xl"
                   />
                 </div>
-                <div className="bg-gray-100 rounded-2xl p-4 shadow-lg card-hover">
+                <div className="bg-gray-100 rounded-2xl p-4 shadow-lg card-hover w-[300px] flex-shrink-0">
                   <Image
                     src="/ojeomneo/assets/images/feature-recommendation.png"
                     alt="딱 맞는 & 한끼"
                     width={300}
                     height={600}
-                    className="w-full h-auto rounded-xl"
+                    className="max-w-full h-auto rounded-xl"
                   />
                 </div>
-                <div className="bg-gray-100 rounded-2xl p-4 shadow-lg card-hover">
+                <div className="bg-gray-100 rounded-2xl p-4 shadow-lg card-hover w-[300px] flex-shrink-0">
                   <Image
                     src="/ojeomneo/assets/images/feature-history.png"
                     alt="나의 & 맛 기록"
                     width={300}
                     height={600}
-                    className="w-full h-auto rounded-xl"
+                    className="max-w-full h-auto rounded-xl"
                   />
                 </div>
                 {/* 반복을 위해 다시 추가 */}
-                <div className="relative bg-gray-100 rounded-2xl p-4 shadow-lg card-hover">
+                <div className="relative bg-gray-100 rounded-2xl p-4 shadow-lg card-hover w-[300px] flex-shrink-0">
                   <Image
                     src="/ojeomneo/assets/images/hero-phone.png"
                     alt="오점너 - Smart Family App"
                     width={300}
                     height={600}
-                    className="w-full h-auto rounded-xl"
+                    className="max-w-full h-auto rounded-xl"
                   />
                 </div>
-                <div className="bg-gray-100 rounded-2xl p-4 shadow-lg card-hover">
+                <div className="bg-gray-100 rounded-2xl p-4 shadow-lg card-hover w-[300px] flex-shrink-0">
                   <Image
                     src="/ojeomneo/assets/images/feature-draw-intro.png"
                     alt="그리면 & 추천"
                     width={300}
                     height={600}
-                    className="w-full h-auto rounded-xl"
+                    className="max-w-full h-auto rounded-xl"
                   />
                 </div>
-                <div className="bg-gray-100 rounded-2xl p-4 shadow-lg card-hover">
+                <div className="bg-gray-100 rounded-2xl p-4 shadow-lg card-hover w-[300px] flex-shrink-0">
                   <Image
                     src="/ojeomneo/assets/images/feature-draw-input.png"
                     alt="기분을 그려봐"
                     width={300}
                     height={600}
-                    className="w-full h-auto rounded-xl"
+                    className="max-w-full h-auto rounded-xl"
                   />
                 </div>
-                <div className="bg-gray-100 rounded-2xl p-4 shadow-lg card-hover">
+                <div className="bg-gray-100 rounded-2xl p-4 shadow-lg card-hover w-[300px] flex-shrink-0">
                   <Image
                     src="/ojeomneo/assets/images/feature-recommendation.png"
                     alt="딱 맞는 & 한끼"
                     width={300}
                     height={600}
-                    className="w-full h-auto rounded-xl"
+                    className="max-w-full h-auto rounded-xl"
                   />
                 </div>
-                <div className="bg-gray-100 rounded-2xl p-4 shadow-lg card-hover">
+                <div className="bg-gray-100 rounded-2xl p-4 shadow-lg card-hover w-[300px] flex-shrink-0">
                   <Image
                     src="/ojeomneo/assets/images/feature-history.png"
                     alt="나의 & 맛 기록"
                     width={300}
                     height={600}
-                    className="w-full h-auto rounded-xl"
+                    className="max-w-full h-auto rounded-xl"
                   />
                 </div>
               </div>
