@@ -6,11 +6,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/gofiber/adaptor/v2"
 	"github.com/gofiber/fiber/v2"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
-	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"github.com/prometheus/common/expfmt"
 )
 
 var (
@@ -104,9 +103,31 @@ func PrometheusMiddleware() fiber.Handler {
 }
 
 // PrometheusHandler Prometheus 메트릭 엔드포인트 핸들러
-// SigNoz가 이 엔드포인트를 scrape하여 메트릭 수집
+// Prometheus가 이 엔드포인트를 scrape하여 메트릭 수집
+// Fiber 네이티브 구현으로 adaptor 의존성 제거
 func PrometheusHandler() fiber.Handler {
-	return adaptor.HTTPHandler(promhttp.Handler())
+	return func(c *fiber.Ctx) error {
+		// Prometheus DefaultGatherer에서 모든 메트릭 수집
+		gathering, err := prometheus.DefaultGatherer.Gather()
+		if err != nil {
+			return c.Status(fiber.StatusInternalServerError).
+				SendString("메트릭 수집 실패: " + err.Error())
+		}
+
+		// Prometheus text format으로 직렬화
+		c.Set("Content-Type", string(expfmt.FmtText))
+
+		// 각 MetricFamily를 text format으로 변환하여 응답
+		encoder := expfmt.NewEncoder(c, expfmt.FmtText)
+		for _, mf := range gathering {
+			if err := encoder.Encode(mf); err != nil {
+				return c.Status(fiber.StatusInternalServerError).
+					SendString("메트릭 직렬화 실패: " + err.Error())
+			}
+		}
+
+		return nil
+	}
 }
 
 // InternalOnly 내부망 접근 제한 미들웨어 (사용하지 않음)
