@@ -22,13 +22,15 @@ var (
 		[]string{"status"}, // allowed, limited
 	)
 
-	rateLimitRemaining = promauto.NewGaugeVec(
-		prometheus.GaugeOpts{
-			Name: "ojeomneo_ratelimit_remaining",
-			Help: "Remaining requests in current window",
-		},
-		[]string{"ip"},
-	)
+	// TODO: IP label이 동시 요청 시 Prometheus 중복 수집 문제 발생
+	// 향후 Summary로 변경 또는 aggregation 방식 개선 필요
+	// rateLimitRemaining = promauto.NewGaugeVec(
+	// 	prometheus.GaugeOpts{
+	// 		Name: "ojeomneo_ratelimit_remaining",
+	// 		Help: "Remaining requests in current window",
+	// 	},
+	// 	[]string{"ip"},
+	// )
 )
 
 // RateLimitConfig Rate Limiting 설정

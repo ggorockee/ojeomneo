@@ -17,21 +17,23 @@ import (
 
 var (
 	// 캐시 메트릭
-	cacheHits = promauto.NewCounterVec(
-		prometheus.CounterOpts{
-			Name: "ojeomneo_cache_hits_total",
-			Help: "Total number of cache hits",
-		},
-		[]string{"path"},
-	)
+	// TODO: path label이 동시 요청 시 Prometheus 중복 수집 문제 발생
+	// 향후 label 없는 전체 counter로 변경 또는 aggregation 방식 개선 필요
+	// cacheHits = promauto.NewCounterVec(
+	// 	prometheus.CounterOpts{
+	// 		Name: "ojeomneo_cache_hits_total",
+	// 		Help: "Total number of cache hits",
+	// 	},
+	// 	[]string{"path"},
+	// )
 
-	cacheMisses = promauto.NewCounterVec(
-		prometheus.CounterOpts{
-			Name: "ojeomneo_cache_misses_total",
-			Help: "Total number of cache misses",
-		},
-		[]string{"path"},
-	)
+	// cacheMisses = promauto.NewCounterVec(
+	// 	prometheus.CounterOpts{
+	// 		Name: "ojeomneo_cache_misses_total",
+	// 		Help: "Total number of cache misses",
+	// 	},
+	// 	[]string{"path"},
+	// )
 
 	cacheLatency = promauto.NewHistogramVec(
 		prometheus.HistogramOpts{
