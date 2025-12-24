@@ -137,7 +137,8 @@ func RateLimiter(config ...RateLimitConfig) fiber.Handler {
 		c.Set("X-RateLimit-Reset", strconv.FormatInt(now.Add(cfg.Window).Unix(), 10))
 
 		// 메트릭 업데이트
-		rateLimitRemaining.WithLabelValues(clientIP).Set(float64(max(0, remaining)))
+		// TODO: IP label이 동시 요청 시 Prometheus 중복 수집 문제 발생
+		// rateLimitRemaining.WithLabelValues(clientIP).Set(float64(max(0, remaining)))
 
 		// Rate Limit 초과 체크
 		if count > int64(cfg.Max) {
