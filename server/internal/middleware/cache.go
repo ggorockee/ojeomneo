@@ -141,7 +141,9 @@ func Cache(config ...CacheConfig) fiber.Handler {
 			// 캐시 히트
 			var response CachedResponse
 			if err := json.Unmarshal(cached, &response); err == nil {
-				cacheHits.WithLabelValues(path).Inc()
+				// TODO: path label이 동시 요청 시 Prometheus 중복 수집 문제 발생 가능
+				// 일단 path label 제거하고 전체 count만 추적
+				// cacheHits.WithLabelValues(path).Inc()
 
 				// 캐시된 헤더 설정
 				for key, value := range response.Headers {
@@ -156,7 +158,8 @@ func Cache(config ...CacheConfig) fiber.Handler {
 		}
 
 		// 캐시 미스 - 다음 핸들러 실행
-		cacheMisses.WithLabelValues(path).Inc()
+		// TODO: path label이 동시 요청 시 Prometheus 중복 수집 문제 발생 가능
+		// cacheMisses.WithLabelValues(path).Inc()
 
 		err = c.Next()
 		if err != nil {
