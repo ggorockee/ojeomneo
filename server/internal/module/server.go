@@ -8,7 +8,7 @@ import (
 	"github.com/gofiber/contrib/otelfiber/v2"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
-	"github.com/gofiber/fiber/v2/middleware/logger"
+	// "github.com/gofiber/fiber/v2/middleware/logger" // Zap JSON 로거 사용으로 비활성화
 	"github.com/gofiber/fiber/v2/middleware/recover"
 	"github.com/gofiber/swagger"
 	"github.com/ggorockee/ojeomneo/server/internal/config"
@@ -89,11 +89,11 @@ func ServerModule() fx.Option {
 					return err
 				})
 
-				// 기본 Fiber 로거 미들웨어 (fallback)
-				app.Use(logger.New(logger.Config{
-					Format:     "${time} | ${status} | ${latency} | ${ip} | ${method} | ${path}\n",
-					TimeFormat: "2006-01-02 15:04:05",
-				}))
+				// Fiber 기본 로거 비활성화 - Zap JSON 로거만 사용 (Loki 파싱 일관성)
+				// app.Use(logger.New(logger.Config{
+				// 	Format:     "${time} | ${status} | ${latency} | ${ip} | ${method} | ${path}\n",
+				// 	TimeFormat: "2006-01-02 15:04:05",
+				// }))
 
 				app.Use(cors.New(cors.Config{
 					AllowOrigins: "*",
