@@ -11,10 +11,10 @@ description: "오점너 - 스케치 기반 메뉴 추천 앱"
 publish_to: 'none'
 
 # Androiod Version
-# version: 1.0.0+7
+version: 1.0.1+8
 
 # IOS Version
-version: 1.0.1+1
+# version: 1.0.1+1
 
 
 # logical version: 1.0.0+1
