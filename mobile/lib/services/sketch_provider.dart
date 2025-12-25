@@ -79,23 +79,33 @@ class SketchProvider extends ChangeNotifier {
   void startStroke(Offset point) {
     _currentStrokePoints = [point];
     _state = SketchState.drawing;
-    notifyListeners();
+    debugPrint('[SketchProvider] 🎯 startStroke: point=$point');
+    // notifyListeners() 제거 - 첫 점만으로는 렌더링하지 않음 (점 찍힘 방지)
   }
 
   void addPoint(Offset point) {
     _currentStrokePoints.add(point);
-    notifyListeners();
+    debugPrint('[SketchProvider] ➕ addPoint: total=${_currentStrokePoints.length} points');
+    // ✅ 최소 2개 점이 모였을 때만 렌더링 시작 (연속 드로잉)
+    if (_currentStrokePoints.length >= 2) {
+      notifyListeners();
+    }
   }
 
   void endStroke() {
-    if (_currentStrokePoints.isNotEmpty) {
+    debugPrint('[SketchProvider] ✋ endStroke: ${_currentStrokePoints.length} points');
+    // ✅ 점이 2개 이상일 때만 스트로크로 저장 (단일 점 무시)
+    if (_currentStrokePoints.length >= 2) {
       _strokes.add(StrokeData(
         points: List.from(_currentStrokePoints),
         color: _currentColor,
         width: _currentWidth,
       ));
-      _currentStrokePoints = [];
+      debugPrint('[SketchProvider] ✅ Stroke saved: ${_currentStrokePoints.length} points');
+    } else {
+      debugPrint('[SketchProvider] ❌ Stroke ignored: only ${_currentStrokePoints.length} point(s)');
     }
+    _currentStrokePoints = [];
     notifyListeners();
   }
 
