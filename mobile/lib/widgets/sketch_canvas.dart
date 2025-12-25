@@ -13,14 +13,14 @@ class SketchCanvas extends StatelessWidget {
   Widget build(BuildContext context) {
     return Consumer<SketchProvider>(
       builder: (context, provider, child) {
-        return GestureDetector(
-          onPanStart: (details) {
+        return Listener(
+          onPointerDown: (details) {
             provider.startStroke(details.localPosition);
           },
-          onPanUpdate: (details) {
+          onPointerMove: (details) {
             provider.addPoint(details.localPosition);
           },
-          onPanEnd: (details) {
+          onPointerUp: (details) {
             provider.endStroke();
           },
           child: Container(
