@@ -151,8 +151,14 @@ class _SplashScreenState extends State<SplashScreen>
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppTheme.primaryColor,
                 foregroundColor: Colors.white,
+                padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 10.h),
+                minimumSize: Size(0, 0),
+                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
               ),
-              child: Text('업데이트 하러가기'),
+              child: Text(
+                '업데이트',
+                style: TextStyle(fontSize: 14.sp),
+              ),
             ),
           ],
         ),
