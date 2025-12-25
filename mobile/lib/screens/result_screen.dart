@@ -179,7 +179,6 @@ ${_currentMenu.name}
     return Padding(
       padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 8.h),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           IconButton(
             onPressed: () => Navigator.of(context).pop(),
@@ -189,22 +188,18 @@ ${_currentMenu.name}
               size: 22.sp,
             ),
           ),
-          Text(
-            '추천 결과',
-            style: TextStyle(
-              fontSize: 18.sp,
-              fontWeight: FontWeight.w700,
-              color: AppTheme.onSurface,
+          Expanded(
+            child: Text(
+              '추천 결과',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 18.sp,
+                fontWeight: FontWeight.w700,
+                color: AppTheme.onSurface,
+              ),
             ),
           ),
-          IconButton(
-            onPressed: () {},
-            icon: Icon(
-              Icons.more_vert_rounded,
-              color: AppTheme.onSurface,
-              size: 22.sp,
-            ),
-          ),
+          SizedBox(width: 48.w), // 뒤로가기 버튼과 대칭을 위한 공간
         ],
       ),
     );
